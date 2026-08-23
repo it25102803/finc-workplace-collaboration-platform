@@ -13,12 +13,12 @@ Finc Workplace Collaboration Platform is a cloud-based internal collaboration so
 
 ## 👥 Group Members & Scope Allocation
 
-| Member Name | Student ID | Scope / Primary Functional Domain |
-| :--- | :--- | :--- |
-| Member 1 | IT25102803 | **User Management & Administration:** Authentication, Profile Settings, Role Allocation, Department Settings. |
-| Member 2 | ITXXXXXXX | **Team Communication & Channels:** Direct/Group Messaging, Department Channels, Meeting Scheduling. |
-| Member 3 | ITXXXXXXX | **Task Management & Calendar:** Task Creation & Assignment, Status Tracking, Shared Team Calendar. |
-| Member 4 | ITXXXXXXX | **Files & Knowledge Base:** Document Storage, Knowledge Base SOP Management, System-Wide Search. |
+| Member Name | Student ID | Main Function | Technical Scope (Frontend & Backend) |
+| :--- | :--- | :--- | :--- |
+| Perera W.T.D | IT25102803 | **User Management & Administration** | **Frontend:** Login/Logout, Profile Settings, Admin Dashboard (User/Role CRUD).<br>**Backend:** Spring Security setup, REST APIs for Authentication, RBAC. |
+| Kruban N. | IT25103015 | **Team Communication & Channels** | **Frontend:** Direct/Group Messaging UI, Channel Views, Meeting UI.<br>**Backend:** Messaging REST APIs, WebSockets, Meeting invites endpoints. |
+| Perera C.T.C.K.S. | IT25102796 | **Task Management & Calendar** | **Frontend:** Task Board, Assignment UI, Shared Calendar.<br>**Backend:** Task CRUD APIs, Progress tracking logic, Calendar endpoints. |
+| [Member 4 Name] | [ITXXXXXXX] | **Files, Knowledge Base & Search** | **Frontend:** File Upload/Download UI, Knowledge Base SOP Portal, Search Bar.<br>**Backend:** File Storage APIs, Knowledge Base CRUD, System Search endpoints. |
 
 ---
 
