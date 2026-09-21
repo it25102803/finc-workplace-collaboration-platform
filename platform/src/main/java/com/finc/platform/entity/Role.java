@@ -1,18 +1,9 @@
 package com.finc.platform.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "roles")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Role {
 
     @Id
@@ -23,10 +14,11 @@ public class Role {
     @Column(nullable = false, unique = true)
     private RoleType roleType;
 
-    private String description;
+    public Role() {}
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "role_permissions", joinColumns = @JoinColumn(name = "role_id"))
-    @Column(name = "permission")
-    private Set<String> permissions = new HashSet<>();
+    public Long getRoleId() { return roleId; }
+    public void setRoleId(Long roleId) { this.roleId = roleId; }
+
+    public RoleType getRoleType() { return roleType; }
+    public void setRoleType(RoleType roleType) { this.roleType = roleType; }
 }
