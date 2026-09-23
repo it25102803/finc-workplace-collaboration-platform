@@ -1,39 +1,33 @@
-# Compiled Java Class Files
-*.class
-*.jar
-*.war
-*.ear
-*.nar
-
-# Target build directories (Maven & Gradle)
+HELP.md
 target/
-build/
-out/
-bin/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
 
-# Log files
-*.log
-*.sqlite
-
-# IDE and Project Settings
-.idea/
-*.iml
-.vscode/
-!.vscode/tasks.json
-!.vscode/launch.json
-.settings/
-.project
+### STS ###
+.apt_generated
 .classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
 
-# Environment variables & secrets
-.env
-application-local.properties
-application-local.yml
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
 
-# OS-generated files
-.DS_Store
-Thumbs.db
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
 
-# Temporary files
-*.tmp
-*.bak
+### VS Code ###
+.vscode/

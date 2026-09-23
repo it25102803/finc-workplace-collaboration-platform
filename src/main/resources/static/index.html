@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Workplace Communication Hub</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-shell">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="brand-block">
+                <div class="brand-mark">W</div>
+
+                <div>
+                    <h2>Workplace</h2>
+                    <span>Communication Hub</span>
+                </div>
+            </div>
+
+            <div class="side-section">
+
+                <div class="section-header">
+                    <span>Channels</span>
+
+                    <button id="createChannelBtn"
+                            class="icon-button btn btn-sm btn-outline-light"
+                            title="Create channel">
+                        ＋
+                    </button>
+                </div>
+
+                <div id="channelList" class="channel-list"></div>
+
+            </div>
+
+            <div class="side-section">
+
+                <div class="section-header">
+                    <span>Direct Messages</span>
+                </div>
+
+                <div id="directMessageList" class="channel-list"></div>
+
+            </div>
+        </aside>
+
+
+        <!-- MAIN CONTENT -->
+        <main class="main-panel">
+
+            <!-- TOP BAR -->
+            <header class="workspace-header">
+
+                <div>
+                    <p class="eyebrow">Team communication</p>
+
+                    <h1 id="chatTitle">General</h1>
+
+                    <span id="channelMeta" class="meta-text">
+                        Project updates
+                    </span>
+                </div>
+
+                <div class="header-actions">
+                    <button id="refreshBtn" class="secondary-button btn btn-light">Refresh</button>
+                </div>
+
+            </header>
+
+
+            <div class="content-layout">
+
+                <section class="chat-panel">
+
+                    <div id="messageList" class="message-list"></div>
+
+
+                    <form id="messageForm" class="composer">
+                        <input
+                            id="messageInput"
+                            class="form-control"
+                            type="text"
+                            maxlength="500"
+                            placeholder="Type a message..."
+                            autocomplete="off">
+
+                        <button type="submit" class="primary-button btn btn-primary">
+                            Send
+                        </button>
+
+                    </form>
+
+                </section>
+
+
+                <aside class="right-panel">
+
+                    <div class="panel-card">
+
+                        <h3>Member management</h3>
+
+                        <div class="member-toolbar">
+
+                            <select id="memberSelector" class="form-select"></select>
+
+                            <button id="addMemberBtn" class="secondary-button btn btn-outline-primary">
+                                Add
+                            </button>
+
+                        </div>
+
+                        <ul id="memberList" class="member-list"></ul>
+
+                    </div>
+
+
+                    <div class="panel-card">
+
+                        <h3>Knowledge base</h3>
+
+                        <ul id="knowledgeList" class="knowledge-list"></ul>
+
+                    </div>
+
+                </aside>
+
+            </div>
+
+        </main>
+    </div>
+
+
+    <!-- CHANNEL MODAL -->
+    <div id="channelModal" class="modal hidden">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h2>Create channel</h2>
+
+                <button id="closeChannelModalBtn" class="close-button btn btn-link">
+                    ×
+                </button>
+
+            </div>
+
+
+            <form id="channelForm">
+
+                <label>
+                    Channel name
+
+                    <input
+                        id="channelName"
+                        class="form-control"
+                        type="text"
+                        required
+                        placeholder="e.g. support-team">
+                </label>
+
+
+                <label>
+                    Description
+
+                    <input
+                        id="channelDescription"
+                        class="form-control"
+                        type="text"
+                        placeholder="Optional description">
+                </label>
+
+
+                <label>
+                    Visibility
+
+                    <select id="channelType" class="form-select">
+                        <option value="PUBLIC">Public</option>
+                        <option value="PRIVATE">Private</option>
+                        <option value="DIRECT">Direct</option>
+                    </select>
+                </label>
+
+
+                <div class="modal-actions">
+
+                    <button
+                        type="button"
+                        id="cancelChannelModalBtn"
+                        class="secondary-button btn btn-outline-secondary">
+                        Cancel
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="primary-button btn btn-primary">
+                        Create
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
