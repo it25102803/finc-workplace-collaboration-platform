@@ -38,6 +38,30 @@ public class CommunicationDataInitializer implements CommandLineRunner {
             design = communicationService.createChannel(design);
             communicationService.createMessage(design.getId(), new Message(design, "Admin User", "Share the latest mock-up in the design review channel."));
 
+            }
+
+                Channel direct = communicationService.getAllChannels().stream()
+                    .filter(channel -> channel.getType() == ChannelType.DIRECT)
+                    .findFirst()
+                    .orElseGet(() -> {
+                        Channel newDirect = new Channel(
+                            "John Employee",
+                            "Direct message with John Employee",
+                            ChannelType.DIRECT
+                        );
+                        newDirect.setMemberEmails(new java.util.ArrayList<>(java.util.List.of("admin@fincacademy.com", "john@fincacademy.com")));
+                        return communicationService.createChannel(newDirect);
+                    });
+
+                if (communicationService.getMessagesForChannel(direct.getId()).isEmpty()) {
+                    communicationService.createMessage(direct.getId(), new Message(
+                        direct,
+                        "John Employee",
+                        "Can we review the channel requirements today?"
+                    ));
+                }
+
+            if (communicationService.getAllKnowledge().isEmpty()) {
             communicationService.createKnowledgeItem(new KnowledgeItem(
                     "Project Kickoff Guide",
                     "Use this guide to introduce the team, goals, and communication rules for the new workplace platform.",

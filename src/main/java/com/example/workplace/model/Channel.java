@@ -19,6 +19,8 @@ public class Channel {
 
     private String description;
 
+    private String department;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ChannelType type = ChannelType.PUBLIC;
@@ -65,6 +67,14 @@ public class Channel {
         this.description = description;
     }
 
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+
     public ChannelType getType() {
         return type;
     }
@@ -97,6 +107,12 @@ public class Channel {
         String cleanEmail = email.trim();
         if (!memberEmails.contains(cleanEmail)) {
             memberEmails.add(cleanEmail);
+        }
+    }
+
+    public void removeMember(String email) {
+        if (email != null) {
+            memberEmails.remove(email.trim());
         }
     }
 }

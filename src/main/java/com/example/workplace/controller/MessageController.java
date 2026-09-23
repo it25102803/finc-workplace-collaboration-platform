@@ -38,4 +38,18 @@ public class MessageController {
             return ResponseEntity.badRequest().build();
         }
     }
+    @DeleteMapping("/messages/{id}")
+    public ResponseEntity<Void> deleteMessage(
+            @PathVariable Long id,
+            @RequestParam String sender) {
+        try {
+            boolean deleted = communicationService.deleteMessage(id, sender);
+            if (deleted) {
+                return ResponseEntity.noContent().build(); // 204 No Content on success
+            }
+            return ResponseEntity.status(403).build(); // 403 Forbidden if sender doesn't match or message not found
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.notFound().build(); // 404 Not Found if ID is invalid
+        }
+    }
 }

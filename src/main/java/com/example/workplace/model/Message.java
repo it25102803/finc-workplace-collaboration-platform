@@ -21,8 +21,16 @@ public class Message {
     @Column(nullable = false)
     private String sender;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT")
     private String content;
+
+    private String attachmentName;
+
+    private String attachmentType;
+
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
+    private String attachmentData;
 
     @Column(nullable = false)
     private LocalDateTime timestamp;
@@ -67,6 +75,30 @@ public class Message {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getAttachmentName() {
+        return attachmentName;
+    }
+
+    public void setAttachmentName(String attachmentName) {
+        this.attachmentName = attachmentName;
+    }
+
+    public String getAttachmentType() {
+        return attachmentType;
+    }
+
+    public void setAttachmentType(String attachmentType) {
+        this.attachmentType = attachmentType;
+    }
+
+    public String getAttachmentData() {
+        return attachmentData;
+    }
+
+    public void setAttachmentData(String attachmentData) {
+        this.attachmentData = attachmentData;
     }
 
     public LocalDateTime getTimestamp() {

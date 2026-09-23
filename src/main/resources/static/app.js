@@ -2,6 +2,7 @@ const API_URL = "/api/users";
 const API_USERS = API_URL;
 const API_CHANNELS = "/api/channels";
 const API_KNOWLEDGE = "/api/knowledge";
+const API_NOTIFICATIONS = "/api/notifications";
 const CURRENT_USER = {
     name: "Admin User",
     email: "admin@fincacademy.com"
@@ -11,10 +12,15 @@ const state = {
     users: [],
     channels: [],
     knowledge: [],
-    selectedChannelId: null
+    selectedChannelId: null,
+    notifications: [],
+    renderedMessages: []
 };
 
 let users = [];
+let messagePollingTimer;
+let stompClient;
+let channelSubscription;
 
 
 // ==========================================
@@ -934,10 +940,47 @@ document.addEventListener("DOMContentLoaded", () => {
     loadUsers();
     loadChannels();
     loadKnowledge();
+    loadNotifications();
+    connectLiveUpdates();
+    messagePollingTimer = setInterval(() => {
+        if (state.selectedChannelId && !stompClient?.connected) {
+            loadMessages(state.selectedChannelId).catch(error => console.error(error));
+        }
+    }, 5000);
 });
 
 function bindEvents() {
     document.getElementById("messageForm").addEventListener("submit", sendMessage);
+    document.getElementById("notificationBtn").addEventListener("click", toggleNotifications);
+    document.getElementById("sidebarToggle").addEventListener("click", toggleSidebar);
+    document.getElementById("sidebarBackdrop").addEventListener("click", closeSidebar);
+    
+    const notificationPanel = document.getElementById("notificationPanel");
+    
+    // Prevent clicks inside the notification panel from closing it
+    if (notificationPanel) {
+        notificationPanel.addEventListener("click", event => {
+            event.stopPropagation();
+        });
+    }
+
+    // Updated click listener for both sidebar and notification panel closing
+    document.addEventListener("click", event => {
+        const sidebar = document.querySelector(".sidebar");
+        const toggle = document.getElementById("sidebarToggle");
+        if (sidebar && !sidebar.contains(event.target) && event.target !== toggle && !toggle.contains(event.target)) {
+            closeSidebar();
+        }
+
+        // Close notification panel if it's open and you click outside of it
+        if (notificationPanel && !notificationPanel.classList.contains("hidden")) {
+            const notificationBtn = document.getElementById("notificationBtn");
+            if (event.target !== notificationBtn && !notificationBtn.contains(event.target)) {
+                notificationPanel.classList.add("hidden");
+            }
+        }
+    });
+
     document.getElementById("refreshBtn").addEventListener("click", async () => {
         await Promise.all([loadUsers(), loadChannels(), loadKnowledge()]);
     });
@@ -946,6 +989,49 @@ function bindEvents() {
     document.getElementById("cancelChannelModalBtn").addEventListener("click", closeChannelModal);
     document.getElementById("channelForm").addEventListener("submit", createChannelFromForm);
     document.getElementById("addMemberBtn").addEventListener("click", addMemberToSelectedChannel);
+}
+function connectLiveUpdates() {
+    if (!window.StompJs) {
+        return;
+    }
+
+    stompClient = new StompJs.Client({
+        brokerURL: `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`,
+        reconnectDelay: 5000
+    });
+
+    stompClient.onConnect = () => {
+        subscribeToChannel();
+        stompClient.subscribe(`/topic/notifications/${CURRENT_USER.email}`, notificationFrame => {
+            const notification = JSON.parse(notificationFrame.body);
+            state.notifications.unshift(notification);
+            renderNotifications();
+        });
+    };
+
+    stompClient.activate();
+}
+
+function subscribeToChannel() {
+    if (!stompClient?.connected || !state.selectedChannelId) {
+        return;
+    }
+
+    channelSubscription?.unsubscribe();
+    channelSubscription = stompClient.subscribe(`/topic/channels/${state.selectedChannelId}`, frame => {
+        const message = JSON.parse(frame.body);
+        if (!state.renderedMessages.some(existing => existing.id === message.id)) {
+            renderMessages([...state.renderedMessages, message]);
+        }
+    });
+}
+
+function toggleSidebar() {
+    document.body.classList.toggle("sidebar-collapsed");
+}
+
+function closeSidebar() {
+    document.body.classList.add("sidebar-collapsed");
 }
 
 async function loadUsers() {
@@ -991,6 +1077,53 @@ async function loadKnowledge() {
     renderKnowledgeList();
 }
 
+async function loadNotifications() {
+    const response = await fetch(`${API_NOTIFICATIONS}?email=${encodeURIComponent(CURRENT_USER.email)}`);
+    if (!response.ok) {
+        return;
+    }
+
+    state.notifications = await response.json();
+    renderNotifications();
+}
+
+function toggleNotifications(event) {
+    if (event) {
+        event.stopPropagation(); // Prevents the click from triggering the document click listener immediately
+    }
+    document.getElementById("notificationPanel").classList.toggle("hidden");
+}
+
+function renderNotifications() {
+    const panel = document.getElementById("notificationPanel");
+    const unread = state.notifications.filter(notification => !notification.read).length;
+    const count = document.getElementById("notificationCount");
+    count.textContent = unread;
+    count.classList.toggle("hidden", unread === 0);
+
+    panel.innerHTML = state.notifications.length
+        ? state.notifications.slice(0, 8).map(notification => `
+            <button class="notification-item ${notification.read ? "read" : "unread"}" data-id="${notification.id}">
+                <strong>${escapeHtml(notification.type.replace("_", " "))}</strong>
+                <span>${escapeHtml(notification.message)}</span>
+            </button>
+        `).join("")
+        : '<div class="empty-state">No notifications</div>';
+
+    panel.querySelectorAll(".notification-item").forEach(item => {
+        item.addEventListener("click", () => markNotificationRead(Number(item.dataset.id)));
+    });
+}
+
+async function markNotificationRead(id) {
+    await fetch(`${API_NOTIFICATIONS}/${id}/read`, { method: "PUT" });
+    const notification = state.notifications.find(item => item.id === id);
+    if (notification) {
+        notification.read = true;
+    }
+    renderNotifications();
+}
+
 async function loadMessages(channelId) {
     const response = await fetch(`${API_CHANNELS}/${channelId}/messages`);
     if (!response.ok) {
@@ -1013,10 +1146,11 @@ function renderChannelList() {
         .map(channel => {
             const isActive = channel.id === state.selectedChannelId ? "active" : "";
             const wrapper = channel.type === "DIRECT" ? "@" : "#";
+            const department = channel.department ? ` (${channel.department})` : "";
             return `
                 <button class="channel-item ${isActive}" data-id="${channel.id}">
                     <span class="channel-hash">${wrapper}</span>
-                    <span>${escapeHtml(channel.name)}</span>
+                    <span>${escapeHtml(channel.name)}${escapeHtml(department)}</span>
                 </button>
             `;
         })
@@ -1051,9 +1185,36 @@ function renderDirectMessageList() {
         });
     });
 }
+async function deleteMessage(messageId) {
+    if (!confirm("Are you sure you want to delete this message?")) {
+        return;
+    }
 
+    try {
+        // This matches your backend controller @DeleteMapping("/messages/{id}") and sends the sender
+        const response = await fetch(`/api/messages/${messageId}?sender=${encodeURIComponent(CURRENT_USER.name)}`, {
+            method: "DELETE"
+        });
+
+        if (response.status === 403) {
+            showToast("You can only delete your own messages");
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error("Unable to delete message");
+        }
+
+        showToast("Message deleted successfully");
+        await loadMessages(state.selectedChannelId);
+    } catch (error) {
+        console.error(error);
+        showToast("Could not delete message");
+    }
+}
 function renderMessages(messages) {
     const container = document.getElementById("messageList");
+    state.renderedMessages = messages;
 
     if (!messages.length) {
         container.innerHTML = '<div class="empty-state">No messages in this channel yet.</div>';
@@ -1066,16 +1227,43 @@ function renderMessages(messages) {
             return `
                 <div class="message-bubble ${isMine ? "mine" : ""}">
                     <div class="message-meta">
-                        <strong>${escapeHtml(message.sender)}</strong>
-                        <span>${formatDate(message.timestamp)}</span>
+                        <div>
+                            <strong>${escapeHtml(message.sender)}</strong>
+                            <span>${formatDate(message.timestamp)}</span>
+                        </div>
+                        ${isMine ? `<button class="delete-message-btn" onclick="deleteMessage(${message.id})" title="Delete message">🗑️</button>` : ""}
                     </div>
-                    <p>${escapeHtml(message.content)}</p>
+                    ${message.content ? `<p>${escapeHtml(message.content)}</p>` : ""}
+                    ${renderAttachment(message)}
                 </div>
             `;
         })
         .join("");
 
     container.scrollTop = container.scrollHeight;
+}
+
+function getRenderedMessages() {
+    return state.renderedMessages || [];
+}
+
+function renderAttachment(message) {
+    if (!message.attachmentData) {
+        return "";
+    }
+
+    const attachmentName = escapeHtml(message.attachmentName || "Attachment");
+    const attachmentUrl = `data:${message.attachmentType || "application/octet-stream"};base64,${message.attachmentData}`;
+
+    if ((message.attachmentType || "").startsWith("image/")) {
+        return `
+            <a href="${attachmentUrl}" download="${attachmentName}" class="attachment-link">
+                <img src="${attachmentUrl}" alt="${attachmentName}" class="message-image">
+            </a>
+        `;
+    }
+
+    return `<a href="${attachmentUrl}" download="${attachmentName}" class="attachment-link">${attachmentName}</a>`;
 }
 
 function renderMemberSelector() {
@@ -1112,9 +1300,21 @@ function renderMemberList() {
         .map(email => {
             const user = getUserByEmail(email);
             const label = user ? `${user.name} (${email})` : email;
-            return `<li><strong>${escapeHtml(label)}</strong><span>${currentChannel.type}</span></li>`;
+            return `
+                <li>
+                    <strong>${escapeHtml(label)}</strong>
+                    <span>
+                        ${currentChannel.type}
+                        <button type="button" class="remove-member-button" data-email="${escapeHtml(email)}" title="Remove member">Remove</button>
+                    </span>
+                </li>
+            `;
         })
         .join("");
+
+    memberList.querySelectorAll(".remove-member-button").forEach(button => {
+        button.addEventListener("click", () => removeMemberFromSelectedChannel(button.dataset.email));
+    });
 }
 
 function renderKnowledgeList() {
@@ -1153,45 +1353,63 @@ function selectChannel(channelId) {
     }
 
     document.getElementById("chatTitle").textContent = channel.name;
-    document.getElementById("channelMeta").textContent = channel.description || `${channel.type} channel`;
+    document.getElementById("channelMeta").textContent = channel.department
+        ? `${channel.department} department | ${channel.description || channel.type + " channel"}`
+        : (channel.description || `${channel.type} channel`);
 
     renderChannelList();
     renderMemberSelector();
     renderMemberList();
     loadMessages(channelId);
+    subscribeToChannel();
 }
 
 async function sendMessage(event) {
     event.preventDefault();
 
     const input = document.getElementById("messageInput");
+    const attachmentInput = document.getElementById("attachmentInput");
     const content = input.value.trim();
+    const attachment = attachmentInput.files[0];
 
-    if (!content || !state.selectedChannelId) {
+    if ((!content && !attachment) || !state.selectedChannelId) {
         return;
     }
 
-    const payload = {
-        sender: CURRENT_USER.name,
-        content,
-        channel: {
-            id: state.selectedChannelId
-        }
-    };
+    let response;
+    if (attachment) {
+        const formData = new FormData();
+        formData.append("sender", CURRENT_USER.name);
+        formData.append("content", content);
+        formData.append("attachment", attachment);
+        response = await fetch(`${API_CHANNELS}/${state.selectedChannelId}/messages/attachment`, {
+            method: "POST",
+            body: formData
+        });
+    } else {
+        const payload = {
+            sender: CURRENT_USER.name,
+            content,
+            channel: {
+                id: state.selectedChannelId
+            }
+        };
 
-    const response = await fetch(`${API_CHANNELS}/${state.selectedChannelId}/messages`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-    });
+        response = await fetch(`${API_CHANNELS}/${state.selectedChannelId}/messages`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+    }
 
     if (!response.ok) {
         throw new Error("Unable to send message");
     }
 
     input.value = "";
+    attachmentInput.value = "";
     await loadMessages(state.selectedChannelId);
 }
 
@@ -1244,6 +1462,7 @@ async function createChannelFromForm(event) {
 
     const name = document.getElementById("channelName").value.trim();
     const description = document.getElementById("channelDescription").value.trim();
+    const department = document.getElementById("channelDepartment").value.trim();
     const type = document.getElementById("channelType").value;
 
     if (!name) {
@@ -1253,6 +1472,7 @@ async function createChannelFromForm(event) {
     const payload = {
         name,
         description,
+        department: department || null,
         type,
         memberEmails: [CURRENT_USER.email]
     };
@@ -1294,6 +1514,23 @@ async function addMemberToSelectedChannel() {
 
     if (!response.ok) {
         throw new Error("Unable to add member");
+    }
+
+    await loadChannels();
+}
+
+async function removeMemberFromSelectedChannel(email) {
+    const currentChannel = getSelectedChannel();
+    if (!currentChannel || !email) {
+        return;
+    }
+
+    const response = await fetch(`${API_CHANNELS}/${currentChannel.id}/members?email=${encodeURIComponent(email)}`, {
+        method: "DELETE"
+    });
+
+    if (!response.ok) {
+        throw new Error("Unable to remove member");
     }
 
     await loadChannels();
