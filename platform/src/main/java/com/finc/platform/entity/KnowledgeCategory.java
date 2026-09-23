@@ -1,5 +1,6 @@
 package com.finc.platform.entity;
 
+<<<<<<< HEAD
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +21,22 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 
+=======
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Table(name = "knowledge_categories")
+@Getter
+@Setter
+@NoArgsConstructor
+>>>>>>> 313b911 (Fix User entity JPA mapping and complete working Auth UI)
 public class KnowledgeCategory {
 
     @Id
@@ -27,6 +44,7 @@ public class KnowledgeCategory {
     private Long categoryId;
 
     private String name;
+<<<<<<< HEAD
     private String description;
     private int displayOrder;
 
@@ -55,3 +73,10 @@ public class KnowledgeCategory {
     }
 
 }
+=======
+
+    public KnowledgeCategory(String name) {
+        this.name = name;
+    }
+}
+>>>>>>> 313b911 (Fix User entity JPA mapping and complete working Auth UI)

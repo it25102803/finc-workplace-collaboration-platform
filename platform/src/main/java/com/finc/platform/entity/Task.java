@@ -1,74 +1,59 @@
 package com.finc.platform.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "tasks")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Task {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long taskId;
 
-    @Column(nullable = false)
     private String title;
-
-    @Column(length = 2000)
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private TaskStatus status;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private TaskPriority priority;
 
-    @Column(nullable = false)
-    private Integer progress;
-
+    private Integer progress = 0;
     private LocalDate startDate;
-
     private LocalDate dueDate;
 
-    private LocalDateTime createdAt;
-
-    private LocalDateTime updatedAt;
-
-    // The existing User entity is reused here
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "assigned_user_id")
+    @JoinColumn(name = "user_id")
     private User assignedUser;
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+    public Task() {}
 
-        if (status == null) {
-            status = TaskStatus.TODO;
-        }
+    public Long getTaskId() { return taskId; }
+    public void setTaskId(Long taskId) { this.taskId = taskId; }
 
-        if (priority == null) {
-            priority = TaskPriority.MEDIUM;
-        }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 
-        if (progress == null) {
-            progress = 0;
-        }
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
+    public TaskStatus getStatus() { return status; }
+    public void setStatus(TaskStatus status) { this.status = status; }
+
+    public TaskPriority getPriority() { return priority; }
+    public void setPriority(TaskPriority priority) { this.priority = priority; }
+
+    public Integer getProgress() { return progress; }
+    public void setProgress(Integer progress) { this.progress = progress; }
+
+    public LocalDate getStartDate() { return startDate; }
+    public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
+
+    public LocalDate getDueDate() { return dueDate; }
+    public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }
+
+    public User getAssignedUser() { return assignedUser; }
+    public void setAssignedUser(User assignedUser) { this.assignedUser = assignedUser; }
 }

@@ -68,7 +68,14 @@
         <scope>runtime</scope>
     </dependency>
 
-    <!-- 7. Spring Boot DevTools -->
+    <!-- 7. H2 Database for local test profile -->
+    <dependency>
+        <groupId>com.h2database</groupId>
+        <artifactId>h2</artifactId>
+        <scope>test</scope>
+    </dependency>
+
+    <!-- 8. Spring Boot DevTools -->
     <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-devtools</artifactId>

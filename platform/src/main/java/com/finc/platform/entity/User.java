@@ -1,6 +1,7 @@
 package com.finc.platform.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -10,12 +11,13 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long userId;
+    @Column(name = "user_id")
+    private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true, nullable = false)
     private String username;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true, nullable = false)
     private String email;
 
     @Column(nullable = false)
@@ -24,8 +26,18 @@ public class User {
     private String firstName;
     private String lastName;
 
+    @Column(nullable = false)
+    private Boolean enabled = true;
+
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private UserStatus status = UserStatus.ONLINE;
+
+    private LocalDateTime createdAt;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "department_id")
+    private Department department;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -35,37 +47,118 @@ public class User {
     )
     private Set<Role> roles = new HashSet<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "department_id")
-    private Department department;
+    public User() {
+    }
 
-    public User() {}
+    public User(String username, String email, String password, String firstName, String lastName) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.enabled = true;
+        this.status = UserStatus.ONLINE;
+        this.createdAt = LocalDateTime.now();
+    }
 
-    // Getters and Setters
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
+    @PrePersist
+    protected void onCreate() {
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
+        if (this.enabled == null) {
+            this.enabled = true;
+        }
+        if (this.status == null) {
+            this.status = UserStatus.ONLINE;
+        }
+    }
 
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
+    public String getUsername() {
+        return username;
+    }
 
-    public String getFirstName() { return firstName; }
-    public void setFirstName(String firstName) { this.firstName = firstName; }
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
-    public String getLastName() { return lastName; }
-    public void setLastName(String lastName) { this.lastName = lastName; }
+    public String getEmail() {
+        return email;
+    }
 
-    public UserStatus getStatus() { return status; }
-    public void setStatus(UserStatus status) { this.status = status; }
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
-    public Set<Role> getRoles() { return roles; }
-    public void setRoles(Set<Role> roles) { this.roles = roles; }
+    public String getPassword() {
+        return password;
+    }
 
-    public Department getDepartment() { return department; }
-    public void setDepartment(Department department) { this.department = department; }
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public UserStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(UserStatus status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Department getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(Department department) {
+        this.department = department;
+    }
+
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
+    }
 }

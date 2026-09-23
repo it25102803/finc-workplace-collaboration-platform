@@ -11,10 +11,14 @@ public class Role {
     private Long roleId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, unique = true)
+    @Column(name = "role_type", length = 50, nullable = false)
     private RoleType roleType;
 
     public Role() {}
+
+    public Role(RoleType roleType) {
+        this.roleType = roleType;
+    }
 
     public Long getRoleId() { return roleId; }
     public void setRoleId(Long roleId) { this.roleId = roleId; }
