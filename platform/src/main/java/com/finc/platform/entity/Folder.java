@@ -46,7 +46,7 @@ public class Folder {
     @JoinColumn(name = "parent_folder_id")
     private Folder parentFolder;
 
-    @OneToMany(mappedBy = "parentFolder")
+    @OneToMany(mappedBy = "parentFolder", cascade = CascadeType.REMOVE)
     private List<Folder> subFolders = new ArrayList<>();
 
     // stores: Folder (1) *composes* File (0..*)
