@@ -89,8 +89,9 @@
     // Login Submission
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
         e.preventDefault();
+        const usernameInput = document.getElementById("loginUsername").value;
         const payload = {
-            username: document.getElementById("loginUsername").value,
+            username: usernameInput,
             password: document.getElementById("loginPassword").value
         };
 
@@ -103,12 +104,20 @@
             const data = await res.json();
             if (res.ok) {
                 showAlert("Login Successful! Redirecting...", true);
+                
+                // Save user details & username for session management
                 localStorage.setItem("user", JSON.stringify(data));
+                localStorage.setItem("username", usernameInput);
+                
+                // Redirect to dashboard page
+                setTimeout(() => {
+                    window.location.href = "dashboard.html";
+                }, 1000);
             } else {
                 showAlert(data.message || "Invalid credentials", false);
             }
         } catch (err) {
-            showAlert("Server unreachable. Ensure Spring Boot is running on port 8080.", false);
+            showAlert("Server unreachable. Ensure Spring Boot is running on port 8081.", false);
         }
     });
 
@@ -132,11 +141,14 @@
             const data = await res.json();
             if (res.ok) {
                 showAlert("Account registered successfully! Please log in.", true);
+                // Switch to login tab automatically
+                const loginTab = new bootstrap.Tab(document.getElementById("login-tab"));
+                loginTab.show();
             } else {
                 showAlert(data.message || "Registration failed", false);
             }
         } catch (err) {
-            showAlert("Server unreachable. Ensure Spring Boot is running on port 8080.", false);
+            showAlert("Server unreachable. Ensure Spring Boot is running on port 8081.", false);
         }
     });
 </script>
