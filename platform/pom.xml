@@ -54,6 +54,12 @@
         <artifactId>spring-boot-starter-validation</artifactId>
     </dependency>
 
+    <!-- Thymeleaf -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-thymeleaf</artifactId>
+    </dependency>
+
     <!-- 5. Lombok -->
     <dependency>
         <groupId>org.projectlombok</groupId>
@@ -89,6 +95,7 @@
         <artifactId>spring-boot-starter-test</artifactId>
         <scope>test</scope>
     </dependency>
+
 </dependencies>
 
 	<build>
