@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>File Manager | Finc Workplace</title>
+
+    <link rel="stylesheet" href="/css/files.css">
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-logo">F</div>
+
+            <div>
+                <h2>FINC</h2>
+                <span>Workplace</span>
+            </div>
+        </div>
+
+        <nav class="navigation">
+
+            <a href="dashboard.html" class="nav-item">
+                <span>&#9635;</span>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="tasks.html" class="nav-item">
+                <span>&#10003;</span>
+                <span>Tasks</span>
+            </a>
+
+            <a href="calendar.html" class="nav-item">
+                <span>&#9635;</span>
+                <span>Calendar</span>
+            </a>
+
+            <a href="files.html" class="nav-item active">
+                <span>&#128193;</span>
+                <span>Files</span>
+            </a>
+
+            <a href="knowledge.html" class="nav-item">
+                <span>&#128214;</span>
+                <span>Knowledge Base</span>
+            </a>
+
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="member-badge">
+                <div class="avatar">M4</div>
+
+                <div>
+                    <strong>Member 4</strong>
+                    <small>Files &amp; Knowledge Base</small>
+                </div>
+            </div>
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+        <!-- TOP BAR -->
+        <header class="topbar">
+
+            <div>
+                <p class="eyebrow">WORKPLACE COLLABORATION</p>
+                <h1>File Manager</h1>
+                <p class="subtitle">
+                    Organize folders and upload files with version history.
+                </p>
+            </div>
+
+            <div class="top-actions">
+
+                <button class="secondary-btn" onclick="openFolderModal()">
+                    + New Folder
+                </button>
+
+                <button class="primary-btn" onclick="openUploadModal()">
+                    + Upload File
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <!-- USER ID BAR -->
+        <section class="user-id-bar">
+
+            <label for="actingUserId">Acting as user ID</label>
+
+            <input
+                    type="number"
+                    id="actingUserId"
+                    min="1"
+                    placeholder="Enter your user ID"
+                    onchange="onUserIdChanged()"
+            >
+
+            <small>
+                Used as the owner/uploader for everything you create here. Find it in your users table.
+            </small>
+
+        </section>
+
+
+        <!-- STATISTICS -->
+        <section class="stats-grid">
+
+            <div class="stat-card">
+                <div class="stat-icon folders">&#128193;</div>
+
+                <div>
+                    <span>Folders here</span>
+                    <strong id="folderCount">0</strong>
+                </div>
+            </div>
+
+
+            <div class="stat-card">
+                <div class="stat-icon files">&#128196;</div>
+
+                <div>
+                    <span>Files here</span>
+                    <strong id="fileCount">0</strong>
+                </div>
+            </div>
+
+
+            <div class="stat-card">
+                <div class="stat-icon size">&#9878;</div>
+
+                <div>
+                    <span>Total size</span>
+                    <strong id="totalSize">0 KB</strong>
+                </div>
+            </div>
+
+
+            <div class="stat-card">
+                <div class="stat-icon location">&#128205;</div>
+
+                <div>
+                    <span>Current location</span>
+                    <strong id="currentLocation">Home</strong>
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- BREADCRUMB -->
+        <section class="breadcrumb" id="breadcrumb">
+            <span class="crumb active" onclick="goToRoot()">Home</span>
+        </section>
+
+
+        <!-- FOLDER GRID -->
+        <section class="panel">
+
+            <div class="panel-header">
+                <h3>Folders</h3>
+            </div>
+
+            <div id="folderGrid" class="folder-grid"></div>
+
+        </section>
+
+
+        <!-- FILE TABLE -->
+        <section class="panel">
+
+            <div class="panel-header">
+                <h3>Files</h3>
+            </div>
+
+            <table class="file-table">
+
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Size</th>
+                    <th>Version</th>
+                    <th>Uploaded</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+
+                <tbody id="fileTableBody"></tbody>
+
+            </table>
+
+            <div id="fileEmptyState" class="empty-state" style="display:none;">
+                No files in this folder yet.
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<!-- NEW FOLDER MODAL -->
+<div id="folderModal" class="modal">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <div>
+                <p class="eyebrow">FILE MANAGER</p>
+                <h2>New folder</h2>
+            </div>
+
+            <button class="close-btn" onclick="closeFolderModal()">&times;</button>
+
+        </div>
+
+        <form id="folderForm">
+
+            <div class="form-group">
+                <label for="folderName">Folder name *</label>
+                <input type="text" id="folderName" required placeholder="e.g. Reports">
+            </div>
+
+            <div id="folderFormMessage" class="form-message"></div>
+
+            <div class="modal-actions">
+                <button type="button" class="secondary-btn" onclick="closeFolderModal()">Cancel</button>
+                <button type="submit" class="primary-btn">Create folder</button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- UPLOAD MODAL (also used for "new version") -->
+<div id="uploadModal" class="modal">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <div>
+                <p class="eyebrow">FILE MANAGER</p>
+                <h2 id="uploadModalTitle">Upload file</h2>
+            </div>
+
+            <button class="close-btn" onclick="closeUploadModal()">&times;</button>
+
+        </div>
+
+        <form id="uploadForm">
+
+            <div class="form-group">
+                <label for="uploadFile">File *</label>
+                <input type="file" id="uploadFile" required>
+            </div>
+
+            <div class="form-group" id="fileTypeGroup">
+                <label for="uploadFileType">File type</label>
+                <select id="uploadFileType">
+                    <option value="DOCUMENT">Document</option>
+                    <option value="PDF">PDF</option>
+                    <option value="IMAGE">Image</option>
+                    <option value="VIDEO">Video</option>
+                    <option value="SPREADSHEET">Spreadsheet</option>
+                    <option value="PRESENTATION">Presentation</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="changeNoteGroup" style="display:none;">
+                <label for="changeNote">Change note</label>
+                <input type="text" id="changeNote" placeholder="What changed in this version?">
+            </div>
+
+            <div id="uploadFormMessage" class="form-message"></div>
+
+            <div class="modal-actions">
+                <button type="button" class="secondary-btn" onclick="closeUploadModal()">Cancel</button>
+                <button type="submit" class="primary-btn">Upload</button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- VERSIONS MODAL -->
+<div id="versionsModal" class="modal">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <div>
+                <p class="eyebrow">VERSION HISTORY</p>
+                <h2 id="versionsModalTitle">Versions</h2>
+            </div>
+
+            <button class="close-btn" onclick="closeVersionsModal()">&times;</button>
+
+        </div>
+
+        <div id="versionList" class="version-list"></div>
+
+    </div>
+
+</div>
+
+
+<script src="/js/files.js"></script>
+
+</body>
+</html>
