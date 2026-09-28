@@ -119,6 +119,15 @@
             color: #ffffff;
         }
     </style>
+    <meta charset="UTF-8">
+    <title>FINC Workplace</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="images/favicon.png">   
+
+    
+    <!-- Your existing CSS links -->
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
@@ -156,10 +165,13 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Password</label>
-                        <div class="input-group">
+                        <label for="loginPassword" class="form-label">Password</label>
+                        <div class="input-group" style="position: relative;">
                             <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
-                            <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
+                            <input type="password" id="loginPassword" class="form-control" placeholder="Enter your password" style="padding-right: 45px;">
+                            <i class="fa-solid fa-eye toggle-password" 
+                            data-target="#loginPassword"
+                            style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); z-index: 100; cursor: pointer; color: #6c757d; pointer-events: auto;"></i>
                         </div>
                     </div>
                     <button type="submit" class="btn btn-custom w-100 mt-2">Log In to Workspace</button>
@@ -194,12 +206,15 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Password</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fa-solid fa-key"></i></span>
-                            <input type="password" id="regPassword" class="form-control" placeholder="••••••••" required>
+                        <label for="password" class="form-label">Password</label>
+                        <div class="input-group" style="position: relative;">
+                            <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                            <input type="password" id="password" class="form-control" placeholder="Enter your password" style="padding-right: 40px;">
+                            <i class="fa-solid fa-eye toggle-password" 
+                               data-target="#password"
+                               style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); z-index: 100; cursor: pointer; color: #6c757d; pointer-events: auto;"></i>
                         </div>
-                    </div>
+                    </div>      
                     <button type="submit" class="btn btn-custom w-100 mt-2" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">Create Account</button>
                 </form>
             </div>
@@ -278,6 +293,26 @@
             }
         } catch (err) {
             showAlert("Server unreachable. Ensure Spring Boot is running on port 8081.", false);
+        }
+    });
+
+    document.addEventListener('click', function (e) {
+    // Check if the clicked element is an eye icon
+        const toggleBtn = e.target.closest('.toggle-password');
+        if (!toggleBtn) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const targetId = toggleBtn.getAttribute('data-target');
+        const passwordInput = document.querySelector(targetId);
+
+        if (passwordInput) {
+            const isPassword = passwordInput.getAttribute('type') === 'password';
+            passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+        
+            toggleBtn.classList.toggle('fa-eye');
+            toggleBtn.classList.toggle('fa-eye-slash');
         }
     });
 </script>
