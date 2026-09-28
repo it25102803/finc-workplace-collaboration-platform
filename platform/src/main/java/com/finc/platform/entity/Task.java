@@ -1,6 +1,7 @@
 package com.finc.platform.entity;
 
 import jakarta.persistence.*;
+
 import java.time.LocalDate;
 
 @Entity
@@ -12,6 +13,8 @@ public class Task {
     private Long taskId;
 
     private String title;
+
+    @Column(length = 2000)
     private String description;
 
     @Enumerated(EnumType.STRING)
@@ -20,40 +23,92 @@ public class Task {
     @Enumerated(EnumType.STRING)
     private TaskPriority priority;
 
-    private Integer progress = 0;
+    private Integer progress;
+
     private LocalDate startDate;
+
     private LocalDate dueDate;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    // =========================================================
+    // ASSIGNED USER
+    // =========================================================
+    @ManyToOne
+    @JoinColumn(name = "assigned_user_id")
     private User assignedUser;
 
-    public Task() {}
+    // =========================================================
+    // GETTERS AND SETTERS
+    // =========================================================
 
-    public Long getTaskId() { return taskId; }
-    public void setTaskId(Long taskId) { this.taskId = taskId; }
+    public Long getTaskId() {
+        return taskId;
+    }
 
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
+    public void setTaskId(Long taskId) {
+        this.taskId = taskId;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public String getTitle() {
+        return title;
+    }
 
-    public TaskStatus getStatus() { return status; }
-    public void setStatus(TaskStatus status) { this.status = status; }
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
-    public TaskPriority getPriority() { return priority; }
-    public void setPriority(TaskPriority priority) { this.priority = priority; }
+    public String getDescription() {
+        return description;
+    }
 
-    public Integer getProgress() { return progress; }
-    public void setProgress(Integer progress) { this.progress = progress; }
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-    public LocalDate getStartDate() { return startDate; }
-    public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
+    public TaskStatus getStatus() {
+        return status;
+    }
 
-    public LocalDate getDueDate() { return dueDate; }
-    public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }
+    public void setStatus(TaskStatus status) {
+        this.status = status;
+    }
 
-    public User getAssignedUser() { return assignedUser; }
-    public void setAssignedUser(User assignedUser) { this.assignedUser = assignedUser; }
+    public TaskPriority getPriority() {
+        return priority;
+    }
+
+    public void setPriority(TaskPriority priority) {
+        this.priority = priority;
+    }
+
+    public Integer getProgress() {
+        return progress;
+    }
+
+    public void setProgress(Integer progress) {
+        this.progress = progress;
+    }
+
+    public LocalDate getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(LocalDate startDate) {
+        this.startDate = startDate;
+    }
+
+    public LocalDate getDueDate() {
+        return dueDate;
+    }
+
+    public void setDueDate(LocalDate dueDate) {
+        this.dueDate = dueDate;
+    }
+
+    public User getAssignedUser() {
+        return assignedUser;
+    }
+
+    public void setAssignedUser(User assignedUser) {
+        this.assignedUser = assignedUser;
+    }
 }

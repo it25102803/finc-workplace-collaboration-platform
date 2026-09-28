@@ -23,36 +23,88 @@ public class TaskService {
         this.userRepository = userRepository;
     }
 
+    // =========================================================
+    // GET ALL TASKS
+    // =========================================================
     public List<Task> getAllTasks() {
+
         return taskRepository.findAll();
     }
 
-    public Task getTaskById(Long taskId) {
-        return taskRepository.findById(taskId)
+    // =========================================================
+    // GET TASKS ASSIGNED TO ONE USER
+    //
+    // This is important for your problem.
+    //
+    // If userId = 5, only tasks assigned to User 5
+    // will be returned.
+    // =========================================================
+    public List<Task> getTasksByUser(Long userId) {
+
+        User user = userRepository.findById(userId)
                 .orElseThrow(() ->
-                        new RuntimeException("Task not found with ID: " + taskId));
+                        new RuntimeException(
+                                "User not found with ID: " + userId
+                        )
+                );
+
+        return taskRepository.findByAssignedUser(user);
     }
 
-    public Task createTask(Task task, Long assignedUserId) {
+    // =========================================================
+    // GET TASK BY ID
+    // =========================================================
+    public Task getTaskById(Long taskId) {
 
+        return taskRepository.findById(taskId)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Task not found with ID: " + taskId
+                        )
+                );
+    }
+
+    // =========================================================
+    // CREATE TASK
+    // =========================================================
+    public Task createTask(
+            Task task,
+            Long assignedUserId
+    ) {
+
+        /*
+         * If a user was selected,
+         * find that user from the database
+         * and assign the task to that user.
+         */
         if (assignedUserId != null) {
 
             User user = userRepository.findById(assignedUserId)
                     .orElseThrow(() ->
                             new RuntimeException(
-                                    "User not found with ID: " + assignedUserId
-                            ));
+                                    "User not found with ID: "
+                                            + assignedUserId
+                            )
+                    );
 
             task.setAssignedUser(user);
         }
 
+        /*
+         * New tasks start with 0% progress
+         * if no progress was provided.
+         */
         if (task.getProgress() == null) {
+
             task.setProgress(0);
         }
 
         return taskRepository.save(task);
     }
 
+    // =========================================================
+    // UPDATE TASK
+    // =========================================================
     public Task updateTask(
             Long taskId,
             Task updatedTask,
@@ -61,33 +113,65 @@ public class TaskService {
 
         Task existingTask = getTaskById(taskId);
 
-        existingTask.setTitle(updatedTask.getTitle());
-        existingTask.setDescription(updatedTask.getDescription());
-        existingTask.setStatus(updatedTask.getStatus());
-        existingTask.setPriority(updatedTask.getPriority());
-        existingTask.setProgress(updatedTask.getProgress());
-        existingTask.setStartDate(updatedTask.getStartDate());
-        existingTask.setDueDate(updatedTask.getDueDate());
+        // Update basic task information
+        existingTask.setTitle(
+                updatedTask.getTitle()
+        );
 
+        existingTask.setDescription(
+                updatedTask.getDescription()
+        );
+
+        existingTask.setStatus(
+                updatedTask.getStatus()
+        );
+
+        existingTask.setPriority(
+                updatedTask.getPriority()
+        );
+
+        existingTask.setProgress(
+                updatedTask.getProgress()
+        );
+
+        existingTask.setStartDate(
+                updatedTask.getStartDate()
+        );
+
+        existingTask.setDueDate(
+                updatedTask.getDueDate()
+        );
+
+        /*
+         * Update assigned user.
+         */
         if (assignedUserId != null) {
 
             User user = userRepository.findById(assignedUserId)
                     .orElseThrow(() ->
                             new RuntimeException(
-                                    "User not found with ID: " + assignedUserId
-                            ));
+                                    "User not found with ID: "
+                                            + assignedUserId
+                            )
+                    );
 
             existingTask.setAssignedUser(user);
+
         } else {
+
             existingTask.setAssignedUser(null);
         }
 
         return taskRepository.save(existingTask);
     }
 
+    // =========================================================
+    // DELETE TASK
+    // =========================================================
     public void deleteTask(Long taskId) {
 
         if (!taskRepository.existsById(taskId)) {
+
             throw new RuntimeException(
                     "Task not found with ID: " + taskId
             );
@@ -96,39 +180,60 @@ public class TaskService {
         taskRepository.deleteById(taskId);
     }
 
-    public Task updateProgress(Long taskId, Integer progress) {
+    // =========================================================
+    // UPDATE TASK PROGRESS
+    // =========================================================
+    public Task updateProgress(
+            Long taskId,
+            Integer progress
+    ) {
 
         Task task = getTaskById(taskId);
 
-        if (progress < 0 || progress > 100) {
+        // Check progress value
+        if (progress == null || progress < 0 || progress > 100) {
+
             throw new IllegalArgumentException(
                     "Progress must be between 0 and 100"
             );
         }
 
+        // Update progress
         task.setProgress(progress);
 
+        /*
+         * Automatically change task status
+         * according to progress.
+         */
         if (progress == 100) {
-            task.setStatus(TaskStatus.COMPLETED);
+
+            task.setStatus(
+                    TaskStatus.COMPLETED
+            );
+
         } else if (progress > 0) {
-            task.setStatus(TaskStatus.IN_PROGRESS);
+
+            task.setStatus(
+                    TaskStatus.IN_PROGRESS
+            );
+
+        } else {
+
+            task.setStatus(
+                    TaskStatus.TODO
+            );
         }
 
         return taskRepository.save(task);
     }
 
-    public List<Task> getTasksByUser(Long userId) {
+    // =========================================================
+    // GET TASKS BY STATUS
+    // =========================================================
+    public List<Task> getTasksByStatus(
+            TaskStatus status
+    ) {
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "User not found with ID: " + userId
-                        ));
-
-        return taskRepository.findByAssignedUser(user);
-    }
-
-    public List<Task> getTasksByStatus(TaskStatus status) {
         return taskRepository.findByStatus(status);
     }
 }

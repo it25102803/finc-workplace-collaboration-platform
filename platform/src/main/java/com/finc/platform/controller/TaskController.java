@@ -19,40 +19,84 @@ public class TaskController {
         this.taskService = taskService;
     }
 
+    // =========================================================
     // GET ALL TASKS
+    // =========================================================
     @GetMapping
     public ResponseEntity<List<Task>> getAllTasks() {
-        return ResponseEntity.ok(taskService.getAllTasks());
+
+        return ResponseEntity.ok(
+                taskService.getAllTasks()
+        );
     }
 
+    // =========================================================
+    // GET TASKS ASSIGNED TO A SPECIFIC USER
+    //
+    // Example:
+    // GET /api/tasks/user/5
+    //
+    // This returns ONLY tasks assigned to User ID 5.
+    // =========================================================
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Task>> getTasksByUser(
+            @PathVariable Long userId
+    ) {
+
+        return ResponseEntity.ok(
+                taskService.getTasksByUser(userId)
+        );
+    }
+
+    // =========================================================
     // GET TASK BY ID
+    //
+    // Example:
+    // GET /api/tasks/10
+    // =========================================================
     @GetMapping("/{id}")
     public ResponseEntity<Task> getTaskById(
             @PathVariable Long id
     ) {
+
         return ResponseEntity.ok(
                 taskService.getTaskById(id)
         );
     }
 
+    // =========================================================
     // CREATE TASK
+    //
+    // Example:
+    // POST /api/tasks?assignedUserId=5
+    // =========================================================
     @PostMapping
     public ResponseEntity<Task> createTask(
             @RequestBody Task task,
             @RequestParam(required = false) Long assignedUserId
     ) {
+
         return ResponseEntity.ok(
-                taskService.createTask(task, assignedUserId)
+                taskService.createTask(
+                        task,
+                        assignedUserId
+                )
         );
     }
 
+    // =========================================================
     // UPDATE TASK
+    //
+    // Example:
+    // PUT /api/tasks/10?assignedUserId=5
+    // =========================================================
     @PutMapping("/{id}")
     public ResponseEntity<Task> updateTask(
             @PathVariable Long id,
             @RequestBody Task task,
             @RequestParam(required = false) Long assignedUserId
     ) {
+
         return ResponseEntity.ok(
                 taskService.updateTask(
                         id,
@@ -62,7 +106,12 @@ public class TaskController {
         );
     }
 
+    // =========================================================
     // DELETE TASK
+    //
+    // Example:
+    // DELETE /api/tasks/10
+    // =========================================================
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteTask(
             @PathVariable Long id
@@ -75,7 +124,12 @@ public class TaskController {
         );
     }
 
-    // UPDATE PROGRESS
+    // =========================================================
+    // UPDATE TASK PROGRESS
+    //
+    // Example:
+    // PATCH /api/tasks/10/progress?progress=75
+    // =========================================================
     @PatchMapping("/{id}/progress")
     public ResponseEntity<Task> updateProgress(
             @PathVariable Long id,
@@ -90,18 +144,12 @@ public class TaskController {
         );
     }
 
-    // GET TASKS FOR USER
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Task>> getTasksByUser(
-            @PathVariable Long userId
-    ) {
-
-        return ResponseEntity.ok(
-                taskService.getTasksByUser(userId)
-        );
-    }
-
+    // =========================================================
     // GET TASKS BY STATUS
+    //
+    // Example:
+    // GET /api/tasks/status/IN_PROGRESS
+    // =========================================================
     @GetMapping("/status/{status}")
     public ResponseEntity<List<Task>> getTasksByStatus(
             @PathVariable TaskStatus status
