@@ -50,13 +50,13 @@ public class AuthService {
         user.setLastName(registerRequest.getLastName());
         user.setStatus(UserStatus.ONLINE);
 
-     // Assign default ROLE_EMPLOYEE role
-Role defaultRole = roleRepository.findByRoleType(RoleType.ROLE_EMPLOYEE)
-        .orElseGet(() -> {
-            Role role = new Role();
-            role.setRoleType(RoleType.ROLE_EMPLOYEE);
-            return roleRepository.save(role);
-        });
+        // Assign default ROLE_EMPLOYEE role
+        Role defaultRole = roleRepository.findByRoleType(RoleType.ROLE_EMPLOYEE)
+                .orElseGet(() -> {
+                    Role role = new Role();
+                    role.setRoleType(RoleType.ROLE_EMPLOYEE);
+                    return roleRepository.save(role);
+                });
 
         Set<Role> roles = new HashSet<>();
         roles.add(defaultRole);
@@ -69,9 +69,10 @@ Role defaultRole = roleRepository.findByRoleType(RoleType.ROLE_EMPLOYEE)
             user.setDepartment(department);
         }
 
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
 
-        return new AuthResponse(null, user.getUsername(), user.getEmail(), "User registered successfully!");
+        // Updated AuthResponse with savedUser.getUserId() as first argument
+        return new AuthResponse(savedUser.getId(), null, savedUser.getUsername(), savedUser.getEmail(), "User registered successfully!");
     }
 
     public AuthResponse loginUser(LoginRequest loginRequest) {
@@ -85,5 +86,7 @@ Role defaultRole = roleRepository.findByRoleType(RoleType.ROLE_EMPLOYEE)
         user.setStatus(UserStatus.ONLINE);
         userRepository.save(user);
 
-return new AuthResponse("MOCK_JWT_TOKEN_" + user.getUsername(), user.getUsername(), user.getEmail(), "Login successful!");    }
+        // Updated AuthResponse with user.getUserId() as first argument
+        return new AuthResponse(user.getId(), "MOCK_JWT_TOKEN_" + user.getUsername(), user.getUsername(), user.getEmail(), "Login successful!");
+    }
 }
