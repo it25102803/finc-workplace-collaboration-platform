@@ -25,26 +25,26 @@
             padding: 24px 16px;
             transition: all 0.3s;
         }
-      .sidebar-brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    margin-bottom: 24px;
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 24px;
         }
         .sidebar-brand-logo {
-    max-width: 110px;
-    height: auto;
-    object-fit: contain;
-    background: #ffffff;
-    padding: 4px 8px;
-    border-radius: 6px;
+            max-width: 110px;
+            height: auto;
+            object-fit: contain;
+            background: #ffffff;
+            padding: 4px 8px;
+            border-radius: 6px;
         }
         .sidebar-brand span {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #f8fafc;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #f8fafc;
         }
         .nav-link-custom {
             display: flex;
@@ -121,12 +121,9 @@
             letter-spacing: 0.5px;
         }
     </style>
-    <meta charset="UTF-8">
-    <title>FINC Workplace</title>
-    
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="images/favicon.png">    
-    <!-- Your existing CSS links -->
+    <!-- External CSS -->
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -134,19 +131,19 @@
 <!-- Sidebar Navigation -->
 <div class="sidebar">
     <div class="sidebar-brand">
-    <img src="images/finc-logo.png" alt="Finc Logo" class="sidebar-brand-logo" onerror="this.src='https://via.placeholder.com/40?text=FINC'">
-    <span>Enterprise Portal</span>
+        <img src="images/finc-logo.png" alt="Finc Logo" class="sidebar-brand-logo" onerror="this.src='https://via.placeholder.com/40?text=FINC'">
+        <span>Enterprise Portal</span>
     </div>
     
     <nav>
-    <a href="dashboard.html" class="nav-link-custom active"><i class="fa-solid fa-chart-pie"></i> Overview</a>
-    <a href="users.html" class="nav-link-custom"><i class="fa-solid fa-users"></i> User Directory</a>
-    <a href="channels.html" class="nav-link-custom"><i class="fa-solid fa-comments"></i> Channels & Chat</a>
-    <a href="tasks.html" class="nav-link-custom"><i class="fa-solid fa-list-check"></i> Task Management</a>
-    <a href="calendar.html" class="nav-link-custom"><i class="fa-solid fa-calendar-days"></i> Calendar & Meetings</a>
-    <a href="files.html" class="nav-link-custom"><i class="fa-solid fa-folder-open"></i> File Manager</a>
-    <a href="knowledge.html" class="nav-link-custom"><i class="fa-solid fa-book"></i> Knowledge Base</a>
-    <a href="settings.html" class="nav-link-custom"><i class="fa-solid fa-gear"></i> Settings</a>
+        <a href="dashboard.html" class="nav-link-custom active"><i class="fa-solid fa-chart-pie"></i> Overview</a>
+        <a href="users.html" class="nav-link-custom"><i class="fa-solid fa-users"></i> User Directory</a>
+        <a href="channels.html" class="nav-link-custom"><i class="fa-solid fa-comments"></i> Channels & Chat</a>
+        <a href="tasks.html" class="nav-link-custom"><i class="fa-solid fa-list-check"></i> Task Management</a>
+        <a href="calendar.html" class="nav-link-custom"><i class="fa-solid fa-calendar-days"></i> Calendar & Meetings</a>
+        <a href="files.html" class="nav-link-custom"><i class="fa-solid fa-folder-open"></i> File Manager</a>
+        <a href="knowledge.html" class="nav-link-custom"><i class="fa-solid fa-book"></i> Knowledge Base</a>
+        <a href="settings.html" class="nav-link-custom"><i class="fa-solid fa-gear"></i> Settings</a>
     </nav>
 </div>
 
@@ -184,7 +181,8 @@
                 <div class="metric-icon" style="background: #eff6ff; color: #2563eb;">
                     <i class="fa-solid fa-user-gear"></i>
                 </div>
-                <div class="metric-val" id="metric-user-scope">Member 1</div>
+                <!-- Displays formatted User ID (e.g. #USR-001) -->
+                <div class="metric-val" id="metric-user-scope">#USR-000</div>
                 <div class="metric-lbl">User Scope</div>
             </div>
         </div>
@@ -216,13 +214,29 @@
             </div>
         </div>
     </div>
-
+</div>
 
 <script>
-    const username = localStorage.getItem("username") || "User";
-    document.getElementById("displayName").textContent = username;
-    document.getElementById("welcomeHeading").textContent = `Welcome back, ${username}!`;
+    document.addEventListener("DOMContentLoaded", () => {
+        const username = localStorage.getItem("username") || "User";
+        const userId = localStorage.getItem("userId");
 
+        // Set navbar and banner welcome messages
+        document.getElementById("displayName").textContent = username;
+        document.getElementById("welcomeHeading").textContent = `Welcome back, ${username}!`;
+
+        // Populate User ID into the Member 1 / User Scope block
+        const userScopeEl = document.getElementById("metric-user-scope");
+        if (userScopeEl) {
+            if (userId && userId !== "null" && userId !== "undefined") {
+                userScopeEl.textContent = `#USR-${String(userId).padStart(3, '0')}`;
+            } else {
+                userScopeEl.textContent = "N/A";
+            }
+        }
+    });
+
+    // Logout handling
     document.getElementById("logoutBtn").addEventListener("click", () => {
         localStorage.clear();
         window.location.href = "index.html";
