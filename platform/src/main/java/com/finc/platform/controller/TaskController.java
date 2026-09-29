@@ -22,7 +22,22 @@ public class TaskController {
     // GET ALL TASKS
     @GetMapping
     public ResponseEntity<List<Task>> getAllTasks() {
-        return ResponseEntity.ok(taskService.getAllTasks());
+
+        return ResponseEntity.ok(
+                taskService.getAllTasks()
+        );
+    }
+
+    // GET TASKS ASSIGNED TO A SPECIFIC USER
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Task>> getTasksByUser(
+            @PathVariable Long userId
+    ) {
+
+        return ResponseEntity.ok(
+                taskService.getTasksByUser(userId)
+        );
     }
 
     // GET TASK BY ID
@@ -30,6 +45,7 @@ public class TaskController {
     public ResponseEntity<Task> getTaskById(
             @PathVariable Long id
     ) {
+
         return ResponseEntity.ok(
                 taskService.getTaskById(id)
         );
@@ -41,8 +57,12 @@ public class TaskController {
             @RequestBody Task task,
             @RequestParam(required = false) Long assignedUserId
     ) {
+
         return ResponseEntity.ok(
-                taskService.createTask(task, assignedUserId)
+                taskService.createTask(
+                        task,
+                        assignedUserId
+                )
         );
     }
 
@@ -53,6 +73,7 @@ public class TaskController {
             @RequestBody Task task,
             @RequestParam(required = false) Long assignedUserId
     ) {
+
         return ResponseEntity.ok(
                 taskService.updateTask(
                         id,
@@ -75,7 +96,7 @@ public class TaskController {
         );
     }
 
-    // UPDATE PROGRESS
+    // UPDATE TASK PROGRESS
     @PatchMapping("/{id}/progress")
     public ResponseEntity<Task> updateProgress(
             @PathVariable Long id,
@@ -87,17 +108,6 @@ public class TaskController {
                         id,
                         progress
                 )
-        );
-    }
-
-    // GET TASKS FOR USER
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Task>> getTasksByUser(
-            @PathVariable Long userId
-    ) {
-
-        return ResponseEntity.ok(
-                taskService.getTasksByUser(userId)
         );
     }
 

@@ -64,6 +64,16 @@ public class FolderController {
         return ResponseEntity.ok(folderService.listContents(folderId).stream().map(FileResponse::from).toList());
     }
 
+    @GetMapping("/roots")
+    public ResponseEntity<List<FolderResponse>> listRootFolders(@RequestParam Long ownerId) {
+        return ResponseEntity.ok(folderService.listRootFolders(ownerId).stream().map(FolderResponse::from).toList());
+    }
+
+    @GetMapping("/{folderId}/subfolders")
+    public ResponseEntity<List<FolderResponse>> listSubFolders(@PathVariable Long folderId) {
+        return ResponseEntity.ok(folderService.listSubFolders(folderId).stream().map(FolderResponse::from).toList());
+    }
+
     @DeleteMapping("/{folderId}")
     public ResponseEntity<Void> delete(@PathVariable Long folderId) {
         folderService.delete(folderId);
