@@ -29,16 +29,10 @@ public class Task {
 
     private LocalDate dueDate;
 
-    // =========================================================
     // ASSIGNED USER
-    // =========================================================
     @ManyToOne
     @JoinColumn(name = "assigned_user_id")
     private User assignedUser;
-
-    // =========================================================
-    // GETTERS AND SETTERS
-    // =========================================================
 
     public Long getTaskId() {
         return taskId;

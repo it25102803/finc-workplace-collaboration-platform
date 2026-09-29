@@ -23,22 +23,13 @@ public class TaskService {
         this.userRepository = userRepository;
     }
 
-    // =========================================================
     // GET ALL TASKS
-    // =========================================================
     public List<Task> getAllTasks() {
 
         return taskRepository.findAll();
     }
 
-    // =========================================================
     // GET TASKS ASSIGNED TO ONE USER
-    //
-    // This is important for your problem.
-    //
-    // If userId = 5, only tasks assigned to User 5
-    // will be returned.
-    // =========================================================
     public List<Task> getTasksByUser(Long userId) {
 
         User user = userRepository.findById(userId)
@@ -51,9 +42,7 @@ public class TaskService {
         return taskRepository.findByAssignedUser(user);
     }
 
-    // =========================================================
     // GET TASK BY ID
-    // =========================================================
     public Task getTaskById(Long taskId) {
 
         return taskRepository.findById(taskId)
@@ -64,19 +53,12 @@ public class TaskService {
                 );
     }
 
-    // =========================================================
     // CREATE TASK
-    // =========================================================
     public Task createTask(
             Task task,
             Long assignedUserId
     ) {
 
-        /*
-         * If a user was selected,
-         * find that user from the database
-         * and assign the task to that user.
-         */
         if (assignedUserId != null) {
 
             User user = userRepository.findById(assignedUserId)
@@ -90,10 +72,7 @@ public class TaskService {
             task.setAssignedUser(user);
         }
 
-        /*
-         * New tasks start with 0% progress
-         * if no progress was provided.
-         */
+
         if (task.getProgress() == null) {
 
             task.setProgress(0);
@@ -102,9 +81,7 @@ public class TaskService {
         return taskRepository.save(task);
     }
 
-    // =========================================================
     // UPDATE TASK
-    // =========================================================
     public Task updateTask(
             Long taskId,
             Task updatedTask,
@@ -142,9 +119,8 @@ public class TaskService {
                 updatedTask.getDueDate()
         );
 
-        /*
-         * Update assigned user.
-         */
+
+        // Update assigned user.
         if (assignedUserId != null) {
 
             User user = userRepository.findById(assignedUserId)
@@ -165,9 +141,7 @@ public class TaskService {
         return taskRepository.save(existingTask);
     }
 
-    // =========================================================
     // DELETE TASK
-    // =========================================================
     public void deleteTask(Long taskId) {
 
         if (!taskRepository.existsById(taskId)) {
@@ -179,10 +153,7 @@ public class TaskService {
 
         taskRepository.deleteById(taskId);
     }
-
-    // =========================================================
     // UPDATE TASK PROGRESS
-    // =========================================================
     public Task updateProgress(
             Long taskId,
             Integer progress
@@ -201,10 +172,6 @@ public class TaskService {
         // Update progress
         task.setProgress(progress);
 
-        /*
-         * Automatically change task status
-         * according to progress.
-         */
         if (progress == 100) {
 
             task.setStatus(
@@ -227,9 +194,7 @@ public class TaskService {
         return taskRepository.save(task);
     }
 
-    // =========================================================
     // GET TASKS BY STATUS
-    // =========================================================
     public List<Task> getTasksByStatus(
             TaskStatus status
     ) {

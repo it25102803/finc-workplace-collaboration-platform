@@ -19,9 +19,7 @@ public class TaskController {
         this.taskService = taskService;
     }
 
-    // =========================================================
     // GET ALL TASKS
-    // =========================================================
     @GetMapping
     public ResponseEntity<List<Task>> getAllTasks() {
 
@@ -30,14 +28,8 @@ public class TaskController {
         );
     }
 
-    // =========================================================
     // GET TASKS ASSIGNED TO A SPECIFIC USER
-    //
-    // Example:
-    // GET /api/tasks/user/5
-    //
-    // This returns ONLY tasks assigned to User ID 5.
-    // =========================================================
+
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<Task>> getTasksByUser(
             @PathVariable Long userId
@@ -48,12 +40,7 @@ public class TaskController {
         );
     }
 
-    // =========================================================
     // GET TASK BY ID
-    //
-    // Example:
-    // GET /api/tasks/10
-    // =========================================================
     @GetMapping("/{id}")
     public ResponseEntity<Task> getTaskById(
             @PathVariable Long id
@@ -64,12 +51,7 @@ public class TaskController {
         );
     }
 
-    // =========================================================
     // CREATE TASK
-    //
-    // Example:
-    // POST /api/tasks?assignedUserId=5
-    // =========================================================
     @PostMapping
     public ResponseEntity<Task> createTask(
             @RequestBody Task task,
@@ -84,12 +66,7 @@ public class TaskController {
         );
     }
 
-    // =========================================================
     // UPDATE TASK
-    //
-    // Example:
-    // PUT /api/tasks/10?assignedUserId=5
-    // =========================================================
     @PutMapping("/{id}")
     public ResponseEntity<Task> updateTask(
             @PathVariable Long id,
@@ -106,12 +83,7 @@ public class TaskController {
         );
     }
 
-    // =========================================================
     // DELETE TASK
-    //
-    // Example:
-    // DELETE /api/tasks/10
-    // =========================================================
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteTask(
             @PathVariable Long id
@@ -124,12 +96,7 @@ public class TaskController {
         );
     }
 
-    // =========================================================
     // UPDATE TASK PROGRESS
-    //
-    // Example:
-    // PATCH /api/tasks/10/progress?progress=75
-    // =========================================================
     @PatchMapping("/{id}/progress")
     public ResponseEntity<Task> updateProgress(
             @PathVariable Long id,
@@ -144,12 +111,7 @@ public class TaskController {
         );
     }
 
-    // =========================================================
     // GET TASKS BY STATUS
-    //
-    // Example:
-    // GET /api/tasks/status/IN_PROGRESS
-    // =========================================================
     @GetMapping("/status/{status}")
     public ResponseEntity<List<Task>> getTasksByStatus(
             @PathVariable TaskStatus status

@@ -9,13 +9,9 @@ import java.util.List;
 
 public interface TaskRepository extends JpaRepository<Task, Long> {
 
-    // =========================================================
     // GET TASKS ASSIGNED TO A SPECIFIC USER
-    // =========================================================
     List<Task> findByAssignedUser(User user);
 
-    // =========================================================
     // GET TASKS BY STATUS
-    // =========================================================
     List<Task> findByStatus(TaskStatus status);
 }
