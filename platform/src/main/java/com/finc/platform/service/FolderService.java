@@ -79,16 +79,6 @@ public class FolderService {
         return fileRepository.findByFolder_FolderIdAndIsDeletedFalse(folderId);
     }
 
-    @Transactional(readOnly = true)
-    public List<Folder> listRootFolders(Long ownerId) {
-        return folderRepository.findByParentFolderIsNullAndOwner_Id(ownerId);
-    }
-
-    @Transactional(readOnly = true)
-    public List<Folder> listSubFolders(Long folderId) {
-        return folderRepository.findByParentFolder_FolderId(folderId);
-    }
-
     @Transactional
     public void delete(Long folderId) {
         folderRepository.deleteById(folderId);

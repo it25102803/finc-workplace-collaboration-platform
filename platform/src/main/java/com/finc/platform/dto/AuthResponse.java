@@ -2,7 +2,6 @@ package com.finc.platform.dto;
 
 public class AuthResponse {
 
-    private Long userId;
     private String token;
     private String username;
     private String email;
@@ -10,16 +9,12 @@ public class AuthResponse {
 
     public AuthResponse() {}
 
-    public AuthResponse(Long userId, String token, String username, String email, String message) {
-        this.userId = userId;
+    public AuthResponse(String token, String username, String email, String message) {
         this.token = token;
         this.username = username;
         this.email = email;
         this.message = message;
     }
-
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
 
     public String getToken() { return token; }
     public void setToken(String token) { this.token = token; }

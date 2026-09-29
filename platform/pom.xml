@@ -74,6 +74,18 @@
         <scope>runtime</scope>
     </dependency>
 
+    <!-- WebSocket Support (Includes Messaging automatically) -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-websocket</artifactId>
+    </dependency>
+
+    <!-- Mail Support -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-mail</artifactId>
+    </dependency>
+
     <!-- 7. H2 Database for local test profile -->
     <dependency>
         <groupId>com.h2database</groupId>
@@ -95,7 +107,6 @@
         <artifactId>spring-boot-starter-test</artifactId>
         <scope>test</scope>
     </dependency>
-
 </dependencies>
 
 	<build>
