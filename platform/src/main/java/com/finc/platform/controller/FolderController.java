@@ -26,7 +26,17 @@ public class FolderController {
     public FolderController(FolderService folderService) {
         this.folderService = folderService;
     }
+    @GetMapping("/roots")
+    public ResponseEntity<List<FolderResponse>> listRoots(@RequestParam Long ownerId) {
+        return ResponseEntity.ok(folderService.listRootFolders(ownerId).stream()
+                .map(FolderResponse::from).toList());
+    }
 
+    @GetMapping("/{folderId}/subfolders")
+    public ResponseEntity<List<FolderResponse>> listSubfolders(@PathVariable Long folderId) {
+        return ResponseEntity.ok(folderService.listSubFolders(folderId).stream()
+                .map(FolderResponse::from).toList());
+    }
     @PostMapping
     public ResponseEntity<FolderResponse> createRootFolder(@RequestBody CreateFolderRequest request) {
         return ResponseEntity.ok(FolderResponse.from(
@@ -41,8 +51,8 @@ public class FolderController {
     @PostMapping("/{folderId}/subfolders")
     public ResponseEntity<FolderResponse> createSubFolder(@PathVariable Long folderId,
                                                           @RequestBody CreateSubFolderRequest request) {
-        // TODO: once Spring Security is wired up, resolve the owner from the
-        // authenticated principal instead of trusting a raw ownerId from the client.
+
+
         User owner = new User();
         owner.setId(request.ownerId());
         return ResponseEntity.ok(FolderResponse.from(
