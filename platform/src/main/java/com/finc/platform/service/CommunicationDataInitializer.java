@@ -2,6 +2,7 @@ package com.finc.platform.service;
 
 import com.finc.platform.entity.Channel;
 import com.finc.platform.entity.ChannelType;
+import com.finc.platform.entity.KnowledgeItem;
 import com.finc.platform.entity.Message;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -55,6 +56,22 @@ public class CommunicationDataInitializer implements CommandLineRunner {
                         direct,
                         "John Employee",
                         "Can we review the channel requirements today?"
+                    ));
+                }
+
+                if (communicationService.getAllKnowledge().isEmpty()) {
+                    communicationService.createKnowledgeItem(new KnowledgeItem(
+                        "Project Kickoff Guide",
+                        "Use this guide to introduce the team, goals, and communication rules for the new workplace platform.",
+                        "Operations",
+                        "Admin User"
+                    ));
+
+                    communicationService.createKnowledgeItem(new KnowledgeItem(
+                        "Customer Response Template",
+                        "Acknowledge the request, confirm the timeline, and include the appropriate escalation contact when needed.",
+                        "Support",
+                        "John Employee"
                     ));
                 }
 
