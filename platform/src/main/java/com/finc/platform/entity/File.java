@@ -57,10 +57,6 @@ public class File {
     @OneToMany(mappedBy = "file", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FileVersion> versions = new ArrayList<>();
 
-    // attaches: KnowledgeArticle (0..*) --- File (0..*)
-    @ManyToMany(mappedBy = "attachedFiles")
-    private List<KnowledgeArticle> articles = new ArrayList<>();
-
     public File(String fileName, String mimeType, FileType fileType, Folder folder, User uploadedBy) {
         this.fileName = fileName;
         this.mimeType = mimeType;

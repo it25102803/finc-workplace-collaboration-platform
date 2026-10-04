@@ -2,7 +2,6 @@ package com.finc.platform.service;
 
 import com.finc.platform.entity.Channel;
 import com.finc.platform.entity.ChannelType;
-import com.finc.platform.entity.KnowledgeItem;
 import com.finc.platform.entity.Message;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -40,18 +39,16 @@ public class CommunicationDataInitializer implements CommandLineRunner {
 
             }
 
-                Channel direct = communicationService.getAllChannels().stream()
-                    .filter(channel -> channel.getType() == ChannelType.DIRECT)
-                    .findFirst()
-                    .orElseGet(() -> {
-                        Channel newDirect = new Channel(
-                            "John Employee",
-                            "Direct message with John Employee",
-                            ChannelType.DIRECT
-                        );
-                        newDirect.setMemberEmails(new java.util.ArrayList<>(java.util.List.of("admin@fincacademy.com", "john@fincacademy.com")));
-                        return communicationService.createChannel(newDirect);
-                    });
+                Channel direct = new Channel(
+                        "John Employee",
+                        "Direct message with John Employee",
+                        ChannelType.DIRECT
+                );
+                direct.setMemberEmails(new java.util.ArrayList<>(java.util.List.of(
+                        "admin@fincacademy.com",
+                        "john@fincacademy.com"
+                )));
+                direct = communicationService.createChannel(direct);
 
                 if (communicationService.getMessagesForChannel(direct.getId()).isEmpty()) {
                     communicationService.createMessage(direct.getId(), new Message(
@@ -61,20 +58,5 @@ public class CommunicationDataInitializer implements CommandLineRunner {
                     ));
                 }
 
-            if (communicationService.getAllKnowledge().isEmpty()) {
-            communicationService.createKnowledgeItem(new KnowledgeItem(
-                    "Project Kickoff Guide",
-                    "Use this guide to introduce the team, goals, and communication rules for the new workplace platform.",
-                    "Operations",
-                    "Admin User"
-            ));
-
-            communicationService.createKnowledgeItem(new KnowledgeItem(
-                    "Customer Response Template",
-                    "Acknowledge the request, confirm the timeline, and include the appropriate escalation contact when needed.",
-                    "Support",
-                    "John Employee"
-            ));
-        }
     }
 }
