@@ -16,6 +16,10 @@ const CURRENT_USER = (() => {
         };
     }
 })();
+const FALLBACK_USER_NAMES = {
+    "admin@fincacademy.com": "Admin User",
+    "john@fincacademy.com": "John Employee"
+};
 
 const state = {
     users: [],
@@ -1050,6 +1054,10 @@ async function loadUsers() {
     state.users = await response.json();
     renderMemberSelector();
     renderDirectMessageList();
+    const selectedChannel = getSelectedChannel();
+    if (selectedChannel?.type === "DIRECT") {
+        updateSelectedChannelHeader(selectedChannel);
+    }
 }
 
 async function loadChannels() {
@@ -1171,11 +1179,6 @@ function renderDirectMessageList() {
         }
     });
     const contactsByEmail = new Map();
-    const fallbackNames = {
-        "admin@fincacademy.com": "Admin User",
-        "john@fincacademy.com": "John Employee"
-    };
-
     state.channels
         .filter(channel => channel.type === "DIRECT")
         .forEach(channel => {
@@ -1191,20 +1194,28 @@ function renderDirectMessageList() {
                 .filter(email => email.toLowerCase() !== currentEmail)
                 .forEach(email => {
                     const key = email.toLowerCase();
-                    if (contactsByEmail.has(key)) {
-                        return;
-                    }
-
                     const user = usersByEmail.get(key);
                     const emailName = email.split("@")[0]
                         .split(/[._-]/)
                         .filter(Boolean)
                         .map(part => part.charAt(0).toUpperCase() + part.slice(1))
                         .join(" ");
+                    const pairChannel = state.channels.find(candidate => {
+                        if (candidate.type !== "DIRECT") {
+                            return false;
+                        }
+
+                        const candidateMembers = [...new Set((candidate.memberEmails || [])
+                            .filter(member => typeof member === "string" && member.trim())
+                            .map(member => member.trim().toLowerCase()))];
+                        return candidateMembers.length === 2
+                            && candidateMembers.includes(currentEmail)
+                            && candidateMembers.includes(key);
+                    });
                     contactsByEmail.set(key, {
                         email,
-                        name: user?.name || fallbackNames[key] || emailName || email,
-                        channelId: channel.id
+                        name: user?.name || FALLBACK_USER_NAMES[key] || emailName || email,
+                        channelId: pairChannel?.id ?? null
                     });
                 });
         });
@@ -1219,8 +1230,10 @@ function renderDirectMessageList() {
     container.innerHTML = contacts
         .map(contact => {
             const name = contact.name || contact.email;
+            const isActive = contact.channelId === state.selectedChannelId ? "active" : "";
             return `
-            <button class="channel-item" data-channel-id="${contact.channelId}">
+                <button class="channel-item ${isActive}" data-channel-id="${contact.channelId || ""}"
+                    data-user-email="${escapeHtml(contact.email)}" data-user-name="${escapeHtml(name)}">
                 <span class="channel-hash">${escapeHtml(name.charAt(0).toUpperCase())}</span>
                 <span>${escapeHtml(name)}</span>
             </button>
@@ -1230,7 +1243,12 @@ function renderDirectMessageList() {
 
     container.querySelectorAll(".channel-item").forEach(button => {
         button.addEventListener("click", () => {
-            selectChannel(Number(button.dataset.channelId));
+            const channelId = Number(button.dataset.channelId);
+            if (channelId) {
+                selectChannel(channelId);
+            } else {
+                startDirectMessage(button.dataset.userEmail, button.dataset.userName);
+            }
         });
     });
 }
@@ -1371,7 +1389,44 @@ function getSelectedChannel() {
 }
 
 function getUserByEmail(email) {
-    return state.users.find(user => user.email === email) || null;
+    const normalizedEmail = (email || "").trim().toLowerCase();
+    return state.users.find(user => (user.email || "").trim().toLowerCase() === normalizedEmail) || null;
+}
+
+function getDirectMessageContactName(channel) {
+    const currentEmail = CURRENT_USER.email.trim().toLowerCase();
+    const contactEmail = (channel.memberEmails || [])
+        .find(email => typeof email === "string" && email.trim().toLowerCase() !== currentEmail);
+
+    if (!contactEmail) {
+        return channel.name;
+    }
+
+    const normalizedEmail = contactEmail.trim().toLowerCase();
+    const user = getUserByEmail(normalizedEmail);
+    if (user?.name) {
+        return user.name;
+    }
+    if (FALLBACK_USER_NAMES[normalizedEmail]) {
+        return FALLBACK_USER_NAMES[normalizedEmail];
+    }
+
+    return normalizedEmail.split("@")[0]
+        .split(/[._-]/)
+        .filter(Boolean)
+        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(" ");
+}
+
+function updateSelectedChannelHeader(channel) {
+    const isDirectMessage = channel.type === "DIRECT";
+    const title = isDirectMessage ? getDirectMessageContactName(channel) : channel.name;
+    document.getElementById("chatTitle").textContent = title;
+    document.getElementById("channelMeta").textContent = isDirectMessage
+        ? `Direct message with ${title}`
+        : (channel.department
+            ? `${channel.department} department | ${channel.description || channel.type + " channel"}`
+            : (channel.description || `${channel.type} channel`));
 }
 
 function selectChannel(channelId) {
@@ -1382,12 +1437,9 @@ function selectChannel(channelId) {
         return;
     }
 
-    document.getElementById("chatTitle").textContent = channel.name;
-    document.getElementById("channelMeta").textContent = channel.department
-        ? `${channel.department} department | ${channel.description || channel.type + " channel"}`
-        : (channel.description || `${channel.type} channel`);
-
+    updateSelectedChannelHeader(channel);
     renderChannelList();
+    renderDirectMessageList();
     renderMemberSelector();
     renderMemberList();
     loadMessages(channelId);
@@ -1471,11 +1523,21 @@ function setAttachmentStatus(message, isError = false) {
 }
 
 async function startDirectMessage(userEmail, userName) {
+    const requestedMembers = [CURRENT_USER.email, userEmail]
+        .map(email => email.trim().toLowerCase())
+        .sort();
     const directChannel = state.channels.find(channel => {
-        const emails = channel.memberEmails || [];
-        return channel.type === "DIRECT"
-            && emails.includes(CURRENT_USER.email)
-            && emails.includes(userEmail);
+        if (channel.type !== "DIRECT") {
+            return false;
+        }
+
+        const members = [...new Set((channel.memberEmails || [])
+            .filter(email => typeof email === "string" && email.trim())
+            .map(email => email.trim().toLowerCase()))]
+            .sort();
+        return members.length === 2
+            && members[0] === requestedMembers[0]
+            && members[1] === requestedMembers[1];
     });
 
     if (directChannel) {
