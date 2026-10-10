@@ -1,120 +1,48 @@
 package com.finc.platform.controller;
 
 import com.finc.platform.entity.CalendarEvent;
+import com.finc.platform.entity.EventType;
+import com.finc.platform.repository.CalendarEventRepository;
 import com.finc.platform.service.CalendarEventService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/calendar")
-@CrossOrigin(origins = "*")
 public class CalendarController {
 
     private final CalendarEventService calendarEventService;
+    private final CalendarEventRepository calendarEventRepository;
 
-    public CalendarController(
-            CalendarEventService calendarEventService
-    ) {
+    public CalendarController(CalendarEventService calendarEventService, CalendarEventRepository calendarEventRepository) {
         this.calendarEventService = calendarEventService;
+        this.calendarEventRepository = calendarEventRepository;
     }
 
-    // GET ALL EVENTS
-    @GetMapping
-    public ResponseEntity<List<CalendarEvent>> getAllEvents() {
-
-        return ResponseEntity.ok(
-                calendarEventService.getAllEvents()
-        );
+    @GetMapping("/events")
+    public ResponseEntity<List<CalendarEvent>> getAllEvents(@RequestParam(required = false) Long userId) {
+        return ResponseEntity.ok(calendarEventService.getAllEvents(userId));
     }
 
-    // GET EVENT BY ID
-    @GetMapping("/{id}")
-    public ResponseEntity<CalendarEvent> getEventById(
-            @PathVariable Long id
-    ) {
-
-        return ResponseEntity.ok(
-                calendarEventService.getEventById(id)
-        );
+    @GetMapping("/holidays")
+    public ResponseEntity<List<CalendarEvent>> getHolidays() {
+        return ResponseEntity.ok(calendarEventRepository.findByEventType(EventType.HOLIDAY));
     }
 
-    // CREATE EVENT
-    @PostMapping
+    @PostMapping("/events")
     public ResponseEntity<CalendarEvent> createEvent(
             @RequestBody CalendarEvent event,
-            @RequestParam(required = false)
-            Long createdByUserId
+            @RequestParam(required = false, defaultValue = "1") Long userId
     ) {
-
-        return ResponseEntity.ok(
-                calendarEventService.createEvent(
-                        event,
-                        createdByUserId
-                )
-        );
+        CalendarEvent created = calendarEventService.createEvent(event, userId);
+        return ResponseEntity.ok(created);
     }
 
-    // UPDATE EVENT
-    @PutMapping("/{id}")
-    public ResponseEntity<CalendarEvent> updateEvent(
-            @PathVariable Long id,
-            @RequestBody CalendarEvent event
-    ) {
-
-        return ResponseEntity.ok(
-                calendarEventService.updateEvent(
-                        id,
-                        event
-                )
-        );
-    }
-
-    // DELETE EVENT
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteEvent(
-            @PathVariable Long id
-    ) {
-
+    @DeleteMapping("/events/{id}")
+    public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
         calendarEventService.deleteEvent(id);
-
-        return ResponseEntity.ok(
-                "Calendar event deleted successfully"
-        );
-    }
-
-    // EVENTS FOR SPECIFIC DATE
-    @GetMapping("/date/{date}")
-    public ResponseEntity<List<CalendarEvent>> getEventsByDate(
-            @PathVariable String date
-    ) {
-
-        LocalDate localDate = LocalDate.parse(date);
-
-        return ResponseEntity.ok(
-                calendarEventService.getEventsByDate(
-                        localDate
-                )
-        );
-    }
-
-    // EVENTS BETWEEN TWO DATES
-    @GetMapping("/range")
-    public ResponseEntity<List<CalendarEvent>> getEventsBetween(
-            @RequestParam String start,
-            @RequestParam String end
-    ) {
-
-        LocalDate startDate = LocalDate.parse(start);
-        LocalDate endDate = LocalDate.parse(end);
-
-        return ResponseEntity.ok(
-                calendarEventService.getEventsBetween(
-                        startDate,
-                        endDate
-                )
-        );
+        return ResponseEntity.noContent().build();
     }
 }

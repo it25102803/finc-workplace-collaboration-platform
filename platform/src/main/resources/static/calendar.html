@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar & Schedules | FINC Workspace</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/calendar.css">
+</head>
+<body>
+<div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon">F</div>
+            <div class="brand-text">
+                <span class="brand-name">FINC Academy</span>
+                <span class="brand-sub">WORKSPACE</span>
+            </div>
+        </div>
+        <nav class="nav-menu">
+            <a href="dashboard.html" class="nav-item"><i class="fa-solid fa-house"></i> Dashboard</a>
+            <a href="tasks.html" class="nav-item"><i class="fa-solid fa-list-check"></i> Tasks</a>
+            <a href="calendar.html" class="nav-item active"><i class="fa-solid fa-calendar-days"></i> Calendar</a>
+            <a href="files.html" class="nav-item"><i class="fa-solid fa-folder"></i> Files</a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-badge">
+                <div class="avatar">U</div>
+                <div>
+                    <div class="user-name">Team Member</div>
+                    <div class="user-role">Member 3</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Calendar Area -->
+    <main class="main-content">
+        <header class="top-header">
+            <div>
+                <h1 class="page-title">Calendar & Schedules</h1>
+                <p class="page-desc">Track meetings, task deadlines, company events, and national holidays.</p>
+            </div>
+            <button class="btn btn-primary" id="btnOpenModal">
+                <i class="fa-solid fa-plus"></i> Add Event
+            </button>
+        </header>
+
+        <!-- Navigation and Filter Controls -->
+        <section class="calendar-toolbar">
+            <div class="nav-controls">
+                <button class="btn btn-outline" id="btnToday">Today</button>
+                <div class="btn-group">
+                    <button class="btn-icon" id="btnPrevMonth"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button class="btn-icon" id="btnNextMonth"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+                <h2 class="current-month-label" id="currentMonthLabel">January 2026</h2>
+            </div>
+            <div class="filter-controls">
+                <div class="filter-wrapper">
+                    <i class="fa-solid fa-filter"></i>
+                    <select id="eventTypeFilter" class="form-select">
+                        <option value="ALL">All Events & Deadlines</option>
+                        <option value="HOLIDAY">Holidays & Poya Days</option>
+                        <option value="DEADLINE">Task Deadlines</option>
+                        <option value="MEETING">Meetings</option>
+                        <option value="COMPANY_EVENT">Company Events</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- Calendar Grid Container -->
+        <div class="calendar-card">
+            <div class="calendar-grid-header">
+                <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+        </div>
+
+        <!-- Legend -->
+        <div class="calendar-legend">
+            <span class="legend-item"><span class="dot dot-holiday"></span> 🌕 Holiday / Poya Day</span>
+            <span class="legend-item"><span class="dot dot-deadline"></span> 📌 Task Deadline</span>
+            <span class="legend-item"><span class="dot dot-meeting"></span> Meeting</span>
+            <span class="legend-item"><span class="dot dot-company"></span> Company Event</span>
+        </div>
+    </main>
+</div>
+
+<!-- Event Create Modal -->
+<div class="modal-overlay" id="eventModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3 class="modal-title">Schedule New Event</h3>
+            <button class="close-btn" id="btnCloseModal">&times;</button>
+        </div>
+        <form id="eventForm">
+            <div class="form-group">
+                <label class="form-label" for="eventTitle">Title *</label>
+                <input type="text" id="eventTitle" class="form-input" placeholder="e.g. Sprint Review Meeting" required>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="eventType">Type</label>
+                    <select id="eventType" class="form-select">
+                        <option value="MEETING">Meeting</option>
+                        <option value="COMPANY_EVENT">Company Event</option>
+                        <option value="REMINDER">Reminder</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="eventDate">Date *</label>
+                    <input type="date" id="eventDate" class="form-input" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="eventStartTime">Start Time</label>
+                    <input type="time" id="eventStartTime" class="form-input" value="09:00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="eventEndTime">End Time</label>
+                    <input type="time" id="eventEndTime" class="form-input" value="10:00">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="eventLocation">Location / Meeting URL</label>
+                <input type="text" id="eventLocation" class="form-input" placeholder="Conference Room 1 or Meet link">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="eventDesc">Description</label>
+                <textarea id="eventDesc" class="form-input" rows="3"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" id="btnCancelModal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Event</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Event Details Modal -->
+<div class="modal-overlay" id="detailModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3 class="modal-title" id="detailTitle">Event</h3>
+            <button class="close-btn" id="btnCloseDetail">&times;</button>
+        </div>
+        <div class="detail-body">
+            <div class="detail-badge" id="detailBadge"></div>
+            <p class="detail-row"><i class="fa-regular fa-calendar"></i> <span id="detailDate"></span></p>
+            <p class="detail-row"><i class="fa-regular fa-clock"></i> <span id="detailTime"></span></p>
+            <p class="detail-row" id="detailLocationRow"><i class="fa-solid fa-location-dot"></i> <span id="detailLocation"></span></p>
+            <p class="detail-desc" id="detailDesc"></p>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-danger" id="btnDeleteEvent" style="display:none;">Delete</button>
+            <button type="button" class="btn btn-outline" id="btnCloseDetailBtn">Close</button>
+        </div>
+    </div>
+</div>
+
+<script src="js/calendar.js"></script>
+</body>
+</html>
