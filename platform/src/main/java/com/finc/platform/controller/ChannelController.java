@@ -64,9 +64,9 @@ public class ChannelController {
     @PostMapping(value = "/{id}/messages/attachment", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Message> createAttachmentMessage(
             @PathVariable Long id,
-            @RequestParam String sender,
-            @RequestParam(required = false, defaultValue = "") String content,
-            @RequestPart MultipartFile attachment) {
+            @RequestParam("sender") String sender,
+            @RequestParam(name = "content", required = false, defaultValue = "") String content,
+            @RequestPart("attachment") MultipartFile attachment) {
 
         try {
             return ResponseEntity.ok(communicationService.createAttachmentMessage(id, sender, content, attachment));

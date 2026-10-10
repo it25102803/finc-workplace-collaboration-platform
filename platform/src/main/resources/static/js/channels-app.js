@@ -1,17 +1,29 @@
 const API_URL = "/api/users";
 const API_USERS = API_URL;
 const API_CHANNELS = "/api/channels";
-const API_KNOWLEDGE = "/api/knowledge";
 const API_NOTIFICATIONS = "/api/notifications";
-const CURRENT_USER = {
-    name: "Admin User",
-    email: "admin@fincacademy.com"
+const CURRENT_USER = (() => {
+    try {
+        const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+        return {
+            name: storedUser?.name || localStorage.getItem("username") || "Admin User",
+            email: storedUser?.email || "admin@fincacademy.com"
+        };
+    } catch {
+        return {
+            name: localStorage.getItem("username") || "Admin User",
+            email: "admin@fincacademy.com"
+        };
+    }
+})();
+const FALLBACK_USER_NAMES = {
+    "admin@fincacademy.com": "Admin User",
+    "john@fincacademy.com": "John Employee"
 };
 
 const state = {
     users: [],
     channels: [],
-    knowledge: [],
     selectedChannelId: null,
     notifications: [],
     renderedMessages: []
@@ -629,10 +641,6 @@ function showPage(pageId, button) {
             "Manage workplace documents"
         ],
 
-        knowledge: [
-            "Knowledge Base",
-            "Company knowledge repository"
-        ]
     };
 
 
@@ -939,7 +947,6 @@ document.addEventListener("DOMContentLoaded", () => {
     bindEvents();
     loadUsers();
     loadChannels();
-    loadKnowledge();
     loadNotifications();
     connectLiveUpdates();
     messagePollingTimer = setInterval(() => {
@@ -951,6 +958,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function bindEvents() {
     document.getElementById("messageForm").addEventListener("submit", sendMessage);
+    document.getElementById("attachmentInput").addEventListener("change", event => {
+        const attachment = event.currentTarget.files[0];
+        setAttachmentStatus(attachment ? `${attachment.name} selected. Select Send to upload.` : "");
+    });
     document.getElementById("notificationBtn").addEventListener("click", toggleNotifications);
     document.getElementById("sidebarToggle").addEventListener("click", toggleSidebar);
     document.getElementById("sidebarBackdrop").addEventListener("click", closeSidebar);
@@ -982,7 +993,7 @@ function bindEvents() {
     });
 
     document.getElementById("refreshBtn").addEventListener("click", async () => {
-        await Promise.all([loadUsers(), loadChannels(), loadKnowledge()]);
+        await Promise.all([loadUsers(), loadChannels()]);
     });
     document.getElementById("createChannelBtn").addEventListener("click", openChannelModal);
     document.getElementById("closeChannelModalBtn").addEventListener("click", closeChannelModal);
@@ -1043,6 +1054,10 @@ async function loadUsers() {
     state.users = await response.json();
     renderMemberSelector();
     renderDirectMessageList();
+    const selectedChannel = getSelectedChannel();
+    if (selectedChannel?.type === "DIRECT") {
+        updateSelectedChannelHeader(selectedChannel);
+    }
 }
 
 async function loadChannels() {
@@ -1055,26 +1070,17 @@ async function loadChannels() {
     renderChannelList();
     renderDirectMessageList();
 
-    if (!state.selectedChannelId && state.channels.length > 0) {
-        selectChannel(state.channels[0].id);
+    const fallbackChannel = state.channels.find(channel => channel.type !== "DIRECT") || state.channels[0];
+    if (!state.selectedChannelId && fallbackChannel) {
+        selectChannel(fallbackChannel.id);
     } else if (state.selectedChannelId) {
         const currentChannel = state.channels.find(channel => channel.id === state.selectedChannelId);
         if (currentChannel) {
             selectChannel(currentChannel.id);
-        } else if (state.channels.length > 0) {
-            selectChannel(state.channels[0].id);
+        } else if (fallbackChannel) {
+            selectChannel(fallbackChannel.id);
         }
     }
-}
-
-async function loadKnowledge() {
-    const response = await fetch(API_KNOWLEDGE);
-    if (!response.ok) {
-        throw new Error("Unable to load knowledge base");
-    }
-
-    state.knowledge = await response.json();
-    renderKnowledgeList();
 }
 
 async function loadNotifications() {
@@ -1136,20 +1142,20 @@ async function loadMessages(channelId) {
 
 function renderChannelList() {
     const container = document.getElementById("channelList");
+    const channels = state.channels.filter(channel => channel.type !== "DIRECT");
 
-    if (!state.channels.length) {
+    if (!channels.length) {
         container.innerHTML = '<div class="empty-state">No channels yet</div>';
         return;
     }
 
-    container.innerHTML = state.channels
+    container.innerHTML = channels
         .map(channel => {
             const isActive = channel.id === state.selectedChannelId ? "active" : "";
-            const wrapper = channel.type === "DIRECT" ? "@" : "#";
             const department = channel.department ? ` (${channel.department})` : "";
             return `
                 <button class="channel-item ${isActive}" data-id="${channel.id}">
-                    <span class="channel-hash">${wrapper}</span>
+                    <span class="channel-hash">#</span>
                     <span>${escapeHtml(channel.name)}${escapeHtml(department)}</span>
                 </button>
             `;
@@ -1163,25 +1169,86 @@ function renderChannelList() {
 
 function renderDirectMessageList() {
     const container = document.getElementById("directMessageList");
-    const users = state.users.filter(user => user.email !== CURRENT_USER.email);
+    const currentEmail = CURRENT_USER.email.trim().toLowerCase();
+    const usersByEmail = new Map();
+    state.users.forEach(user => {
+        const email = (user.email || "").trim();
+        const key = email.toLowerCase();
+        if (key && !usersByEmail.has(key)) {
+            usersByEmail.set(key, { ...user, email });
+        }
+    });
+    const contactsByEmail = new Map();
+    state.channels
+        .filter(channel => channel.type === "DIRECT")
+        .forEach(channel => {
+            const members = [...new Set((channel.memberEmails || [])
+                .filter(email => typeof email === "string" && email.trim())
+                .map(email => email.trim()))];
+            const normalizedMembers = members.map(email => email.toLowerCase());
+            if (!normalizedMembers.includes(currentEmail)) {
+                return;
+            }
 
-    if (!users.length) {
-        container.innerHTML = '<div class="empty-state">No teammates</div>';
+            members
+                .filter(email => email.toLowerCase() !== currentEmail)
+                .forEach(email => {
+                    const key = email.toLowerCase();
+                    const user = usersByEmail.get(key);
+                    const emailName = email.split("@")[0]
+                        .split(/[._-]/)
+                        .filter(Boolean)
+                        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+                        .join(" ");
+                    const pairChannel = state.channels.find(candidate => {
+                        if (candidate.type !== "DIRECT") {
+                            return false;
+                        }
+
+                        const candidateMembers = [...new Set((candidate.memberEmails || [])
+                            .filter(member => typeof member === "string" && member.trim())
+                            .map(member => member.trim().toLowerCase()))];
+                        return candidateMembers.length === 2
+                            && candidateMembers.includes(currentEmail)
+                            && candidateMembers.includes(key);
+                    });
+                    contactsByEmail.set(key, {
+                        email,
+                        name: user?.name || FALLBACK_USER_NAMES[key] || emailName || email,
+                        channelId: pairChannel?.id ?? null
+                    });
+                });
+        });
+
+    const contacts = [...contactsByEmail.values()];
+
+    if (!contacts.length) {
+        container.innerHTML = '<div class="empty-state">No direct conversations yet</div>';
         return;
     }
 
-    container.innerHTML = users
-        .map(user => `
-            <button class="channel-item" data-user-email="${user.email}" data-user-name="${user.name}">
-                <span class="channel-hash">${user.name.charAt(0).toUpperCase()}</span>
-                <span>${escapeHtml(user.name)}</span>
+    container.innerHTML = contacts
+        .map(contact => {
+            const name = contact.name || contact.email;
+            const isActive = contact.channelId === state.selectedChannelId ? "active" : "";
+            return `
+                <button class="channel-item ${isActive}" data-channel-id="${contact.channelId || ""}"
+                    data-user-email="${escapeHtml(contact.email)}" data-user-name="${escapeHtml(name)}">
+                <span class="channel-hash">${escapeHtml(name.charAt(0).toUpperCase())}</span>
+                <span>${escapeHtml(name)}</span>
             </button>
-        `)
+        `;
+        })
         .join("");
 
     container.querySelectorAll(".channel-item").forEach(button => {
         button.addEventListener("click", () => {
-            startDirectMessage(button.dataset.userEmail, button.dataset.userName);
+            const channelId = Number(button.dataset.channelId);
+            if (channelId) {
+                selectChannel(channelId);
+            } else {
+                startDirectMessage(button.dataset.userEmail, button.dataset.userName);
+            }
         });
     });
 }
@@ -1317,31 +1384,49 @@ function renderMemberList() {
     });
 }
 
-function renderKnowledgeList() {
-    const container = document.getElementById("knowledgeList");
-
-    if (!state.knowledge.length) {
-        container.innerHTML = '<li>No knowledge articles yet.</li>';
-        return;
-    }
-
-    container.innerHTML = state.knowledge
-        .slice(0, 5)
-        .map(item => `
-            <li>
-                <strong>${escapeHtml(item.title)}</strong>
-                <span>${escapeHtml(item.category)} • ${escapeHtml(item.createdBy)}</span>
-            </li>
-        `)
-        .join("");
-}
-
 function getSelectedChannel() {
     return state.channels.find(channel => channel.id === state.selectedChannelId) || null;
 }
 
 function getUserByEmail(email) {
-    return state.users.find(user => user.email === email) || null;
+    const normalizedEmail = (email || "").trim().toLowerCase();
+    return state.users.find(user => (user.email || "").trim().toLowerCase() === normalizedEmail) || null;
+}
+
+function getDirectMessageContactName(channel) {
+    const currentEmail = CURRENT_USER.email.trim().toLowerCase();
+    const contactEmail = (channel.memberEmails || [])
+        .find(email => typeof email === "string" && email.trim().toLowerCase() !== currentEmail);
+
+    if (!contactEmail) {
+        return channel.name;
+    }
+
+    const normalizedEmail = contactEmail.trim().toLowerCase();
+    const user = getUserByEmail(normalizedEmail);
+    if (user?.name) {
+        return user.name;
+    }
+    if (FALLBACK_USER_NAMES[normalizedEmail]) {
+        return FALLBACK_USER_NAMES[normalizedEmail];
+    }
+
+    return normalizedEmail.split("@")[0]
+        .split(/[._-]/)
+        .filter(Boolean)
+        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(" ");
+}
+
+function updateSelectedChannelHeader(channel) {
+    const isDirectMessage = channel.type === "DIRECT";
+    const title = isDirectMessage ? getDirectMessageContactName(channel) : channel.name;
+    document.getElementById("chatTitle").textContent = title;
+    document.getElementById("channelMeta").textContent = isDirectMessage
+        ? `Direct message with ${title}`
+        : (channel.department
+            ? `${channel.department} department | ${channel.description || channel.type + " channel"}`
+            : (channel.description || `${channel.type} channel`));
 }
 
 function selectChannel(channelId) {
@@ -1352,12 +1437,9 @@ function selectChannel(channelId) {
         return;
     }
 
-    document.getElementById("chatTitle").textContent = channel.name;
-    document.getElementById("channelMeta").textContent = channel.department
-        ? `${channel.department} department | ${channel.description || channel.type + " channel"}`
-        : (channel.description || `${channel.type} channel`);
-
+    updateSelectedChannelHeader(channel);
     renderChannelList();
+    renderDirectMessageList();
     renderMemberSelector();
     renderMemberList();
     loadMessages(channelId);
@@ -1372,53 +1454,90 @@ async function sendMessage(event) {
     const content = input.value.trim();
     const attachment = attachmentInput.files[0];
 
-    if ((!content && !attachment) || !state.selectedChannelId) {
+    if (!content && !attachment) {
         return;
     }
 
-    let response;
-    if (attachment) {
-        const formData = new FormData();
-        formData.append("sender", CURRENT_USER.name);
-        formData.append("content", content);
-        formData.append("attachment", attachment);
-        response = await fetch(`${API_CHANNELS}/${state.selectedChannelId}/messages/attachment`, {
-            method: "POST",
-            body: formData
-        });
-    } else {
-        const payload = {
-            sender: CURRENT_USER.name,
-            content,
-            channel: {
-                id: state.selectedChannelId
+    if (!state.selectedChannelId) {
+        setAttachmentStatus("Select a channel before sending.", true);
+        return;
+    }
+
+    if (attachment && attachment.size > 10 * 1024 * 1024) {
+        setAttachmentStatus("Files must be 10 MB or smaller.", true);
+        return;
+    }
+
+    setAttachmentStatus(attachment ? `Uploading ${attachment.name}...` : "");
+
+    try {
+        let response;
+        if (attachment) {
+            const formData = new FormData();
+            formData.append("sender", CURRENT_USER.name);
+            formData.append("content", content);
+            formData.append("attachment", attachment, attachment.name);
+            response = await fetch(`${API_CHANNELS}/${state.selectedChannelId}/messages/attachment`, {
+                method: "POST",
+                body: formData
+            });
+        } else {
+            const payload = {
+                sender: CURRENT_USER.name,
+                content,
+                channel: {
+                    id: state.selectedChannelId
+                }
             }
-        };
+            response = await fetch(`${API_CHANNELS}/${state.selectedChannelId}/messages`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+        }
 
-        response = await fetch(`${API_CHANNELS}/${state.selectedChannelId}/messages`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-        });
+        if (!response.ok) {
+            const message = response.status === 413
+                ? "The file exceeds the 10 MB upload limit."
+                : `Message upload failed (HTTP ${response.status}). Please try again.`;
+            throw new Error(message);
+        }
+
+        input.value = "";
+        attachmentInput.value = "";
+        setAttachmentStatus("");
+        await loadMessages(state.selectedChannelId);
+    } catch (error) {
+        console.error("Unable to send message", error);
+        setAttachmentStatus(error instanceof Error ? error.message : "Unable to send message. Please try again.", true);
     }
+}
 
-    if (!response.ok) {
-        throw new Error("Unable to send message");
-    }
-
-    input.value = "";
-    attachmentInput.value = "";
-    await loadMessages(state.selectedChannelId);
+function setAttachmentStatus(message, isError = false) {
+    const status = document.getElementById("attachmentStatus");
+    status.textContent = message;
+    status.hidden = !message;
+    status.classList.toggle("error", isError);
 }
 
 async function startDirectMessage(userEmail, userName) {
+    const requestedMembers = [CURRENT_USER.email, userEmail]
+        .map(email => email.trim().toLowerCase())
+        .sort();
     const directChannel = state.channels.find(channel => {
-        const emails = channel.memberEmails || [];
-        return channel.type === "DIRECT"
-            && emails.includes(CURRENT_USER.email)
-            && emails.includes(userEmail);
+        if (channel.type !== "DIRECT") {
+            return false;
+        }
+
+        const members = [...new Set((channel.memberEmails || [])
+            .filter(email => typeof email === "string" && email.trim())
+            .map(email => email.trim().toLowerCase()))]
+            .sort();
+        return members.length === 2
+            && members[0] === requestedMembers[0]
+            && members[1] === requestedMembers[1];
     });
 
     if (directChannel) {
@@ -1445,7 +1564,9 @@ async function startDirectMessage(userEmail, userName) {
         throw new Error("Unable to create direct message channel");
     }
 
+    const createdChannel = await response.json();
     await loadChannels();
+    selectChannel(createdChannel.id);
 }
 
 function openChannelModal() {

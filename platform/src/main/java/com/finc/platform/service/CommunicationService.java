@@ -14,8 +14,11 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.io.IOException;
 import java.util.Base64;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class CommunicationService {
@@ -60,7 +63,30 @@ public class CommunicationService {
             channel.setMemberEmails(new java.util.ArrayList<>());
         }
 
+        if (channel.getType() == ChannelType.DIRECT) {
+            Set<String> requestedMembers = normalizeMemberEmails(channel.getMemberEmails());
+            if (!requestedMembers.isEmpty()) {
+                Optional<Channel> existingDirect = channelRepository.findAll().stream()
+                        .filter(existing -> existing.getType() == ChannelType.DIRECT)
+                        .filter(existing -> normalizeMemberEmails(existing.getMemberEmails()).equals(requestedMembers))
+                        .findFirst();
+                if (existingDirect.isPresent()) {
+                    return existingDirect.get();
+                }
+            }
+        }
+
         return channelRepository.save(channel);
+    }
+
+    private Set<String> normalizeMemberEmails(List<String> memberEmails) {
+        Set<String> normalized = new HashSet<>();
+        for (String email : memberEmails) {
+            if (email != null && !email.isBlank()) {
+                normalized.add(email.trim().toLowerCase(Locale.ROOT));
+            }
+        }
+        return normalized;
     }
 
     public List<Message> getMessagesForChannel(Long channelId) {
@@ -158,4 +184,5 @@ public class CommunicationService {
     public void deleteKnowledgeItem(Long id) {
         knowledgeRepository.deleteById(id);
     }
+
 }
