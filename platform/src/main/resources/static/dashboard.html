@@ -136,14 +136,14 @@
     </div>
     
     <nav>
-    <a href="dashboard.html" class="nav-link-custom active"><i class="fa-solid fa-chart-pie"></i> Overview</a>
-    <a href="users.html" class="nav-link-custom"><i class="fa-solid fa-users"></i> User Directory</a>
-    <a href="channels.html" class="nav-link-custom"><i class="fa-solid fa-comments"></i> Channels & Chat</a>
-    <a href="tasks.html" class="nav-link-custom"><i class="fa-solid fa-list-check"></i> Task Management</a>
-    <a href="calendar.html" class="nav-link-custom"><i class="fa-solid fa-calendar-days"></i> Calendar & Meetings</a>
-    <a href="files.html" class="nav-link-custom"><i class="fa-solid fa-folder-open"></i> File Manager</a>
-    <a href="knowledge.html" class="nav-link-custom"><i class="fa-solid fa-book"></i> Knowledge Base</a>
-    <a href="settings.html" class="nav-link-custom"><i class="fa-solid fa-gear"></i> Settings</a>
+        <a href="dashboard.html" class="nav-link-custom active"><i class="fa-solid fa-chart-pie"></i> Overview</a>
+        <a href="users.html" class="nav-link-custom"><i class="fa-solid fa-users"></i> User Directory</a>
+        <a href="channels.html" class="nav-link-custom"><i class="fa-solid fa-comments"></i> Channels & Chat</a>
+        <a href="tasks.html" class="nav-link-custom"><i class="fa-solid fa-list-check"></i> Task Management</a>
+        <a href="calendar.html" class="nav-link-custom"><i class="fa-solid fa-calendar-days"></i> Calendar & Meetings</a>
+        <a href="files.html" class="nav-link-custom"><i class="fa-solid fa-folder-open"></i> File Manager</a>
+        <a href="knowledge.html" class="nav-link-custom"><i class="fa-solid fa-book"></i> Knowledge Base</a>
+        <a href="settings.html" class="nav-link-custom"><i class="fa-solid fa-gear"></i> Settings</a>
     </nav>
 </div>
 
@@ -181,8 +181,8 @@
                 <div class="metric-icon" style="background: #eff6ff; color: #2563eb;">
                     <i class="fa-solid fa-user-gear"></i>
                 </div>
-                <!-- Displays formatted User ID (e.g. #USR-001) -->
-                <div class="metric-val" id="metric-user-scope">#USR-000</div>
+                <!-- Clean 3-digit User ID Container -->
+                <div class="metric-val" id="metric-user-scope">001</div>
                 <div class="metric-lbl">User Scope</div>
             </div>
         </div>
@@ -216,31 +216,6 @@
     </div>
 </div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const username = localStorage.getItem("username") || "User";
-        const userId = localStorage.getItem("userId");
-
-        // Set navbar and banner welcome messages
-        document.getElementById("displayName").textContent = username;
-        document.getElementById("welcomeHeading").textContent = `Welcome back, ${username}!`;
-
-        // Populate User ID into the Member 1 / User Scope block
-        const userScopeEl = document.getElementById("metric-user-scope");
-        if (userScopeEl) {
-            if (userId && userId !== "null" && userId !== "undefined") {
-                userScopeEl.textContent = `#USR-${String(userId).padStart(3, '0')}`;
-            } else {
-                userScopeEl.textContent = "N/A";
-            }
-        }
-    });
-
-    // Logout handling
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-        localStorage.clear();
-        window.location.href = "index.html";
-    });
-</script>
+<script src="js/dashboard.js"></script>
 </body>
 </html>
