@@ -29,6 +29,17 @@ public class Department {
 
     private LocalDateTime createdAt;
 
+    // Custom Constructor 1: Single String argument (Fixes DataInitializer compilation error)
+    public Department(String name) {
+        this.name = name;
+    }
+
+    // Custom Constructor 2: Name and Description
+    public Department(String name, String description) {
+        this.name = name;
+        this.description = description;
+    }
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
