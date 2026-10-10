@@ -18,11 +18,8 @@ public class Task {
 
     @Column(nullable = false)
     private String title;
-<<<<<<< HEAD
 
     @Column(columnDefinition = "TEXT")
-=======
->>>>>>> 5a34969030b895ddc55d00d0646f6cec20c96dc9
     private String description;
 
     @Enumerated(EnumType.STRING)
@@ -30,7 +27,6 @@ public class Task {
     private TaskStatus status = TaskStatus.TODO;
 
     @Enumerated(EnumType.STRING)
-<<<<<<< HEAD
     @Column(nullable = false)
     private TaskPriority priority = TaskPriority.MEDIUM;
 
@@ -128,44 +124,4 @@ public class Task {
 
     public List<TaskAttachment> getAttachments() { return attachments; }
     public void setAttachments(List<TaskAttachment> attachments) { this.attachments = attachments; }
-=======
-    private TaskPriority priority;
-
-    private Integer progress = 0;
-    private LocalDate startDate;
-    private LocalDate dueDate;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User assignedUser;
-
-    public Task() {}
-
-    public Long getTaskId() { return taskId; }
-    public void setTaskId(Long taskId) { this.taskId = taskId; }
-
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
-
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-
-    public TaskStatus getStatus() { return status; }
-    public void setStatus(TaskStatus status) { this.status = status; }
-
-    public TaskPriority getPriority() { return priority; }
-    public void setPriority(TaskPriority priority) { this.priority = priority; }
-
-    public Integer getProgress() { return progress; }
-    public void setProgress(Integer progress) { this.progress = progress; }
-
-    public LocalDate getStartDate() { return startDate; }
-    public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
-
-    public LocalDate getDueDate() { return dueDate; }
-    public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }
-
-    public User getAssignedUser() { return assignedUser; }
-    public void setAssignedUser(User assignedUser) { this.assignedUser = assignedUser; }
->>>>>>> 5a34969030b895ddc55d00d0646f6cec20c96dc9
 }

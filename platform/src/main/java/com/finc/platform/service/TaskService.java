@@ -5,6 +5,7 @@ import com.finc.platform.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
@@ -33,13 +34,15 @@ public class TaskService {
         return taskRepository.findAll();
     }
 
-<<<<<<< HEAD
-    // Role-based visibility: Admin sees all tasks; Member X sees only their tasks + All-Member tasks
     public List<Task> getTasksForUserView(Long userId) {
         if (userId == null || userId == 1L) {
             return taskRepository.findAll();
         }
         return taskRepository.findVisibleToUser(userId);
+    }
+
+    public List<Task> getTasksByUser(Long userId) {
+        return taskRepository.findByAssignedUser_id(userId);
     }
 
     public Task getTaskById(Long taskId) {
@@ -55,34 +58,9 @@ public class TaskService {
         }
         if (creator == null) {
             creator = userRepository.findAll().stream().findFirst().orElse(null);
-=======
-    public Task getTaskById(Long taskId) {
-        return taskRepository.findById(taskId)
-                .orElseThrow(() ->
-                        new RuntimeException("Task not found with ID: " + taskId));
-    }
-
-    public Task createTask(Task task, Long assignedUserId) {
-
-        if (assignedUserId != null) {
-
-            User user = userRepository.findById(assignedUserId)
-                    .orElseThrow(() ->
-                            new RuntimeException(
-                                    "User not found with ID: " + assignedUserId
-                            ));
-
-            task.setAssignedUser(user);
-        }
-
-        if (task.getProgress() == null) {
-            task.setProgress(0);
->>>>>>> 5a34969030b895ddc55d00d0646f6cec20c96dc9
         }
         task.setCreatedBy(creator);
 
-<<<<<<< HEAD
-        // If assignedUserId is null or <= 0, task is assigned to "All Members"
         if (assignedUserId != null && assignedUserId > 0) {
             task.setAssignedUser(userRepository.findById(assignedUserId).orElse(null));
         } else {
@@ -94,55 +72,6 @@ public class TaskService {
         }
 
         validateTask(task);
-=======
-        return taskRepository.save(task);
-    }
-
-    public Task updateTask(
-            Long taskId,
-            Task updatedTask,
-            Long assignedUserId
-    ) {
-
-        Task existingTask = getTaskById(taskId);
-
-        existingTask.setTitle(updatedTask.getTitle());
-        existingTask.setDescription(updatedTask.getDescription());
-        existingTask.setStatus(updatedTask.getStatus());
-        existingTask.setPriority(updatedTask.getPriority());
-        existingTask.setProgress(updatedTask.getProgress());
-        existingTask.setStartDate(updatedTask.getStartDate());
-        existingTask.setDueDate(updatedTask.getDueDate());
-
-        if (assignedUserId != null) {
-
-            User user = userRepository.findById(assignedUserId)
-                    .orElseThrow(() ->
-                            new RuntimeException(
-                                    "User not found with ID: " + assignedUserId
-                            ));
-
-            existingTask.setAssignedUser(user);
-        } else {
-            existingTask.setAssignedUser(null);
-        }
-
-        return taskRepository.save(existingTask);
-    }
-
-    public void deleteTask(Long taskId) {
-
-        if (!taskRepository.existsById(taskId)) {
-            throw new RuntimeException(
-                    "Task not found with ID: " + taskId
-            );
-        }
-
-        taskRepository.deleteById(taskId);
-    }
-
-    public Task updateProgress(Long taskId, Integer progress) {
->>>>>>> 5a34969030b895ddc55d00d0646f6cec20c96dc9
 
         if (task.getStatus() == TaskStatus.COMPLETED) {
             task.setCompletedAt(LocalDateTime.now());
@@ -151,7 +80,6 @@ public class TaskService {
 
         Task savedTask = taskRepository.save(task);
 
-        // Auto-sync deadline to calendar
         if (savedTask.getDueDate() != null) {
             syncTaskDeadlineEvent(savedTask);
         }
@@ -180,7 +108,9 @@ public class TaskService {
         validateTask(existing);
 
         if (existing.getStatus() == TaskStatus.COMPLETED) {
-            if (existing.getCompletedAt() == null) existing.setCompletedAt(LocalDateTime.now());
+            if (existing.getCompletedAt() == null) {
+                existing.setCompletedAt(LocalDateTime.now());
+            }
             existing.setProgress(100);
         } else {
             existing.setCompletedAt(null);
@@ -217,22 +147,11 @@ public class TaskService {
     @Transactional
     public Task updateProgress(Long taskId, Integer progress) {
         Task task = getTaskById(taskId);
-<<<<<<< HEAD
         validateProgress(progress);
-=======
-
-        if (progress < 0 || progress > 100) {
-            throw new IllegalArgumentException(
-                    "Progress must be between 0 and 100"
-            );
-        }
-
->>>>>>> 5a34969030b895ddc55d00d0646f6cec20c96dc9
         task.setProgress(progress);
 
         if (progress == 100) {
             task.setStatus(TaskStatus.COMPLETED);
-<<<<<<< HEAD
             task.setCompletedAt(LocalDateTime.now());
         } else if (progress > 0) {
             task.setStatus(TaskStatus.IN_PROGRESS);
@@ -240,15 +159,10 @@ public class TaskService {
         } else {
             task.setStatus(TaskStatus.TODO);
             task.setCompletedAt(null);
-=======
-        } else if (progress > 0) {
-            task.setStatus(TaskStatus.IN_PROGRESS);
->>>>>>> 5a34969030b895ddc55d00d0646f6cec20c96dc9
         }
         return taskRepository.save(task);
     }
 
-<<<<<<< HEAD
     public void deleteTask(Long taskId) {
         taskRepository.deleteById(taskId);
     }
@@ -262,6 +176,17 @@ public class TaskService {
 
     public List<TaskComment> getComments(Long taskId) {
         return taskCommentRepository.findByTaskTaskIdOrderByCreatedAtAsc(taskId);
+    }
+
+    public List<Task> getTasksByStatus(TaskStatus status) {
+        return taskRepository.findByStatus(status);
+    }
+
+    public List<Task> getOverdueTasks() {
+        return taskRepository.findByDueDateBeforeAndStatusNotIn(
+                LocalDate.now(),
+                List.of(TaskStatus.COMPLETED, TaskStatus.CANCELLED)
+        );
     }
 
     private void validateTask(Task task) {
@@ -278,20 +203,5 @@ public class TaskService {
         if (progress == null || progress < 0 || progress > 100) {
             throw new IllegalArgumentException("Progress must be between 0 and 100");
         }
-=======
-    public List<Task> getTasksByUser(Long userId) {
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "User not found with ID: " + userId
-                        ));
-
-        return taskRepository.findByAssignedUser(user);
-    }
-
-    public List<Task> getTasksByStatus(TaskStatus status) {
-        return taskRepository.findByStatus(status);
->>>>>>> 5a34969030b895ddc55d00d0646f6cec20c96dc9
     }
 }
