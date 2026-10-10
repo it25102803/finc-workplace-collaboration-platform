@@ -1,101 +1,61 @@
 package com.finc.platform.service;
 
 import com.finc.platform.entity.CalendarEvent;
+import com.finc.platform.entity.EventType;
 import com.finc.platform.entity.User;
 import com.finc.platform.repository.CalendarEventRepository;
 import com.finc.platform.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 @Service
 public class CalendarEventService {
 
-    private final CalendarEventRepository eventRepository;
+    private final CalendarEventRepository calendarEventRepository;
     private final UserRepository userRepository;
 
-    public CalendarEventService(
-            CalendarEventRepository eventRepository,
-            UserRepository userRepository
-    ) {
-        this.eventRepository = eventRepository;
+    public CalendarEventService(CalendarEventRepository calendarEventRepository, UserRepository userRepository) {
+        this.calendarEventRepository = calendarEventRepository;
         this.userRepository = userRepository;
     }
 
-    public List<CalendarEvent> getAllEvents() {
-        return eventRepository.findAll();
+    public List<CalendarEvent> getAllEvents(Long userId) {
+        if (userId != null) {
+            return calendarEventRepository.findAllVisibleToUser(userId);
+        }
+        return calendarEventRepository.findAll();
     }
 
-    public CalendarEvent getEventById(Long id) {
-
-        return eventRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Calendar event not found"
-                        ));
+    public List<CalendarEvent> getEventsByDate(LocalDate date) {
+        return calendarEventRepository.findByEventDate(date);
     }
 
-    public CalendarEvent createEvent(
-            CalendarEvent event,
-            Long createdByUserId
-    ) {
+    public List<CalendarEvent> getEventsByUser(Long userId) {
+        return calendarEventRepository.findByCreatedByUser_id(userId);
+    }
 
-        if (createdByUserId != null) {
-
-            User user = userRepository.findById(createdByUserId)
-                    .orElseThrow(() ->
-                            new RuntimeException(
-                                    "User not found"
-                            ));
-
-            event.setCreatedBy(user);
+    @Transactional
+    public CalendarEvent createEvent(CalendarEvent event, Long userId) {
+        if (userId != null) {
+            User creator = userRepository.findById(userId).orElse(null);
+            event.setCreatedByUser(creator);
+        } else if (event.getCreatedByUser() == null) {
+            event.setCreatedByUser(userRepository.findAll().stream().findFirst().orElse(null));
         }
 
-        return eventRepository.save(event);
-    }
-
-    public CalendarEvent updateEvent(
-            Long id,
-            CalendarEvent updatedEvent
-    ) {
-
-        CalendarEvent existing = getEventById(id);
-
-        existing.setTitle(updatedEvent.getTitle());
-        existing.setDescription(updatedEvent.getDescription());
-        existing.setEventDate(updatedEvent.getEventDate());
-        existing.setStartTime(updatedEvent.getStartTime());
-        existing.setEndTime(updatedEvent.getEndTime());
-        existing.setEventType(updatedEvent.getEventType());
-
-        return eventRepository.save(existing);
-    }
-
-    public void deleteEvent(Long id) {
-
-        if (!eventRepository.existsById(id)) {
-            throw new RuntimeException(
-                    "Calendar event not found"
-            );
+        if (event.getEventDate() != null) {
+            if (event.getStartTime() == null) event.setStartTime(event.getEventDate().atStartOfDay());
+            if (event.getEndTime() == null) event.setEndTime(event.getEventDate().atTime(LocalTime.MAX));
         }
 
-        eventRepository.deleteById(id);
+        return calendarEventRepository.save(event);
     }
 
-    public List<CalendarEvent> getEventsByDate(
-            LocalDate date
-    ) {
-        return eventRepository.findByEventDate(date);
-    }
-
-    public List<CalendarEvent> getEventsBetween(
-            LocalDate start,
-            LocalDate end
-    ) {
-        return eventRepository.findByEventDateBetween(
-                start,
-                end
-        );
+    public void deleteEvent(Long eventId) {
+        calendarEventRepository.deleteById(eventId);
     }
 }

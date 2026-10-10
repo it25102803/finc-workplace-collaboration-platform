@@ -1,124 +1,95 @@
 package com.finc.platform.controller;
 
 import com.finc.platform.entity.Task;
-import com.finc.platform.entity.TaskStatus;
+import com.finc.platform.entity.TaskComment;
+import com.finc.platform.repository.UserRepository;
 import com.finc.platform.service.TaskService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/tasks")
-@CrossOrigin(origins = "*")
 public class TaskController {
 
     private final TaskService taskService;
+    private final UserRepository userRepository;
 
-    public TaskController(TaskService taskService) {
+    public TaskController(TaskService taskService, UserRepository userRepository) {
         this.taskService = taskService;
+        this.userRepository = userRepository;
     }
 
-    // GET ALL TASKS
     @GetMapping
-    public ResponseEntity<List<Task>> getAllTasks() {
-
-        return ResponseEntity.ok(
-                taskService.getAllTasks()
-        );
+    public ResponseEntity<List<Task>> getAllTasks(@RequestParam(required = false) Long currentUserId) {
+        return ResponseEntity.ok(taskService.getTasksForUserView(currentUserId));
     }
 
-    // GET TASKS ASSIGNED TO A SPECIFIC USER
-
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Task>> getTasksByUser(
-            @PathVariable Long userId
-    ) {
-
-        return ResponseEntity.ok(
-                taskService.getTasksByUser(userId)
-        );
+    @GetMapping("/users")
+    public ResponseEntity<List<Map<String, Object>>> getAssignableUsers() {
+        List<Map<String, Object>> list = userRepository.findAll().stream().map(u -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", u.getId());
+            map.put("username", u.getUsername());
+            String displayName = u.getFirstName() != null ? u.getFirstName() + " " + (u.getLastName() != null ? u.getLastName() : "") : u.getUsername();
+            map.put("name", displayName.trim());
+            return map;
+        }).collect(Collectors.toList());
+        return ResponseEntity.ok(list);
     }
 
-    // GET TASK BY ID
     @GetMapping("/{id}")
-    public ResponseEntity<Task> getTaskById(
-            @PathVariable Long id
-    ) {
-
-        return ResponseEntity.ok(
-                taskService.getTaskById(id)
-        );
+    public ResponseEntity<Task> getTaskById(@PathVariable Long id) {
+        return ResponseEntity.ok(taskService.getTaskById(id));
     }
 
-    // CREATE TASK
     @PostMapping
     public ResponseEntity<Task> createTask(
             @RequestBody Task task,
-            @RequestParam(required = false) Long assignedUserId
+            @RequestParam(required = false, defaultValue = "1") Long createdByUserId,
+            @RequestParam(required = false) Long assignedUserId,
+            @RequestParam(required = false) Long eventId
     ) {
-
-        return ResponseEntity.ok(
-                taskService.createTask(
-                        task,
-                        assignedUserId
-                )
-        );
+        Task created = taskService.createTask(task, createdByUserId, assignedUserId, eventId);
+        return ResponseEntity.ok(created);
     }
 
-    // UPDATE TASK
     @PutMapping("/{id}")
     public ResponseEntity<Task> updateTask(
             @PathVariable Long id,
             @RequestBody Task task,
-            @RequestParam(required = false) Long assignedUserId
+            @RequestParam(required = false, defaultValue = "1") Long createdByUserId,
+            @RequestParam(required = false) Long assignedUserId,
+            @RequestParam(required = false) Long eventId
     ) {
-
-        return ResponseEntity.ok(
-                taskService.updateTask(
-                        id,
-                        task,
-                        assignedUserId
-                )
-        );
+        Task updated = taskService.updateTask(id, task, createdByUserId, assignedUserId, eventId);
+        return ResponseEntity.ok(updated);
     }
 
-    // DELETE TASK
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteTask(
-            @PathVariable Long id
-    ) {
-
-        taskService.deleteTask(id);
-
-        return ResponseEntity.ok(
-                "Task deleted successfully"
-        );
-    }
-
-    // UPDATE TASK PROGRESS
     @PatchMapping("/{id}/progress")
-    public ResponseEntity<Task> updateProgress(
-            @PathVariable Long id,
-            @RequestParam Integer progress
-    ) {
-
-        return ResponseEntity.ok(
-                taskService.updateProgress(
-                        id,
-                        progress
-                )
-        );
+    public ResponseEntity<Task> updateProgress(@PathVariable Long id, @RequestParam Integer progress) {
+        return ResponseEntity.ok(taskService.updateProgress(id, progress));
     }
 
-    // GET TASKS BY STATUS
-    @GetMapping("/status/{status}")
-    public ResponseEntity<List<Task>> getTasksByStatus(
-            @PathVariable TaskStatus status
-    ) {
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
+        taskService.deleteTask(id);
+        return ResponseEntity.noContent().build();
+    }
 
-        return ResponseEntity.ok(
-                taskService.getTasksByStatus(status)
-        );
+    @PostMapping("/{id}/comments")
+    public ResponseEntity<TaskComment> addComment(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body,
+            @RequestParam(required = false, defaultValue = "1") Long userId
+    ) {
+        return ResponseEntity.ok(taskService.addComment(id, body.get("content"), userId));
+    }
+
+    @GetMapping("/{id}/comments")
+    public ResponseEntity<List<TaskComment>> getComments(@PathVariable Long id) {
+        return ResponseEntity.ok(taskService.getComments(id));
     }
 }
