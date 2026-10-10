@@ -39,13 +39,9 @@ public class User {
     @JoinColumn(name = "department_id")
     private Department department;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-        name = "user_roles",
-        joinColumns = @JoinColumn(name = "user_id"),
-        inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
-    private Set<Role> roles = new HashSet<>();
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id")
+    private Role role;
 
     public User() {
     }
@@ -74,6 +70,7 @@ public class User {
         }
     }
 
+    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -154,11 +151,12 @@ public class User {
         this.department = department;
     }
 
-    public Set<Role> getRoles() {
-        return roles;
+    // Solves setRole(Role) and getRole() compilation errors
+    public Role getRole() {
+        return role;
     }
 
-    public void setRoles(Set<Role> roles) {
-        this.roles = roles;
+    public void setRole(Role role) {
+        this.role = role;
     }
 }

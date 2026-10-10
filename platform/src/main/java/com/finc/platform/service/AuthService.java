@@ -3,7 +3,6 @@ package com.finc.platform.service;
 import com.finc.platform.dto.AuthResponse;
 import com.finc.platform.dto.LoginRequest;
 import com.finc.platform.dto.RegisterRequest;
-import com.finc.platform.entity.Department;
 import com.finc.platform.entity.Role;
 import com.finc.platform.entity.RoleType;
 import com.finc.platform.entity.User;
@@ -11,82 +10,120 @@ import com.finc.platform.entity.UserStatus;
 import com.finc.platform.repository.DepartmentRepository;
 import com.finc.platform.repository.RoleRepository;
 import com.finc.platform.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.time.LocalDateTime;
 
 @Service
 public class AuthService {
 
-    private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
-    private final DepartmentRepository departmentRepository;
+    @Autowired
+    private UserRepository userRepository;
 
-    public AuthService(UserRepository userRepository, 
-                       RoleRepository roleRepository, 
-                       DepartmentRepository departmentRepository) {
-        this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
-        this.departmentRepository = departmentRepository;
-    }
+    @Autowired
+    private RoleRepository roleRepository;
 
-    @Transactional
-    public AuthResponse registerUser(RegisterRequest registerRequest) {
-        if (userRepository.existsByUsername(registerRequest.getUsername())) {
-            throw new RuntimeException("Error: Username is already taken!");
+    @Autowired
+    private DepartmentRepository departmentRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    /**
+     * User Registration (FR-UM-01, FR-UM-02, FR-UM-03, FR-UM-04)
+     */
+    public AuthResponse register(RegisterRequest request) {
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new IllegalArgumentException("Username is already taken");
         }
-
-        if (userRepository.existsByEmail(registerRequest.getEmail())) {
-            throw new RuntimeException("Error: Email is already in use!");
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Email is already in use");
         }
 
         User user = new User();
-        user.setUsername(registerRequest.getUsername());
-        user.setEmail(registerRequest.getEmail());
-        user.setPassword(registerRequest.getPassword()); // Raw password for now until PasswordEncoder is injected
-        user.setFirstName(registerRequest.getFirstName());
-        user.setLastName(registerRequest.getLastName());
-        user.setStatus(UserStatus.ONLINE);
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        
+        // BCrypt Password Hashing (NFR-01)
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setCreatedAt(LocalDateTime.now());
+        user.setEnabled(true);
+        user.setStatus(UserStatus.OFFLINE);
 
-        // Assign default ROLE_EMPLOYEE role
+        // Assign default ROLE_EMPLOYEE (FR-UM-03)
         Role defaultRole = roleRepository.findByRoleType(RoleType.ROLE_EMPLOYEE)
                 .orElseGet(() -> {
-                    Role role = new Role();
-                    role.setRoleType(RoleType.ROLE_EMPLOYEE);
-                    return roleRepository.save(role);
+                    Role r = new Role();
+                    r.setRoleType(RoleType.ROLE_EMPLOYEE);
+                    return roleRepository.save(r);
                 });
+        user.setRole(defaultRole);
 
-        Set<Role> roles = new HashSet<>();
-        roles.add(defaultRole);
-        user.setRoles(roles);
-
-        // Assign Department if provided
-        if (registerRequest.getDepartmentId() != null) {
-            Department department = departmentRepository.findById(registerRequest.getDepartmentId())
-                    .orElseThrow(() -> new RuntimeException("Error: Department not found."));
-            user.setDepartment(department);
+        // Optional Department allocation (FR-UM-04)
+        if (request.getDepartmentId() != null) {
+            departmentRepository.findById(request.getDepartmentId())
+                    .ifPresent(user::setDepartment);
         }
 
         User savedUser = userRepository.save(user);
-
-        // Updated AuthResponse with savedUser.getUserId() as first argument
-        return new AuthResponse(savedUser.getId(), null, savedUser.getUsername(), savedUser.getEmail(), "User registered successfully!");
+        return mapToAuthResponse(savedUser);
     }
 
-    public AuthResponse loginUser(LoginRequest loginRequest) {
-        User user = userRepository.findByUsername(loginRequest.getUsername())
-                .orElseThrow(() -> new RuntimeException("Error: Invalid username or password."));
+    /**
+     * User Login Method (FR-UM-05, FR-UM-06)
+     * FIXES: "The method login(LoginRequest) is undefined for the type AuthService"
+     */
+    public AuthResponse login(LoginRequest request) {
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid username or password"));
 
-        if (!user.getPassword().equals(loginRequest.getPassword())) {
-            throw new RuntimeException("Error: Invalid username or password.");
+        // Verify BCrypt hashed password
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Invalid username or password");
         }
 
+        // Set status to ONLINE upon successful login (FR-UM-06)
         user.setStatus(UserStatus.ONLINE);
-        userRepository.save(user);
+        User updatedUser = userRepository.save(user);
 
-        // Updated AuthResponse with user.getUserId() as first argument
-        return new AuthResponse(user.getId(), "MOCK_JWT_TOKEN_" + user.getUsername(), user.getUsername(), user.getEmail(), "Login successful!");
+        return mapToAuthResponse(updatedUser);
+    }
+
+    /**
+     * Session Logout Method (FR-UM-07)
+     */
+    public void logout(Long userId) {
+        if (userId != null) {
+            userRepository.findById(userId).ifPresent(user -> {
+                user.setStatus(UserStatus.OFFLINE);
+                userRepository.save(user);
+            });
+        }
+    }
+
+    /**
+     * Helper to map User Entity to AuthResponse DTO with clean 3-digit numerical ID
+     */
+    private AuthResponse mapToAuthResponse(User user) {
+        AuthResponse response = new AuthResponse();
+        response.setUserId(user.getId());
+        response.setUsername(user.getUsername());
+        response.setEmail(user.getEmail());
+        
+        // Formats ID to clean 3 digits ("001", "002", "003")
+        String formattedBadge = String.format("%03d", user.getId());
+        response.setBadgeId(formattedBadge);
+
+        if (user.getRole() != null) {
+            response.setRole(user.getRole().getRoleType().name());
+        } else {
+            response.setRole("ROLE_EMPLOYEE");
+        }
+
+        return response;
     }
 }

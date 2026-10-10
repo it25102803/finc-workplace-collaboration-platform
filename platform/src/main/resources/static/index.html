@@ -219,7 +219,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    const API_BASE = "http://localhost:8081/api/auth";
+    const API_BASE = "/api/auth";
 
     function showAlert(message, isSuccess) {
         const alertBox = document.getElementById("alertBox");
@@ -243,32 +243,43 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             });
-            const data = await res.json();
+
             if (res.ok) {
+                const data = await res.json();
                 showAlert("Login Successful! Redirecting...", true);
                 
-                // Store complete user credentials including userId
+                localStorage.clear();
                 localStorage.setItem("user", JSON.stringify(data));
                 localStorage.setItem("userId", data.userId || "");
+                localStorage.setItem("badgeId", data.badgeId || "001");
                 localStorage.setItem("username", data.username || usernameInput);
                 localStorage.setItem("email", data.email || "");
+                localStorage.setItem("role", data.role || "ROLE_EMPLOYEE");
+                localStorage.setItem("status", "Online");
                 
                 setTimeout(() => {
                     window.location.href = "dashboard.html";
                 }, 800);
             } else {
-                showAlert(data.message || "Invalid credentials", false);
+                let errorMsg = "Invalid credentials";
+                const contentType = res.headers.get("content-type");
+                if (contentType && contentType.includes("application/json")) {
+                    const data = await res.json();
+                    errorMsg = data.message || errorMsg;
+                } else {
+                    errorMsg = await res.text();
+                }
+                showAlert(errorMsg, false);
             }
         } catch (err) {
-            showAlert("Server unreachable. Ensure Spring Boot is running on port 8081.", false);
+            showAlert("Server unreachable. Ensure Spring Boot application is running.", false);
         }
     });
 
-    // Register Submission
+    // Register Submission with Clean Duplicate Message Error Handling
     document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        // Safely check both reg-prefixed IDs and plain IDs
         const getVal = (id, altId) => {
             const el = document.getElementById(id) || document.getElementById(altId);
             return el ? el.value.trim() : '';
@@ -279,7 +290,7 @@
             email: getVal("regEmail", "email"),
             firstName: getVal("regFirstName", "firstName"),
             lastName: getVal("regLastName", "lastName"),
-            password: getVal("regPassword", "password")
+            password: getVal("password", "regPassword")
         };
 
         try {
@@ -288,7 +299,10 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             });
-            const data = await res.json();
+
+            let responseMsg = "";
+            const contentType = res.headers.get("content-type");
+
             if (res.ok) {
                 showAlert("Account registered successfully! Please log in.", true);
                 const loginTabEl = document.getElementById("login-tab");
@@ -297,10 +311,16 @@
                     loginTab.show();
                 }
             } else {
-                showAlert(data.message || "Registration failed", false);
+                if (contentType && contentType.includes("application/json")) {
+                    const data = await res.json();
+                    responseMsg = data.message || "Registration failed. Username or Email already exists.";
+                } else {
+                    responseMsg = await res.text();
+                }
+                showAlert(responseMsg || "Username or Email already in use.", false);
             }
         } catch (err) {
-            showAlert("Server unreachable. Ensure Spring Boot is running on port 8081.", false);
+            showAlert("Server unreachable. Ensure Spring Boot application is running.", false);
         }
     });
 
