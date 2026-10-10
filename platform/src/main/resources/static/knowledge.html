@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knowledge Base | Finc Workplace</title>
+    <link rel="stylesheet" href="css/knowledge.css">
+</head>
+<body>
+    <div class="page-shell">
+        <aside class="sidebar">
+            <a class="brand" href="dashboard.html" aria-label="Finc Workplace dashboard">
+                <span class="brand-mark">F</span>
+                <span><strong>FINC</strong><small>Workplace</small></span>
+            </a>
+            <nav aria-label="Main navigation">
+                <a href="dashboard.html">Dashboard</a>
+                <a href="channels.html">Channels &amp; Chat</a>
+                <a href="tasks.html">Tasks</a>
+                <a href="calendar.html">Calendar</a>
+                <a href="files.html">File Manager</a>
+                <a class="active" href="knowledge.html" aria-current="page">Knowledge Base</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="page-header">
+                <div>
+                    <p class="eyebrow">TEAM RESOURCES</p>
+                    <h1>Knowledge Base</h1>
+                    <p class="subtitle">Guides and shared reference material.</p>
+                </div>
+                <button id="refreshKnowledge" type="button">Refresh</button>
+            </header>
+
+            <p id="knowledgeStatus" class="status" role="status" aria-live="polite">Loading knowledge items...</p>
+            <section id="knowledgeList" class="knowledge-list" aria-label="Knowledge articles"></section>
+        </main>
+    </div>
+    <script src="js/knowledge.js" defer></script>
+</body>
+</html>

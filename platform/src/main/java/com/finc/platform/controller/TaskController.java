@@ -23,6 +23,7 @@ public class TaskController {
     }
 
     @GetMapping
+<<<<<<< HEAD
     public ResponseEntity<List<Task>> getAllTasks(@RequestParam(required = false) Long currentUserId) {
         return ResponseEntity.ok(taskService.getTasksForUserView(currentUserId));
     }
@@ -38,11 +39,24 @@ public class TaskController {
             return map;
         }).collect(Collectors.toList());
         return ResponseEntity.ok(list);
+=======
+    public ResponseEntity<List<Task>> getAllTasks() {
+        return ResponseEntity.ok(taskService.getAllTasks());
+>>>>>>> 5a34969030b895ddc55d00d0646f6cec20c96dc9
     }
 
     @GetMapping("/{id}")
+<<<<<<< HEAD
     public ResponseEntity<Task> getTaskById(@PathVariable Long id) {
         return ResponseEntity.ok(taskService.getTaskById(id));
+=======
+    public ResponseEntity<Task> getTaskById(
+            @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(
+                taskService.getTaskById(id)
+        );
+>>>>>>> 5a34969030b895ddc55d00d0646f6cec20c96dc9
     }
 
     @PostMapping
@@ -52,8 +66,14 @@ public class TaskController {
             @RequestParam(required = false) Long assignedUserId,
             @RequestParam(required = false) Long eventId
     ) {
+<<<<<<< HEAD
         Task created = taskService.createTask(task, createdByUserId, assignedUserId, eventId);
         return ResponseEntity.ok(created);
+=======
+        return ResponseEntity.ok(
+                taskService.createTask(task, assignedUserId)
+        );
+>>>>>>> 5a34969030b895ddc55d00d0646f6cec20c96dc9
     }
 
     @PutMapping("/{id}")
@@ -64,20 +84,65 @@ public class TaskController {
             @RequestParam(required = false) Long assignedUserId,
             @RequestParam(required = false) Long eventId
     ) {
+<<<<<<< HEAD
         Task updated = taskService.updateTask(id, task, createdByUserId, assignedUserId, eventId);
         return ResponseEntity.ok(updated);
     }
 
+=======
+        return ResponseEntity.ok(
+                taskService.updateTask(
+                        id,
+                        task,
+                        assignedUserId
+                )
+        );
+    }
+
+    // DELETE TASK
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteTask(
+            @PathVariable Long id
+    ) {
+
+        taskService.deleteTask(id);
+
+        return ResponseEntity.ok(
+                "Task deleted successfully"
+        );
+    }
+
+    // UPDATE PROGRESS
+>>>>>>> 5a34969030b895ddc55d00d0646f6cec20c96dc9
     @PatchMapping("/{id}/progress")
     public ResponseEntity<Task> updateProgress(@PathVariable Long id, @RequestParam Integer progress) {
         return ResponseEntity.ok(taskService.updateProgress(id, progress));
     }
 
+<<<<<<< HEAD
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
         taskService.deleteTask(id);
         return ResponseEntity.noContent().build();
     }
+=======
+    // GET TASKS FOR USER
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Task>> getTasksByUser(
+            @PathVariable Long userId
+    ) {
+
+        return ResponseEntity.ok(
+                taskService.getTasksByUser(userId)
+        );
+    }
+
+    // GET TASKS BY STATUS
+    @GetMapping("/status/{status}")
+    public ResponseEntity<List<Task>> getTasksByStatus(
+            @PathVariable TaskStatus status
+    ) {
+>>>>>>> 5a34969030b895ddc55d00d0646f6cec20c96dc9
 
     @PostMapping("/{id}/comments")
     public ResponseEntity<TaskComment> addComment(

@@ -14,6 +14,7 @@ import java.util.List;
 @Repository
 public interface TaskRepository extends JpaRepository<Task, Long> {
 
+<<<<<<< HEAD
     // Returns tasks assigned to this user OR tasks assigned to "All Members" (assignee IS NULL)
     @Query("SELECT t FROM Task t LEFT JOIN t.assignee u WHERE t.assignee IS NULL OR u.id = :userId")
     List<Task> findVisibleToUser(@Param("userId") Long userId);
@@ -24,4 +25,14 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     List<Task> findByStatus(TaskStatus status);
 
     List<Task> findByDueDateBeforeAndStatusNotIn(LocalDate date, Collection<TaskStatus> statuses);
+=======
+    List<Task> findByAssignedUser(User assignedUser);
+
+    List<Task> findByStatus(TaskStatus status);
+
+    List<Task> findByAssignedUserAndStatus(
+            User assignedUser,
+            TaskStatus status
+    );
+>>>>>>> 5a34969030b895ddc55d00d0646f6cec20c96dc9
 }
