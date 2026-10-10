@@ -92,7 +92,13 @@
 
                     <div id="messageList" class="message-list"></div>
 
-                    <p id="attachmentStatus" class="attachment-status" role="status" aria-live="polite" hidden></p>
+                    <p id="attachmentStatus" class="attachment-status" role="status" aria-live="polite" hidden>
+                        <span id="attachmentStatusText"></span>
+                        <button id="clearAttachmentBtn" class="attachment-clear-button" type="button"
+                                aria-label="Remove selected attachment" title="Remove selected attachment" hidden>
+                            &times;
+                        </button>
+                    </p>
 
                     <form id="messageForm" class="composer">
                         <input
@@ -232,6 +238,6 @@
 
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/channels-app.js?v=20261004-dm-header"></script>
+    <script src="js/channels-app.js?v=20261010-attachment-clear"></script>
 </body>
 </html>

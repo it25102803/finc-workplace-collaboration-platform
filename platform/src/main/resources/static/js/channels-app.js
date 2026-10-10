@@ -6,13 +6,13 @@ const CURRENT_USER = (() => {
     try {
         const storedUser = JSON.parse(localStorage.getItem("user") || "null");
         return {
-            name: storedUser?.name || localStorage.getItem("username") || "Admin User",
-            email: storedUser?.email || "admin@fincacademy.com"
+            name: storedUser?.name || storedUser?.username || localStorage.getItem("username") || "Admin User",
+            email: storedUser?.email || localStorage.getItem("email") || "admin@fincacademy.com"
         };
     } catch {
         return {
             name: localStorage.getItem("username") || "Admin User",
-            email: "admin@fincacademy.com"
+            email: localStorage.getItem("email") || "admin@fincacademy.com"
         };
     }
 })();
@@ -962,6 +962,10 @@ function bindEvents() {
         const attachment = event.currentTarget.files[0];
         setAttachmentStatus(attachment ? `${attachment.name} selected. Select Send to upload.` : "");
     });
+    document.getElementById("clearAttachmentBtn").addEventListener("click", () => {
+        document.getElementById("attachmentInput").value = "";
+        setAttachmentStatus("");
+    });
     document.getElementById("notificationBtn").addEventListener("click", toggleNotifications);
     document.getElementById("sidebarToggle").addEventListener("click", toggleSidebar);
     document.getElementById("sidebarBackdrop").addEventListener("click", closeSidebar);
@@ -1220,10 +1224,34 @@ function renderDirectMessageList() {
                 });
         });
 
+    usersByEmail.forEach((user, key) => {
+        if (key === currentEmail || contactsByEmail.has(key)) {
+            return;
+        }
+
+        const pairChannel = state.channels.find(candidate => {
+            if (candidate.type !== "DIRECT") {
+                return false;
+            }
+
+            const candidateMembers = [...new Set((candidate.memberEmails || [])
+                .filter(member => typeof member === "string" && member.trim())
+                .map(member => member.trim().toLowerCase()))];
+            return candidateMembers.length === 2
+                && candidateMembers.includes(currentEmail)
+                && candidateMembers.includes(key);
+        });
+        contactsByEmail.set(key, {
+            email: user.email,
+            name: user.name || FALLBACK_USER_NAMES[key] || user.email,
+            channelId: pairChannel?.id ?? null
+        });
+    });
+
     const contacts = [...contactsByEmail.values()];
 
     if (!contacts.length) {
-        container.innerHTML = '<div class="empty-state">No direct conversations yet</div>';
+        container.innerHTML = '<div class="empty-state">No teammates available</div>';
         return;
     }
 
@@ -1471,32 +1499,16 @@ async function sendMessage(event) {
     setAttachmentStatus(attachment ? `Uploading ${attachment.name}...` : "");
 
     try {
-        let response;
+        const formData = new FormData();
+        formData.append("sender", CURRENT_USER.name);
+        formData.append("content", content);
         if (attachment) {
-            const formData = new FormData();
-            formData.append("sender", CURRENT_USER.name);
-            formData.append("content", content);
             formData.append("attachment", attachment, attachment.name);
-            response = await fetch(`${API_CHANNELS}/${state.selectedChannelId}/messages/attachment`, {
-                method: "POST",
-                body: formData
-            });
-        } else {
-            const payload = {
-                sender: CURRENT_USER.name,
-                content,
-                channel: {
-                    id: state.selectedChannelId
-                }
-            }
-            response = await fetch(`${API_CHANNELS}/${state.selectedChannelId}/messages`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(payload)
-            });
         }
+        const response = await fetch(`${API_CHANNELS}/${state.selectedChannelId}/messages`, {
+            method: "POST",
+            body: formData
+        });
 
         if (!response.ok) {
             const message = response.status === 413
@@ -1517,9 +1529,11 @@ async function sendMessage(event) {
 
 function setAttachmentStatus(message, isError = false) {
     const status = document.getElementById("attachmentStatus");
-    status.textContent = message;
+    const attachment = document.getElementById("attachmentInput").files[0];
+    document.getElementById("attachmentStatusText").textContent = message;
     status.hidden = !message;
     status.classList.toggle("error", isError);
+    document.getElementById("clearAttachmentBtn").hidden = !attachment || message.startsWith("Uploading ");
 }
 
 async function startDirectMessage(userEmail, userName) {

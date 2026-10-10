@@ -276,15 +276,40 @@ button {
     color: #1d4ed8;
     font-size: 0.875rem;
     overflow-wrap: anywhere;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.attachment-status[hidden] {
+    display: none;
+}
+
+.attachment-clear-button {
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: currentColor;
+    font-size: 1.35rem;
+    line-height: 1;
+}
+
+.attachment-clear-button:hover,
+.attachment-clear-button:focus-visible {
+    background: rgba(29, 78, 216, 0.12);
+}
+
+.attachment-clear-button[hidden] {
+    display: none;
 }
 
 .attachment-status.error {
     background: #fef2f2;
     color: #b91c1c;
-}
-
-.attachment-status[hidden] {
-    display: none;
 }
 
 .attachment-link {

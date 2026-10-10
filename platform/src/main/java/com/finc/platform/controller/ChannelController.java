@@ -61,6 +61,27 @@ public class ChannelController {
         }
     }
 
+    @PostMapping(value = "/{id}/messages", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Message> createMultipartMessage(
+            @PathVariable Long id,
+            @RequestParam("sender") String sender,
+            @RequestParam(name = "content", required = false, defaultValue = "") String content,
+            @RequestPart(name = "attachment", required = false) MultipartFile attachment) {
+
+        try {
+            if (attachment != null && !attachment.isEmpty()) {
+                return ResponseEntity.ok(communicationService.createAttachmentMessage(id, sender, content, attachment));
+            }
+
+            Message message = new Message();
+            message.setSender(sender);
+            message.setContent(content);
+            return ResponseEntity.ok(communicationService.createMessage(id, message));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
     @PostMapping(value = "/{id}/messages/attachment", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Message> createAttachmentMessage(
             @PathVariable Long id,
