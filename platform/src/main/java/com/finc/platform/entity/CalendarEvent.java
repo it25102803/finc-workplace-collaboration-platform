@@ -48,7 +48,7 @@ public class CalendarEvent {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "task_id")
-    @JsonIgnore // Break circular serialization
+    @JsonIgnore
     private Task relatedTask;
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -61,9 +61,6 @@ public class CalendarEvent {
     private Set<User> attendees = new HashSet<>();
 
     public CalendarEvent() {}
-
-    public User getOrganizer() { return this.createdByUser; }
-    public void setOrganizer(User organizer) { this.createdByUser = organizer; }
 
     public Long getEventId() { return eventId; }
     public void setEventId(Long eventId) { this.eventId = eventId; }
@@ -89,14 +86,18 @@ public class CalendarEvent {
     public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
 
     public LocalDate getEventDate() {
-        if (this.eventDate != null) return this.eventDate;
-        return this.startTime != null ? this.startTime.toLocalDate() : null;
+        if (eventDate != null) return eventDate;
+        return startTime != null ? startTime.toLocalDate() : null;
     }
 
     public void setEventDate(LocalDate eventDate) {
         this.eventDate = eventDate;
-        if (this.startTime == null && eventDate != null) this.startTime = eventDate.atTime(LocalTime.MIN);
-        if (this.endTime == null && eventDate != null) this.endTime = eventDate.atTime(LocalTime.MAX);
+        if (this.startTime == null && eventDate != null) {
+            this.startTime = eventDate.atTime(LocalTime.MIN);
+        }
+        if (this.endTime == null && eventDate != null) {
+            this.endTime = eventDate.atTime(LocalTime.MAX);
+        }
     }
 
     public String getLocation() { return location; }
@@ -111,7 +112,9 @@ public class CalendarEvent {
     public EventVisibility getVisibility() { return visibility; }
     public void setVisibility(EventVisibility visibility) {
         this.visibility = visibility;
-        if (visibility != null) this.isPrivate = (visibility == EventVisibility.PRIVATE);
+        if (visibility != null) {
+            this.isPrivate = (visibility == EventVisibility.PRIVATE);
+        }
     }
 
     public User getCreatedByUser() { return createdByUser; }

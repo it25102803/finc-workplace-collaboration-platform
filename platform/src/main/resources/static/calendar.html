@@ -13,10 +13,12 @@
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
         <div class="brand">
-            <div class="brand-icon">F</div>
-            <div class="brand-text">
-                <span class="brand-name">FINC Academy</span>
-                <span class="brand-sub">WORKSPACE</span>
+            <div class="brand-logo-card">
+                <img src="images/finc-logo.png" alt="Finc Academy & Consultants" class="brand-logo-img" onerror="this.onerror=null; this.src='images/Finc_Main.jpg';">
+            </div>
+            <div class="brand-portal-title">
+                <span class="title">Enterprise</span>
+                <span class="subtitle">Portal</span>
             </div>
         </div>
         <nav class="nav-menu">
@@ -25,18 +27,9 @@
             <a href="calendar.html" class="nav-item active"><i class="fa-solid fa-calendar-days"></i> Calendar</a>
             <a href="files.html" class="nav-item"><i class="fa-solid fa-folder"></i> Files</a>
         </nav>
-        <div class="sidebar-footer">
-            <div class="user-badge">
-                <div class="avatar">U</div>
-                <div>
-                    <div class="user-name">Team Member</div>
-                    <div class="user-role">Member 3</div>
-                </div>
-            </div>
-        </div>
     </aside>
 
-    <!-- Main Calendar Area -->
+    <!-- Main Content Area -->
     <main class="main-content">
         <header class="top-header">
             <div>
@@ -48,7 +41,7 @@
             </button>
         </header>
 
-        <!-- Navigation and Filter Controls -->
+        <!-- Calendar Toolbar -->
         <section class="calendar-toolbar">
             <div class="nav-controls">
                 <button class="btn btn-outline" id="btnToday">Today</button>
@@ -72,7 +65,7 @@
             </div>
         </section>
 
-        <!-- Calendar Grid Container -->
+        <!-- Calendar Grid -->
         <div class="calendar-card">
             <div class="calendar-grid-header">
                 <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
@@ -90,7 +83,7 @@
     </main>
 </div>
 
-<!-- Event Create Modal -->
+<!-- Event Add Modal -->
 <div class="modal-overlay" id="eventModal">
     <div class="modal-box">
         <div class="modal-header">
@@ -142,7 +135,7 @@
     </div>
 </div>
 
-<!-- Event Details Modal -->
+<!-- Event Detail Modal -->
 <div class="modal-overlay" id="detailModal">
     <div class="modal-box">
         <div class="modal-header">

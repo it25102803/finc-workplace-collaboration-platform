@@ -3,27 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<<<<<<< HEAD
     <title>Task Management | FINC Workspace</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/tasks.css">
-=======
-
-    <title>Task Management | Finc Workplace</title>
-
-    <link rel="stylesheet" href="/css/tasks.css">
->>>>>>> 5a34969030b895ddc55d00d0646f6cec20c96dc9
 </head>
 <body>
 <div class="app-layout">
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
         <div class="brand">
-            <div class="brand-icon">F</div>
-            <div class="brand-text">
-                <span class="brand-name">FINC Academy</span>
-                <span class="brand-sub">WORKSPACE</span>
+            <div class="brand-logo-card">
+                <img src="images/finc-logo.png" alt="Finc Academy & Consultants" class="brand-logo-img" onerror="this.onerror=null; this.src='images/Finc_Main.jpg';">
+            </div>
+            <div class="brand-portal-title">
+                <span class="title">Enterprise</span>
+                <span class="subtitle">Portal</span>
             </div>
         </div>
         <nav class="nav-menu">
@@ -32,15 +27,6 @@
             <a href="calendar.html" class="nav-item"><i class="fa-solid fa-calendar-days"></i> Calendar</a>
             <a href="files.html" class="nav-item"><i class="fa-solid fa-folder"></i> Files</a>
         </nav>
-        <div class="sidebar-footer">
-            <div class="user-badge">
-                <div class="avatar" id="sidebarAvatar">A</div>
-                <div>
-                    <div class="user-name" id="sidebarUserName">Admin</div>
-                    <div class="user-role" id="sidebarUserRole">System Administrator</div>
-                </div>
-            </div>
-        </div>
     </aside>
 
     <!-- Main Task Board -->
@@ -52,18 +38,6 @@
             </div>
 
             <div class="header-actions">
-                <!-- Real-Time User View Switcher -->
-                <div class="user-switcher-box">
-                    <label for="currentUserSelect"><i class="fa-solid fa-user-check"></i> Logged in as:</label>
-                    <select id="currentUserSelect" class="form-select user-select">
-                        <option value="1">👑 Admin (View All Tasks)</option>
-                        <option value="2">👤 Member 1 (User Management)</option>
-                        <option value="3">👤 Member 2 (Communication)</option>
-                        <option value="4">👤 Member 3 (Task & Calendar)</option>
-                        <option value="5">👤 Member 4 (Files & Knowledge)</option>
-                    </select>
-                </div>
-
                 <button class="btn btn-primary" id="btnOpenTaskModal">
                     <i class="fa-solid fa-plus"></i> New Task
                 </button>
@@ -121,9 +95,8 @@
                 <input type="text" id="taskTitle" class="form-input" placeholder="e.g. Implement user login API" required>
             </div>
 
-            <!-- Assignee Selection (FRD Module 8) -->
             <div class="form-group">
-                <label class="form-label" for="taskAssignee">Assign To *</label>
+                <label class="form-label" for="taskAssignee">Assign To</label>
                 <select id="taskAssignee" class="form-select">
                     <option value="">👥 All Members (Visible to Everyone)</option>
                 </select>
