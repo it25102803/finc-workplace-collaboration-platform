@@ -66,27 +66,6 @@ public class Task {
 
     public Task() {}
 
-    public User getCreatedBy() { return this.creator; }
-    public void setCreatedBy(User user) { this.creator = user; }
-
-    public User getCreator() { return this.creator; }
-    public void setCreator(User creator) { this.creator = creator; }
-
-    public User getAssignedUser() { return this.assignee; }
-    public void setAssignedUser(User user) { this.assignee = user; }
-    public void setAssignedUser() { this.assignee = null; }
-
-    public CalendarEvent getRelatedEvent() { return this.relatedEvent; }
-    public void setRelatedEvent(CalendarEvent event) { this.relatedEvent = event; }
-    public void setRelatedEvent() { this.relatedEvent = null; }
-
-    public LocalDate getStartDate() { return this.startDate; }
-    public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
-
-    public Integer getProgress() { return this.progress != null ? this.progress : 0; }
-    public void setProgress(Integer progress) { this.progress = (progress != null) ? progress : 0; }
-    public void setProgress(int progress) { this.progress = progress; }
-
     public Long getTaskId() { return taskId; }
     public void setTaskId(Long taskId) { this.taskId = taskId; }
 
@@ -107,8 +86,14 @@ public class Task {
     public TaskPriority getPriority() { return priority; }
     public void setPriority(TaskPriority priority) { this.priority = priority; }
 
+    public LocalDate getStartDate() { return startDate; }
+    public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
+
     public LocalDate getDueDate() { return dueDate; }
     public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }
+
+    public Integer getProgress() { return progress != null ? progress : 0; }
+    public void setProgress(Integer progress) { this.progress = progress != null ? progress : 0; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
@@ -116,8 +101,20 @@ public class Task {
     public LocalDateTime getCompletedAt() { return completedAt; }
     public void setCompletedAt(LocalDateTime completedAt) { this.completedAt = completedAt; }
 
+    public User getCreator() { return creator; }
+    public void setCreator(User creator) { this.creator = creator; }
+
+    public User getCreatedBy() { return creator; }
+    public void setCreatedBy(User user) { this.creator = user; }
+
     public User getAssignee() { return assignee; }
     public void setAssignee(User assignee) { this.assignee = assignee; }
+
+    public User getAssignedUser() { return assignee; }
+    public void setAssignedUser(User user) { this.assignee = user; }
+
+    public CalendarEvent getRelatedEvent() { return relatedEvent; }
+    public void setRelatedEvent(CalendarEvent event) { this.relatedEvent = event; }
 
     public List<TaskComment> getComments() { return comments; }
     public void setComments(List<TaskComment> comments) { this.comments = comments; }

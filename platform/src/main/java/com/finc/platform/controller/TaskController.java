@@ -87,10 +87,7 @@ public class TaskController {
     }
 
     @PatchMapping("/{id}/progress")
-    public ResponseEntity<Task> updateProgress(
-            @PathVariable Long id,
-            @RequestParam Integer progress
-    ) {
+    public ResponseEntity<Task> updateProgress(@PathVariable Long id, @RequestParam Integer progress) {
         return ResponseEntity.ok(taskService.updateProgress(id, progress));
     }
 

@@ -74,7 +74,6 @@ function renderCalendar() {
     const filter = document.getElementById('eventTypeFilter').value;
     const now = new Date();
 
-    // Previous month filler
     for (let i = firstDayIndex; i > 0; i--) {
         const dayDiv = document.createElement('div');
         dayDiv.className = 'calendar-day other-month';
@@ -82,7 +81,6 @@ function renderCalendar() {
         grid.appendChild(dayDiv);
     }
 
-    // Current month days
     for (let day = 1; day <= totalDays; day++) {
         const dayDiv = document.createElement('div');
         dayDiv.className = 'calendar-day';
@@ -122,7 +120,6 @@ function renderCalendar() {
         grid.appendChild(dayDiv);
     }
 
-    // Next month filler
     const totalSlots = firstDayIndex + totalDays;
     const remainingSlots = (totalSlots % 7 === 0) ? 0 : 7 - (totalSlots % 7);
     for (let j = 1; j <= remainingSlots; j++) {

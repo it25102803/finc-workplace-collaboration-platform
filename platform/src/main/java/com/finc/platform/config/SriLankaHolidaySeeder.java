@@ -25,25 +25,24 @@ public class SriLankaHolidaySeeder implements CommandLineRunner {
     public void run(String... args) {
         Map<LocalDate, String> holidays2026 = new LinkedHashMap<>();
 
-        // 2026 Official Sri Lankan Public, Bank, & Mercantile Holidays & Poya Days
         holidays2026.put(LocalDate.of(2026, 1, 3), "🌕 Duruthu Full Moon Poya Day");
         holidays2026.put(LocalDate.of(2026, 1, 15), "🌾 Tamil Thai Pongal Day");
         holidays2026.put(LocalDate.of(2026, 2, 1), "🌕 Navam Full Moon Poya Day");
         holidays2026.put(LocalDate.of(2026, 2, 4), "🇱🇰 National Independence Day");
         holidays2026.put(LocalDate.of(2026, 2, 16), "🕉️ Mahasivarathri Day");
         holidays2026.put(LocalDate.of(2026, 3, 3), "🌕 Medin Full Moon Poya Day");
-        holidays2026.put(LocalDate.of(2026, 3, 20), "🌙 Id Ul-Fitr (Ramazan Festival Day)");
+        holidays2026.put(LocalDate.of(2026, 3, 20), "🌙 Id Ul-Fitr (Ramazan)");
         holidays2026.put(LocalDate.of(2026, 4, 1), "🌕 Bak Full Moon Poya Day");
         holidays2026.put(LocalDate.of(2026, 4, 3), "✝️ Good Friday");
         holidays2026.put(LocalDate.of(2026, 4, 13), "☀️ Sinhala & Tamil New Year Eve");
         holidays2026.put(LocalDate.of(2026, 4, 14), "☀️ Sinhala & Tamil New Year Day");
         holidays2026.put(LocalDate.of(2026, 5, 1), "🛠️ May Day (Workers' Day)");
-        holidays2026.put(LocalDate.of(2026, 5, 27), "🌙 Id Ul-Alha (Hadji Festival Day)");
+        holidays2026.put(LocalDate.of(2026, 5, 27), "🌙 Id Ul-Alha (Hadji)");
         holidays2026.put(LocalDate.of(2026, 5, 30), "🌕 Vesak Full Moon Poya Day");
-        holidays2026.put(LocalDate.of(2026, 5, 31), "🌕 Day after Vesak Full Moon Poya Day");
+        holidays2026.put(LocalDate.of(2026, 5, 31), "🌕 Day after Vesak Poya");
         holidays2026.put(LocalDate.of(2026, 6, 29), "🌕 Poson Full Moon Poya Day");
         holidays2026.put(LocalDate.of(2026, 7, 28), "🌕 Esala Full Moon Poya Day");
-        holidays2026.put(LocalDate.of(2026, 8, 26), "🕌 Milad-Un-Nabi (Holy Prophet's Birthday)");
+        holidays2026.put(LocalDate.of(2026, 8, 26), "🕌 Milad-Un-Nabi");
         holidays2026.put(LocalDate.of(2026, 8, 27), "🌕 Nikini Full Moon Poya Day");
         holidays2026.put(LocalDate.of(2026, 9, 25), "🌕 Binara Full Moon Poya Day");
         holidays2026.put(LocalDate.of(2026, 10, 25), "🌕 Vap Full Moon Poya Day");

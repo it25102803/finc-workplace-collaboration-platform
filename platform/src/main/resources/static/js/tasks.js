@@ -1,43 +1,13 @@
 let allTasks = [];
 let assignableUsers = [];
 let currentTask = null;
-let currentUserId = localStorage.getItem('finc_logged_in_user') || '1';
+const currentUserId = 1;
 
 document.addEventListener('DOMContentLoaded', () => {
-    initUserSwitcher();
     initTaskEventListeners();
     fetchUsers();
     fetchTasks();
 });
-
-function initUserSwitcher() {
-    const userSelect = document.getElementById('currentUserSelect');
-    userSelect.value = currentUserId;
-    updateSidebarUserBadge(currentUserId);
-
-    userSelect.addEventListener('change', (e) => {
-        currentUserId = e.target.value;
-        localStorage.setItem('finc_logged_in_user', currentUserId);
-        updateSidebarUserBadge(currentUserId);
-        fetchTasks();
-    });
-}
-
-function updateSidebarUserBadge(userId) {
-    const avatar = document.getElementById('sidebarAvatar');
-    const name = document.getElementById('sidebarUserName');
-    const role = document.getElementById('sidebarUserRole');
-
-    if (userId === '1') {
-        avatar.textContent = 'A';
-        name.textContent = 'Admin';
-        role.textContent = 'System Administrator';
-    } else {
-        avatar.textContent = `M${userId - 1}`;
-        name.textContent = `Member ${userId - 1}`;
-        role.textContent = 'Team Member';
-    }
-}
 
 async function fetchUsers() {
     try {
@@ -47,12 +17,13 @@ async function fetchUsers() {
             populateAssigneeDropdown();
         }
     } catch (e) {
-        console.warn('Could not load dynamic users, using defaults:', e);
+        console.warn('Could not load dynamic users:', e);
     }
 }
 
 function populateAssigneeDropdown() {
     const select = document.getElementById('taskAssignee');
+    if (!select) return;
     select.innerHTML = '<option value="">👥 All Members (Visible to Everyone)</option>';
     assignableUsers.forEach(u => {
         const opt = document.createElement('option');
@@ -107,6 +78,7 @@ function renderKanban() {
     ['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'COMPLETED'].forEach(status => {
         const container = document.getElementById(`cards-${status}`);
         const countBadge = document.getElementById(`count-${status}`);
+        if (!container || !countBadge) return;
         container.innerHTML = '';
 
         const statusTasks = allTasks.filter(t => t.status === status);
