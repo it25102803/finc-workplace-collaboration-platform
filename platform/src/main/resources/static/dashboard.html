@@ -4,158 +4,68 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Enterprise Workspace - Dashboard</title>
-    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- FontAwesome Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #f8fafc;
-            color: #334155;
-        }
-        .sidebar {
-            width: 260px;
-            height: 100vh;
-            position: fixed;
-            background: #0f172a;
-            color: #ffffff;
-            padding: 24px 16px;
-            transition: all 0.3s;
-        }
-        .sidebar-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 24px;
-        }
-        .sidebar-brand-logo {
-            max-width: 110px;
-            height: auto;
-            object-fit: contain;
-            background: #ffffff;
-            padding: 4px 8px;
-            border-radius: 6px;
-        }
-        .sidebar-brand span {
-            font-size: 1rem;
-            font-weight: 700;
-            color: #f8fafc;
-        }
-        .nav-link-custom {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            color: #94a3b8;
-            border-radius: 10px;
-            font-weight: 500;
-            text-decoration: none;
-            margin-bottom: 6px;
-            transition: all 0.2s;
-        }
-        .nav-link-custom:hover, .nav-link-custom.active {
-            background: #1e293b;
-            color: #38bdf8;
-        }
-        .main-content {
-            margin-left: 260px;
-            padding: 32px;
-        }
-        .top-navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 32px;
-        }
-        .user-profile-badge {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: #ffffff;
-            padding: 8px 16px;
-            border-radius: 30px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        }
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            background-color: #10b981;
-            border-radius: 50%;
-        }
-        .metric-card {
-            background: #ffffff;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-            border: 1px solid #f1f5f9;
-            transition: transform 0.2s ease;
-        }
-        .metric-card:hover {
-            transform: translateY(-2px);
-        }
-        .metric-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.25rem;
-            margin-bottom: 16px;
-        }
-        .metric-val {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #0f172a;
-        }
-        .metric-lbl {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .role-badge {
-            background: #e0f2fe;
-            color: #0284c7;
-            font-size: 0.75rem;
-            font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 12px;
-            text-transform: uppercase;
-        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #334155; }
+        .sidebar { width: 260px; height: 100vh; position: fixed; background: #0f172a; color: #ffffff; padding: 24px 16px; }
+        .sidebar-brand { display: flex; align-items: center; gap: 12px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 24px; }
+        .sidebar-brand-logo { max-width: 110px; height: auto; object-fit: contain; background: #ffffff; padding: 4px 8px; border-radius: 6px; }
+        .sidebar-brand span { font-size: 1rem; font-weight: 700; color: #f8fafc; }
+        .nav-link-custom { display: flex; align-items: center; gap: 12px; padding: 12px 16px; color: #94a3b8; border-radius: 10px; font-weight: 500; text-decoration: none; margin-bottom: 6px; transition: all 0.2s; }
+        .nav-link-custom:hover, .nav-link-custom.active { background: #1e293b; color: #38bdf8; }
+        .main-content { margin-left: 260px; padding: 32px; }
+        .top-navbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .user-profile-badge { display: flex; align-items: center; gap: 12px; background: #ffffff; padding: 8px 16px; border-radius: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); text-decoration: none; color: inherit; transition: box-shadow 0.2s, transform 0.2s; }
+        .user-profile-badge:hover { box-shadow: 0 4px 14px rgba(37,99,235,0.15); transform: translateY(-1px); color: inherit; }
+        .status-dot { width: 10px; height: 10px; background-color: #10b981; border-radius: 50%; }
+        .metric-card { background: #ffffff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #f1f5f9; transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
+        .metric-card:hover { transform: translateY(-2px); }
+        .metric-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; margin-bottom: 16px; }
+        .metric-val { font-size: 1.8rem; font-weight: 700; color: #0f172a; }
+        .metric-lbl { font-size: 0.85rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .role-badge { background: #e0f2fe; color: #0284c7; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; text-transform: uppercase; }
+        .metric-link { text-decoration: none; color: inherit; display: block; height: 100%; }
+        .metric-link .metric-card { cursor: pointer; }
+        .metric-link:hover .metric-card { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(37,99,235,0.12); border-color: #bfdbfe; }
+        .metric-link:active .metric-card { transform: translateY(-2px); }
+        .global-search-wrap { position: relative; width: 100%; max-width: 520px; }
+        .global-search-wrap input { width: 100%; padding: 12px 16px 12px 42px; border-radius: 10px; border: 1px solid #e2e8f0; background: #ffffff; font-size: 0.9rem; }
+        .global-search-wrap input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .global-search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; }
+        .search-results-panel { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: #ffffff; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.12); max-height: 420px; overflow-y: auto; z-index: 1050; display: none; border: 1px solid #e2e8f0; }
+        .search-results-panel .result-item { padding: 10px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; text-decoration: none; color: inherit; }
+        .search-results-panel .result-item:last-child { border-bottom: none; }
+        .search-results-panel .result-item:hover { background: #f8fafc; }
+        .result-icon { width: 34px; height: 34px; border-radius: 8px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .result-title { font-weight: 600; font-size: 0.88rem; color: #0f172a; }
+        .result-sub { font-size: 0.76rem; color: #64748b; }
+        .result-type { font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; background: #f1f5f9; color: #475569; text-transform: uppercase; margin-left: auto; flex-shrink: 0; }
+        .search-empty { padding: 16px; text-align: center; font-size: 0.85rem; color: #94a3b8; }
     </style>
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="images/favicon.png">    
-    <!-- External CSS -->
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="images/favicon.png">
 </head>
 <body>
 
-<!-- Sidebar Navigation -->
 <div class="sidebar">
     <div class="sidebar-brand">
         <img src="images/finc-logo.png" alt="Finc Logo" class="sidebar-brand-logo" onerror="this.src='https://via.placeholder.com/40?text=FINC'">
         <span>Enterprise Portal</span>
     </div>
-    
     <nav>
         <a href="dashboard.html" class="nav-link-custom active"><i class="fa-solid fa-chart-pie"></i> Overview</a>
-        <a href="user-directory.html" class="nav-link-custom"><i class="fa-solid fa-users"></i> User Directory</a>
+        <a href="user-directory.html" id="userDirectoryLink" class="nav-link-custom" style="display: none;"><i class="fa-solid fa-users"></i> User Directory</a>
         <a href="channels.html" class="nav-link-custom"><i class="fa-solid fa-comments"></i> Channels & Chat</a>
         <a href="tasks.html" class="nav-link-custom"><i class="fa-solid fa-list-check"></i> Task Management</a>
         <a href="calendar.html" class="nav-link-custom"><i class="fa-solid fa-calendar-days"></i> Calendar & Meetings</a>
         <a href="files.html" class="nav-link-custom"><i class="fa-solid fa-folder-open"></i> File Manager</a>
+        <a href="knowledge.html" class="nav-link-custom"><i class="fa-solid fa-book"></i> Knowledge Base</a>
+        <a href="admin-settings.html" id="adminSettingsLink" class="nav-link-custom" style="display: none;"><i class="fa-solid fa-gear"></i> Admin Settings</a>
         <a href="knowledge-base.html" class="nav-link-custom"><i class="fa-solid fa-book"></i> Knowledge Base</a>
     </nav>
 </div>
 
-<!-- Main Area -->
 <div class="main-content">
     <div class="top-navbar">
         <div>
@@ -163,59 +73,70 @@
             <p class="text-muted mb-0" style="font-size: 0.9rem;">Finc Academy & Consultants Collaboration Workspace</p>
         </div>
         <div class="d-flex align-items-center gap-3">
-            <div class="user-profile-badge">
+            <!-- Clickable profile badge -->
+            <a href="profile.html" class="user-profile-badge">
                 <span class="status-dot"></span>
                 <span class="fw-semibold" id="displayName" style="font-size: 0.9rem;">User Session</span>
                 <span class="role-badge" id="userRoleBadge">EMPLOYEE</span>
-            </div>
+            </a>
             <button id="logoutBtn" class="btn btn-outline-danger btn-sm px-3 rounded-pill fw-semibold"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
         </div>
     </div>
 
-    <!-- Welcome Banner Card -->
+    <div class="global-search-wrap mb-4">
+        <i class="fa-solid fa-magnifying-glass global-search-icon"></i>
+        <input type="text" id="globalSearchInput" placeholder="Search users, departments, channels, tasks, files, articles..." autocomplete="off">
+        <div id="searchResults" class="search-results-panel"></div>
+    </div>
+
     <div class="card border-0 mb-4 rounded-4" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff;">
         <div class="card-body p-4 d-flex justify-content-between align-items-center">
             <div>
                 <h4 class="fw-bold mb-2" id="welcomeHeading">Welcome back!</h4>
                 <p class="mb-0 opacity-75" style="max-width: 500px;">
-                    Department: <span id="userDepartment" class="fw-semibold">Software Engineering</span>
+                    Department: <span id="userDepartment" class="fw-semibold">Not Assigned</span>
                 </p>
             </div>
             <i class="fa-solid fa-shield-halved fa-4x opacity-25 d-none d-md-block"></i>
         </div>
     </div>
 
-    <!-- Metric Cards Grid -->
     <div class="row g-4 mb-4">
         <div class="col-md-3">
-            <div class="metric-card">
-                <div class="metric-icon" style="background: #eff6ff; color: #2563eb;">
-                    <i class="fa-solid fa-user-gear"></i>
+            <a href="user-directory.html" class="metric-link">
+                <div class="metric-card">
+                    <div class="metric-icon" style="background: #eff6ff; color: #2563eb;">
+                        <i class="fa-solid fa-user-gear"></i>
+                    </div>
+                    <div class="metric-val" id="metric-user-scope">001</div>
+                    <div class="metric-lbl">USER ID</div>
                 </div>
-                <div class="metric-val" id="metric-user-scope">001</div>
-                <div class="metric-lbl">USER ID</div>
-            </div>
+            </a>
         </div>
         <div class="col-md-3">
-            <div class="metric-card">
-                <div class="metric-icon" style="background: #ecfdf5; color: #10b981;">
-                    <i class="fa-solid fa-file-lines"></i>
+            <a href="knowledge.html" class="metric-link">
+                <div class="metric-card">
+                    <div class="metric-icon" style="background: #ecfdf5; color: #10b981;">
+                        <i class="fa-solid fa-file-lines"></i>
+                    </div>
+                    <div class="metric-val" id="metric-articles">0</div>
+                    <div class="metric-lbl">Articles</div>
                 </div>
-                <div class="metric-val" id="metric-articles">0</div>
-                <div class="metric-lbl">Articles</div>
-            </div>
+            </a>
         </div>
         <div class="col-md-3">
-            <div class="metric-card">
-                <div class="metric-icon" style="background: #fff7ed; color: #f97316;">
-                    <i class="fa-solid fa-tasks"></i>
+            <a href="tasks.html" class="metric-link">
+                <div class="metric-card">
+                    <div class="metric-icon" style="background: #fff7ed; color: #f97316;">
+                        <i class="fa-solid fa-tasks"></i>
+                    </div>
+                    <div class="metric-val" id="metric-tasks">0</div>
+                    <div class="metric-lbl">Active Tasks</div>
                 </div>
-                <div class="metric-val" id="metric-tasks">0</div>
-                <div class="metric-lbl">Active Tasks</div>
-            </div>
+            </a>
         </div>
         <div class="col-md-3">
-            <div class="metric-card">
+            <div class="metric-card" style="cursor: default;">
                 <div class="metric-icon" style="background: #f3e8ff; color: #a855f7;">
                     <i class="fa-solid fa-server"></i>
                 </div>
@@ -227,5 +148,7 @@
 </div>
 
 <script src="js/dashboard.js"></script>
+<script src="js/presence.js"></script>
+<script src="js/roleguard.js"></script>
 </body>
 </html>

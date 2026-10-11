@@ -23,10 +23,15 @@
             </div>
         </div>
         <nav class="nav-menu">
+            <a href="dashboard.html" class="nav-item"><i class="fa-solid fa-house"></i> Dashboard</a>
+            <a href="tasks.html" class="nav-item active"><i class="fa-solid fa-list-check"></i> Tasks</a>
+            <a href="calendar.html" class="nav-item"><i class="fa-solid fa-calendar-days"></i> Calendar</a>
+            <a href="files.html" class="nav-item"><i class="fa-solid fa-folder"></i> Files</a>
             <a href="dashboard.html" class="nav-item">
                 <i class="fa-solid fa-chart-pie"></i>
                 <span>Overview</span>
             </a>
+            <a href="user-directory.html" id="userDirectoryLink" class="nav-link-custom" style="display: none;"><i class="fa-solid fa-users"></i> User Directory</a>
             <a href="users.html" class="nav-item">
                 <i class="fa-solid fa-users"></i>
                 <span>User Directory</span>
@@ -46,6 +51,13 @@
             <a href="files.html" class="nav-item">
                 <i class="fa-solid fa-folder"></i>
                 <span>File Manager</span>
+            </a>
+            <a href="knowledge.html" class="nav-item">
+                <i class="fa-solid fa-book"></i>
+                <span>Knowledge Base</span>
+            </a>
+            <a href="admin-settings.html" id="adminSettingsLink" class="nav-link-custom" style="display: none;">
+                <i class="fa-solid fa-gear"></i> Admin Settings
             </a>
             <a href="knowledge-base.html" class="nav-item">
                 <i class="fa-solid fa-book"></i>
@@ -213,7 +225,19 @@
         </div>
     </div>
 </div>
-
+<script src="js/api.js"></script>
 <script src="js/tasks.js"></script>
+<script src="js/presence.js"></script>
+<script>
+    // Show Admin Settings link only for SYSTEM_ADMIN users
+    (function () {
+        const role = (localStorage.getItem("role") || "").replace("ROLE_", "");
+        const link = document.getElementById("adminSettingsLink");
+        if (link && role === "SYSTEM_ADMIN") {
+            link.style.display = "";
+        }
+    })();
+</script>
+<script src="js/roleguard.js"></script>
 </body>
 </html>

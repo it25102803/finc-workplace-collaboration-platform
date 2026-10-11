@@ -47,8 +47,16 @@
             box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35); transition: transform 0.2s ease;
         }
         .btn-custom:hover { transform: translateY(-1px); color: #ffffff; }
+        /* NEW: Forgot password link */
+        .forgot-link {
+            font-size: 0.8rem;
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .forgot-link:hover { text-decoration: underline; color: #1d4ed8; }
     </style>
-    <link rel="icon" type="image/png" href="images/favicon.png">   
+    <link rel="icon" type="image/png" href="images/favicon.png">
 </head>
 <body>
 
@@ -90,11 +98,17 @@
                         <div class="input-group" style="position: relative;">
                             <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
                             <input type="password" id="loginPassword" class="form-control" placeholder="Enter your password" style="padding-right: 45px;" required>
-                            <i class="fa-solid fa-eye toggle-password" 
+                            <i class="fa-solid fa-eye toggle-password"
                                data-target="#loginPassword"
                                style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); z-index: 100; cursor: pointer; color: #6c757d;"></i>
                         </div>
                     </div>
+
+                    <!-- NEW: Forgot password link (FR-UM-10) -->
+                    <div class="d-flex justify-content-end mb-2">
+                        <a href="forgot-password.html" class="forgot-link">Forgot password?</a>
+                    </div>
+
                     <button type="submit" class="btn btn-custom w-100 mt-2">Log In to Workspace</button>
                 </form>
             </div>
@@ -143,11 +157,11 @@
                         <div class="input-group" style="position: relative;">
                             <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
                             <input type="password" id="password" class="form-control" placeholder="Enter your password" style="padding-right: 40px;" required>
-                            <i class="fa-solid fa-eye toggle-password" 
+                            <i class="fa-solid fa-eye toggle-password"
                                data-target="#password"
                                style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); z-index: 100; cursor: pointer; color: #6c757d;"></i>
                         </div>
-                    </div>      
+                    </div>
                     <button type="submit" class="btn btn-custom w-100 mt-2" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">Create Account</button>
                 </form>
             </div>
@@ -206,16 +220,16 @@
             if (res.ok) {
                 const data = await res.json();
                 showAlert("Login Successful! Redirecting...", true);
-                
+
                 localStorage.clear();
                 localStorage.setItem("user", JSON.stringify(data));
                 localStorage.setItem("userId", data.userId || "");
                 localStorage.setItem("badgeId", String(data.userId || 1).padStart(3, '0'));
                 localStorage.setItem("username", data.username || usernameInput);
-                localStorage.setItem("departmentName", data.departmentName || "Software Engineering");
+                localStorage.setItem("departmentName", data.departmentName || "Not Assigned");
                 localStorage.setItem("role", data.role || "ROLE_EMPLOYEE");
                 localStorage.setItem("status", "Online");
-                
+
                 setTimeout(() => {
                     window.location.href = "dashboard.html";
                 }, 800);
@@ -239,7 +253,6 @@
     document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        // Convert unselected/missing department values strictly to null or numeric Integer
         const deptSelect = document.getElementById("regDepartment");
         let parsedDeptId = null;
         if (deptSelect && deptSelect.value && deptSelect.value !== "undefined" && !isNaN(deptSelect.value)) {
@@ -251,7 +264,7 @@
             email: document.getElementById("regEmail").value.trim(),
             firstName: document.getElementById("regFirstName").value.trim(),
             lastName: document.getElementById("regLastName").value.trim(),
-            departmentId: parsedDeptId, // Safely maps as Integer or null
+            departmentId: parsedDeptId,
             password: document.getElementById("password").value.trim()
         };
 

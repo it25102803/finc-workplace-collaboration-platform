@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Settings — Finc Workplace</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f1f5f9; min-height: 100vh; }
+        .topbar { background: #0f172a; color: #fff; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .topbar h1 { font-size: 1.1rem; margin: 0; }
+        .topbar a { color: #cbd5e1; text-decoration: none; font-size: 0.9rem; }
+        .topbar a:hover { color: #fff; }
+        .wrap { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
+        .card { background: #fff; border-radius: 14px; padding: 26px; box-shadow: 0 4px 16px rgba(0,0,0,0.05); margin-bottom: 22px; }
+        .card h2 { font-size: 1.1rem; margin-bottom: 18px; color: #0f172a; }
+        .setting-row { display: grid; grid-template-columns: 220px 1fr auto; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid #e2e8f0; }
+        .setting-row:last-child { border-bottom: none; }
+        .setting-key { font-weight: 600; color: #1e293b; font-size: 0.9rem; }
+        .setting-desc { font-size: 0.78rem; color: #64748b; margin-top: 2px; }
+        input.form-control { border-radius: 8px; }
+        .btn-save { background: #2563eb; color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 0.85rem; font-weight: 600; }
+        .btn-save:hover { background: #1d4ed8; color: #fff; }
+        .alert-box { margin-bottom: 16px; }
+        .quota-bar { height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin-top: 6px; }
+        .quota-fill { height: 100%; background: linear-gradient(90deg, #10b981, #059669); }
+        .quota-fill.warn { background: linear-gradient(90deg, #f59e0b, #d97706); }
+        .quota-fill.danger { background: linear-gradient(90deg, #ef4444, #dc2626); }
+        .dept-card { border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+
+        .tabs { display: flex; gap: 8px; margin-bottom: 22px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; }
+        .tab-btn { background: none; border: none; padding: 12px 20px; font-size: 0.9rem; font-weight: 600; color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; display: flex; align-items: center; gap: 8px; }
+        .tab-btn:hover { color: #1e293b; }
+        .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; }
+
+        .user-table { width: 100%; }
+        .user-table th { text-align: left; font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 12px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; }
+        .user-table td { padding: 14px 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.88rem; vertical-align: middle; }
+        .user-table tr:last-child td { border-bottom: none; }
+        .badge-role { background: #e0f2fe; color: #0284c7; padding: 3px 10px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; }
+        .badge-admin { background: #f3e8ff; color: #a855f7; padding: 3px 10px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; }
+        .badge-online { background: #ecfdf5; color: #059669; padding: 3px 10px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; }
+        .badge-offline { background: #f3f4f6; color: #6b7280; padding: 3px 10px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; }
+        .badge-disabled { background: #fee2e2; color: #dc2626; padding: 3px 10px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; }
+        .btn-action { background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; border-radius: 6px; padding: 5px 10px; font-size: 0.75rem; font-weight: 600; margin-right: 4px; }
+        .btn-action:hover { background: #e2e8f0; color: #0f172a; }
+        .btn-action.danger { color: #dc2626; }
+        .btn-action.danger:hover { background: #fee2e2; }
+        .btn-action.primary { background: #2563eb; color: #fff; border-color: #2563eb; }
+        .btn-action.primary:hover { background: #1d4ed8; }
+
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+
+        /* Roles */
+        .role-card {
+            border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 16px;
+            background: #fff;
+        }
+        .role-card h3 {
+            font-size: 1rem; font-weight: 700; margin-bottom: 4px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .role-desc { font-size: 0.8rem; color: #64748b; margin-bottom: 16px; }
+        .perm-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px;
+            margin-bottom: 14px;
+        }
+        .perm-item {
+            display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+            border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer;
+            font-size: 0.82rem; font-weight: 500; color: #334155;
+            transition: all 0.15s;
+        }
+        .perm-item:hover { background: #f8fafc; border-color: #cbd5e1; }
+        .perm-item input { cursor: pointer; }
+        .perm-item.checked { background: #eff6ff; border-color: #93c5fd; color: #1e40af; }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <h1><i class="fa-solid fa-gear"></i> Admin Console</h1>
+    <a href="dashboard.html"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+</div>
+
+<div class="wrap">
+    <div id="alertBox" class="alert d-none alert-box"></div>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="users"><i class="fa-solid fa-users"></i> Users</button>
+        <button class="tab-btn" data-tab="departments"><i class="fa-solid fa-sitemap"></i> Departments</button>
+        <button class="tab-btn" data-tab="roles"><i class="fa-solid fa-shield-halved"></i> Roles & Permissions</button>
+        <button class="tab-btn" data-tab="settings"><i class="fa-solid fa-sliders"></i> System Settings</button>
+        <button class="tab-btn" data-tab="quotas"><i class="fa-solid fa-database"></i> Storage Quotas</button>
+    </div>
+
+    <!-- ============ USERS ============ -->
+    <div class="tab-pane active" id="tab-users">
+        <div class="card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 style="margin:0;"><i class="fa-solid fa-users"></i> User Management</h2>
+                <button class="btn-action primary" id="btnCreateUser"><i class="fa-solid fa-user-plus"></i> Create User</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="user-table">
+                    <thead>
+                        <tr><th>ID</th><th>USERNAME</th><th>NAME</th><th>EMAIL</th><th>ROLE</th><th>STATUS</th><th>ACTIONS</th></tr>
+                    </thead>
+                    <tbody id="usersTbody">
+                        <tr><td colspan="7" class="text-center text-muted py-4">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ DEPARTMENTS ============ -->
+    <div class="tab-pane" id="tab-departments">
+        <div class="card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 style="margin:0;"><i class="fa-solid fa-sitemap"></i> Departments</h2>
+                <button class="btn-action primary" id="btnCreateDept"><i class="fa-solid fa-plus"></i> Create Department</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="user-table">
+                    <thead>
+                        <tr><th>ID</th><th>NAME</th><th>DESCRIPTION</th><th>USERS</th><th>STORAGE LIMIT</th><th>ACTIONS</th></tr>
+                    </thead>
+                    <tbody id="deptTbody">
+                        <tr><td colspan="6" class="text-center text-muted py-4">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ ROLES ============ -->
+    <div class="tab-pane" id="tab-roles">
+        <div class="card">
+            <h2><i class="fa-solid fa-shield-halved"></i> Roles & Permissions</h2>
+            <p class="text-muted" style="font-size:0.85rem;">
+                Tick the permissions granted to each role. Changes are saved immediately and logged to the audit trail.
+            </p>
+            <div id="rolesContainer">
+                <div class="text-center text-muted py-4">Loading roles...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ SETTINGS ============ -->
+    <div class="tab-pane" id="tab-settings">
+        <div class="card">
+            <h2><i class="fa-solid fa-sliders"></i> System Settings</h2>
+            <div id="settingsList">Loading...</div>
+        </div>
+    </div>
+
+    <!-- ============ QUOTAS ============ -->
+    <div class="tab-pane" id="tab-quotas">
+        <div class="card">
+            <h2><i class="fa-solid fa-database"></i> Department Storage Quotas</h2>
+            <div id="deptList">Loading...</div>
+        </div>
+    </div>
+</div>
+
+<!-- CREATE USER MODAL -->
+<div class="modal fade" id="createUserModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa-solid fa-user-plus"></i> Create User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3"><label class="form-label">Username *</label><input type="text" class="form-control" id="cuUsername"></div>
+                    <div class="col-md-6 mb-3"><label class="form-label">Email *</label><input type="email" class="form-control" id="cuEmail"></div>
+                    <div class="col-md-6 mb-3"><label class="form-label">Password *</label><input type="text" class="form-control" id="cuPassword" placeholder="min 6 chars"></div>
+                    <div class="col-md-6 mb-3"><label class="form-label">Phone</label><input type="text" class="form-control" id="cuPhone"></div>
+                    <div class="col-md-6 mb-3"><label class="form-label">First Name</label><input type="text" class="form-control" id="cuFirstName"></div>
+                    <div class="col-md-6 mb-3"><label class="form-label">Last Name</label><input type="text" class="form-control" id="cuLastName"></div>
+                    <div class="col-md-6 mb-3"><label class="form-label">Role</label><select class="form-select" id="cuRole"></select></div>
+                    <div class="col-md-6 mb-3"><label class="form-label">Department</label><select class="form-select" id="cuDepartment"><option value="">Not Assigned</option></select></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn-action primary" id="btnSaveCreateUser">Create User</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- EDIT USER MODAL -->
+<div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa-solid fa-user-pen"></i> Edit User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="euUserId">
+                <div class="row">
+                    <div class="col-md-6 mb-3"><label class="form-label">Username (read-only)</label><input type="text" class="form-control" id="euUsername" disabled></div>
+                    <div class="col-md-6 mb-3"><label class="form-label">Email</label><input type="email" class="form-control" id="euEmail"></div>
+                    <div class="col-md-6 mb-3"><label class="form-label">First Name</label><input type="text" class="form-control" id="euFirstName"></div>
+                    <div class="col-md-6 mb-3"><label class="form-label">Last Name</label><input type="text" class="form-control" id="euLastName"></div>
+                    <div class="col-md-6 mb-3"><label class="form-label">Phone</label><input type="text" class="form-control" id="euPhone"></div>
+                    <div class="col-md-6 mb-3"><label class="form-label">Department</label><select class="form-select" id="euDepartment"><option value="">Not Assigned</option></select></div>
+                    <div class="col-md-6 mb-3"><label class="form-label">Role</label><select class="form-select" id="euRole"></select></div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label d-block">Account Status</label>
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" id="euEnabled">
+                            <label class="form-check-label" for="euEnabled">Enabled (can log in)</label>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div>
+                    <label class="form-label">Reset Password</label>
+                    <div class="d-flex gap-2">
+                        <input type="text" class="form-control" id="euNewPassword" placeholder="New password (min 6 chars)">
+                        <button class="btn-action danger" id="btnResetPassword" style="white-space:nowrap;"><i class="fa-solid fa-key"></i> Reset</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn-action primary" id="btnSaveEditUser">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- DEPARTMENT MODAL -->
+<div class="modal fade" id="deptModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deptModalTitle"><i class="fa-solid fa-sitemap"></i> Create Department</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="deptId">
+                <div class="mb-3"><label class="form-label">Name *</label><input type="text" class="form-control" id="deptName"></div>
+                <div class="mb-3"><label class="form-label">Description</label><input type="text" class="form-control" id="deptDescription"></div>
+                <div class="mb-3"><label class="form-label">Storage Limit (MB)</label><input type="number" min="0" class="form-control" id="deptStorage" value="1024"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn-action primary" id="btnSaveDept">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/roleguard.js"></script>
+<script>
+const actorId = localStorage.getItem("userId") || "1";
+let rolesCache = [];
+let departmentsCache = [];
+let permissionCatalogue = [];
+
+function showAlert(msg, ok) {
+    const a = document.getElementById("alertBox");
+    a.className = "alert alert-box " + (ok ? "alert-success" : "alert-danger");
+    a.textContent = msg;
+    a.classList.remove("d-none");
+    setTimeout(() => a.classList.add("d-none"), 4000);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+// ---------- Tabs ----------
+document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+        const tab = btn.dataset.tab;
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b === btn));
+        document.querySelectorAll(".tab-pane").forEach(p => p.classList.remove("active"));
+        document.getElementById("tab-" + tab).classList.add("active");
+        if (tab === "users") loadUsers();
+        if (tab === "departments") loadDepartments();
+        if (tab === "roles") loadRoles();
+        if (tab === "settings") loadSettings();
+        if (tab === "quotas") loadQuotas();
+    });
+});
+
+// ---------- Load roles + departments for user modals ----------
+async function loadRolesAndDepts() {
+    try {
+        const r = await fetch(`/api/admin/roles?actorId=${actorId}`);
+        if (r.ok) rolesCache = await r.json();
+    } catch (e) { console.warn(e); }
+
+    try {
+        const d = await fetch(`/api/departments`);
+        if (d.ok) departmentsCache = await d.json();
+    } catch (e) { console.warn(e); }
+
+    const roleOpts = rolesCache.map(r =>
+        `<option value="${r.roleType}">${r.roleType.replace("ROLE_","")}</option>`).join("");
+    document.getElementById("cuRole").innerHTML = roleOpts;
+    document.getElementById("euRole").innerHTML  = roleOpts;
+
+    const deptOpts = departmentsCache.map(d =>
+        `<option value="${d.departmentId}">${d.name}</option>`).join("");
+    document.getElementById("cuDepartment").innerHTML = '<option value="">Not Assigned</option>' + deptOpts;
+    document.getElementById("euDepartment").innerHTML = '<option value="">Not Assigned</option>' + deptOpts;
+}
+
+// ====================================================
+// ROLES & PERMISSIONS
+// ====================================================
+async function loadRoles() {
+    const container = document.getElementById("rolesContainer");
+    container.innerHTML = '<div class="text-center text-muted py-4">Loading roles...</div>';
+    try {
+        // Fetch roles + catalogue in parallel
+        const [rRes, cRes] = await Promise.all([
+            fetch(`/api/admin/roles?actorId=${actorId}`),
+            fetch(`/api/admin/roles/catalogue?actorId=${actorId}`)
+        ]);
+        if (!rRes.ok) throw new Error("HTTP " + rRes.status);
+        rolesCache = await rRes.json();
+        permissionCatalogue = cRes.ok ? await cRes.json() : [];
+
+        if (!rolesCache.length) {
+            container.innerHTML = '<div class="text-center text-muted py-4">No roles found.</div>';
+            return;
+        }
+
+        container.innerHTML = rolesCache.map(role => renderRoleCard(role)).join("");
+
+        // Attach save handlers
+        container.querySelectorAll("[data-save-role]").forEach(btn => {
+            btn.addEventListener("click", () => saveRolePermissions(parseInt(btn.dataset.saveRole, 10)));
+        });
+
+        // Attach checkbox visual toggle
+        container.querySelectorAll(".perm-item").forEach(item => {
+            const cb = item.querySelector("input[type=checkbox]");
+            item.classList.toggle("checked", cb.checked);
+            cb.addEventListener("change", () => item.classList.toggle("checked", cb.checked));
+        });
+    } catch (e) {
+        console.error(e);
+        container.innerHTML = '<div class="text-center text-danger py-4">Failed to load roles.</div>';
+    }
+}
+
+function renderRoleCard(role) {
+    const shortName = role.roleType.replace("ROLE_", "");
+    const current = new Set(role.permissions || []);
+
+    const permHtml = permissionCatalogue.map(p => `
+        <label class="perm-item">
+            <input type="checkbox" value="${p}" ${current.has(p) ? "checked" : ""}>
+            <span>${p.replace(/_/g, " ")}</span>
+        </label>
+    `).join("");
+
+    return `
+        <div class="role-card" data-role-id="${role.roleId}">
+            <h3>
+                <i class="fa-solid fa-shield"></i>
+                ${shortName}
+                <span class="badge-role" style="font-size:0.7rem;">${role.roleId}</span>
+            </h3>
+            <div class="role-desc">
+                <strong>${current.size}</strong> permission(s) granted
+            </div>
+            <div class="perm-grid">
+                ${permHtml}
+            </div>
+            <button class="btn-action primary" data-save-role="${role.roleId}">
+                <i class="fa-solid fa-floppy-disk"></i> Save Permissions
+            </button>
+        </div>
+    `;
+}
+
+async function saveRolePermissions(roleId) {
+    const card = document.querySelector(`[data-role-id="${roleId}"]`);
+    if (!card) return;
+    const permissions = Array.from(card.querySelectorAll("input[type=checkbox]:checked"))
+        .map(cb => cb.value);
+
+    try {
+        const res = await fetch(`/api/admin/roles/${roleId}/permissions?actorId=${actorId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ permissions })
+        });
+        if (!res.ok) throw new Error(await res.text());
+        showAlert(`Permissions updated for role ${roleId}.`, true);
+        loadRoles();
+    } catch (e) {
+        showAlert("Save failed: " + e.message, false);
+    }
+}
+
+// ====================================================
+// USERS
+// ====================================================
+async function loadUsers() {
+    const tbody = document.getElementById("usersTbody");
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Loading...</td></tr>';
+    try {
+        const res = await fetch(`/api/users?actorId=${actorId}`);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const users = await res.json();
+
+        if (!users.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No users found.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = users.map(u => {
+            const id = u.id || u.userId;
+            const badge = String(id).padStart(3, "0");
+            const fullName = `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.username;
+            const roleType = u.role ? u.role.roleType : "ROLE_EMPLOYEE";
+            const roleShort = roleType.replace("ROLE_", "");
+            const roleClass = roleShort.includes("ADMIN") ? "badge-admin" : "badge-role";
+
+            let statusBadge;
+            if (u.enabled === false) statusBadge = '<span class="badge-disabled">DISABLED</span>';
+            else if (u.status === "ONLINE") statusBadge = '<span class="badge-online">ONLINE</span>';
+            else statusBadge = '<span class="badge-offline">OFFLINE</span>';
+
+            return `
+                <tr>
+                    <td class="fw-bold" style="color:#2563eb;">${badge}</td>
+                    <td>${u.username}</td>
+                    <td>${fullName}</td>
+                    <td style="color:#64748b;">${u.email}</td>
+                    <td><span class="${roleClass}">${roleShort}</span></td>
+                    <td>${statusBadge}</td>
+                    <td><button class="btn-action" data-edit="${id}"><i class="fa-solid fa-pen"></i> Edit</button></td>
+                </tr>`;
+        }).join("");
+
+        tbody.querySelectorAll("[data-edit]").forEach(btn => {
+            btn.addEventListener("click", () => openEditModal(parseInt(btn.dataset.edit, 10)));
+        });
+    } catch (e) {
+        console.error(e);
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4">Failed to load users.</td></tr>';
+    }
+}
+
+function openEditModal(userId) {
+    fetch(`/api/users/${userId}?actorId=${actorId}`)
+        .then(r => r.json())
+        .then(u => {
+            document.getElementById("euUserId").value = userId;
+            document.getElementById("euUsername").value = u.username || "";
+            document.getElementById("euEmail").value = u.email || "";
+            document.getElementById("euFirstName").value = u.firstName || "";
+            document.getElementById("euLastName").value = u.lastName || "";
+            document.getElementById("euPhone").value = u.phone || "";
+            document.getElementById("euDepartment").value = u.department ? u.department.departmentId : "";
+            document.getElementById("euRole").value = u.role ? u.role.roleType : "ROLE_EMPLOYEE";
+            document.getElementById("euEnabled").checked = u.enabled !== false;
+            document.getElementById("euNewPassword").value = "";
+            new bootstrap.Modal(document.getElementById("editUserModal")).show();
+        })
+        .catch(err => showAlert("Could not load user: " + err.message, false));
+}
+
+document.getElementById("btnSaveEditUser").addEventListener("click", async () => {
+    const id = document.getElementById("euUserId").value;
+    const payload = {
+        firstName: document.getElementById("euFirstName").value.trim(),
+        lastName: document.getElementById("euLastName").value.trim(),
+        email: document.getElementById("euEmail").value.trim(),
+        phone: document.getElementById("euPhone").value.trim(),
+        departmentId: document.getElementById("euDepartment").value
+            ? parseInt(document.getElementById("euDepartment").value, 10) : null,
+        enabled: document.getElementById("euEnabled").checked
+    };
+    const newRole = document.getElementById("euRole").value;
+    try {
+        const r1 = await fetch(`/api/admin/users/${id}?actorId=${actorId}`, {
+            method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
+        });
+        if (!r1.ok) throw new Error(await r1.text());
+
+        const r2 = await fetch(`/api/admin/users/${id}/role?actorId=${actorId}`, {
+            method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role: newRole })
+        });
+        if (!r2.ok) throw new Error(await r2.text());
+
+        bootstrap.Modal.getInstance(document.getElementById("editUserModal")).hide();
+        showAlert("User updated successfully.", true);
+        loadUsers();
+    } catch (e) { showAlert("Update failed: " + e.message, false); }
+});
+
+document.getElementById("btnResetPassword").addEventListener("click", async () => {
+    const id = document.getElementById("euUserId").value;
+    const pwd = document.getElementById("euNewPassword").value;
+    if (!pwd || pwd.length < 6) { showAlert("Password must be at least 6 characters.", false); return; }
+    try {
+        const r = await fetch(`/api/admin/users/${id}/reset-password?actorId=${actorId}`, {
+            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ newPassword: pwd })
+        });
+        if (!r.ok) throw new Error(await r.text());
+        showAlert("Password reset successfully.", true);
+        document.getElementById("euNewPassword").value = "";
+    } catch (e) { showAlert("Reset failed: " + e.message, false); }
+});
+
+document.getElementById("btnCreateUser").addEventListener("click", () => {
+    ["cuUsername","cuEmail","cuPassword","cuPhone","cuFirstName","cuLastName"].forEach(id => {
+        document.getElementById(id).value = "";
+    });
+    document.getElementById("cuDepartment").value = "";
+    new bootstrap.Modal(document.getElementById("createUserModal")).show();
+});
+
+document.getElementById("btnSaveCreateUser").addEventListener("click", async () => {
+    const payload = {
+        username: document.getElementById("cuUsername").value.trim(),
+        email: document.getElementById("cuEmail").value.trim(),
+        password: document.getElementById("cuPassword").value,
+        firstName: document.getElementById("cuFirstName").value.trim(),
+        lastName: document.getElementById("cuLastName").value.trim(),
+        phone: document.getElementById("cuPhone").value.trim(),
+        role: document.getElementById("cuRole").value,
+        departmentId: document.getElementById("cuDepartment").value
+            ? parseInt(document.getElementById("cuDepartment").value, 10) : null,
+        enabled: true
+    };
+    if (!payload.username || !payload.email || !payload.password) {
+        showAlert("Username, email and password are required.", false);
+        return;
+    }
+    try {
+        const r = await fetch(`/api/admin/users?actorId=${actorId}`, {
+            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
+        });
+        if (!r.ok) throw new Error(await r.text());
+        bootstrap.Modal.getInstance(document.getElementById("createUserModal")).hide();
+        showAlert("User created successfully.", true);
+        loadUsers();
+    } catch (e) { showAlert("Create failed: " + e.message, false); }
+});
+
+// ====================================================
+// DEPARTMENTS
+// ====================================================
+async function loadDepartments() {
+    const tbody = document.getElementById("deptTbody");
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Loading...</td></tr>';
+    try {
+        const [deptRes, usersRes] = await Promise.all([
+            fetch(`/api/departments?actorId=${actorId}`),
+            fetch(`/api/users?actorId=${actorId}`)
+        ]);
+        if (!deptRes.ok) throw new Error("HTTP " + deptRes.status);
+        const depts = await deptRes.json();
+        const users = usersRes.ok ? await usersRes.json() : [];
+
+        const counts = {};
+        users.forEach(u => {
+            const did = u.department ? (u.department.departmentId || u.department.id) : null;
+            if (did) counts[did] = (counts[did] || 0) + 1;
+        });
+
+        if (!depts.length) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No departments.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = depts.map(d => {
+            const id = d.departmentId || d.id;
+            const userCount = counts[id] || 0;
+            const storage = d.storageLimitMb != null ? d.storageLimitMb + " MB" : "—";
+            return `
+                <tr>
+                    <td class="fw-bold" style="color:#2563eb;">${String(id).padStart(3,"0")}</td>
+                    <td class="fw-semibold">${d.name}</td>
+                    <td style="color:#64748b;">${d.description || "—"}</td>
+                    <td>${userCount}</td>
+                    <td>${storage}</td>
+                    <td>
+                        <button class="btn-action" data-edit-dept="${id}"><i class="fa-solid fa-pen"></i> Edit</button>
+                        <button class="btn-action danger" data-del-dept="${id}" data-name="${d.name}" data-count="${userCount}">
+                            <i class="fa-solid fa-trash"></i> Delete
+                        </button>
+                    </td>
+                </tr>`;
+        }).join("");
+
+        tbody.querySelectorAll("[data-edit-dept]").forEach(btn => {
+            btn.addEventListener("click", () => openEditDeptModal(parseInt(btn.dataset.editDept, 10)));
+        });
+        tbody.querySelectorAll("[data-del-dept]").forEach(btn => {
+            btn.addEventListener("click", () => deleteDept(
+                parseInt(btn.dataset.delDept, 10),
+                btn.dataset.name,
+                parseInt(btn.dataset.count, 10)
+            ));
+        });
+    } catch (e) {
+        console.error(e);
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">Failed to load departments.</td></tr>';
+    }
+}
+
+document.getElementById("btnCreateDept").addEventListener("click", () => {
+    document.getElementById("deptModalTitle").innerHTML = '<i class="fa-solid fa-sitemap"></i> Create Department';
+    document.getElementById("deptId").value = "";
+    document.getElementById("deptName").value = "";
+    document.getElementById("deptDescription").value = "";
+    document.getElementById("deptStorage").value = "1024";
+    new bootstrap.Modal(document.getElementById("deptModal")).show();
+});
+
+function openEditDeptModal(deptId) {
+    const d = departmentsCache.find(x => (x.departmentId || x.id) === deptId);
+    if (!d) {
+        fetch(`/api/departments/${deptId}`)
+            .then(r => r.json())
+            .then(populateDeptModal)
+            .catch(err => showAlert("Could not load department: " + err.message, false));
+    } else {
+        populateDeptModal(d);
+    }
+}
+
+function populateDeptModal(d) {
+    document.getElementById("deptModalTitle").innerHTML = '<i class="fa-solid fa-pen"></i> Edit Department';
+    document.getElementById("deptId").value = d.departmentId || d.id;
+    document.getElementById("deptName").value = d.name || "";
+    document.getElementById("deptDescription").value = d.description || "";
+    document.getElementById("deptStorage").value = d.storageLimitMb != null ? d.storageLimitMb : 1024;
+    new bootstrap.Modal(document.getElementById("deptModal")).show();
+}
+
+document.getElementById("btnSaveDept").addEventListener("click", async () => {
+    const id = document.getElementById("deptId").value;
+    const name = document.getElementById("deptName").value.trim();
+    const description = document.getElementById("deptDescription").value.trim();
+    const storageLimitMb = parseInt(document.getElementById("deptStorage").value, 10) || 0;
+    if (!name) { showAlert("Department name is required.", false); return; }
+    const payload = { name, description, storageLimitMb };
+    try {
+        const url = id ? `/api/departments/${id}?actorId=${actorId}` : `/api/departments?actorId=${actorId}`;
+        const method = id ? "PUT" : "POST";
+        const r = await fetch(url, {
+            method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
+        });
+        if (!r.ok) throw new Error(await r.text());
+        bootstrap.Modal.getInstance(document.getElementById("deptModal")).hide();
+        showAlert(id ? "Department updated." : "Department created.", true);
+        departmentsCache = [];
+        await loadRolesAndDepts();
+        loadDepartments();
+    } catch (e) { showAlert("Save failed: " + e.message, false); }
+});
+
+async function deleteDept(id, name, userCount) {
+    if (userCount > 0) {
+        showAlert(`Cannot delete "${name}" — it still has ${userCount} user(s). Reassign them first.`, false);
+        return;
+    }
+    if (!confirm(`Delete department "${name}"? This cannot be undone.`)) return;
+    try {
+        const r = await fetch(`/api/departments/${id}?actorId=${actorId}`, { method: "DELETE" });
+        if (!r.ok) throw new Error(await r.text());
+        showAlert("Department deleted.", true);
+        departmentsCache = [];
+        await loadRolesAndDepts();
+        loadDepartments();
+    } catch (e) { showAlert("Delete failed: " + e.message, false); }
+}
+
+// ====================================================
+// SETTINGS
+// ====================================================
+async function loadSettings() {
+    try {
+        const res = await fetch(`/api/admin/settings?actorId=${actorId}`);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const list = await res.json();
+        const container = document.getElementById("settingsList");
+        container.innerHTML = "";
+        list.forEach(s => {
+            const row = document.createElement("div");
+            row.className = "setting-row";
+            row.innerHTML = `
+                <div>
+                    <div class="setting-key">${s.key}</div>
+                    <div class="setting-desc">${s.description || ""}</div>
+                </div>
+                <div><input class="form-control" id="input-${s.key}" value="${s.value}"></div>
+                <div><button class="btn-save" data-key="${s.key}"><i class="fa-solid fa-floppy-disk"></i> Save</button></div>
+            `;
+            container.appendChild(row);
+        });
+        container.querySelectorAll(".btn-save").forEach(btn => {
+            btn.addEventListener("click", () => saveSetting(btn.dataset.key));
+        });
+    } catch (e) {
+        document.getElementById("settingsList").textContent = "Failed to load settings.";
+    }
+}
+
+async function saveSetting(key) {
+    const value = document.getElementById("input-" + key).value;
+    try {
+        const res = await fetch(`/api/admin/settings/${encodeURIComponent(key)}?actorId=${actorId}`, {
+            method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ value })
+        });
+        if (res.ok) showAlert(`Saved: ${key}`, true);
+        else showAlert(await res.text(), false);
+    } catch (e) { showAlert("Network error", false); }
+}
+
+// ====================================================
+// QUOTAS
+// ====================================================
+async function loadQuotas() {
+    try {
+        const res = await fetch(`/api/admin/departments/quotas?actorId=${actorId}`);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const list = await res.json();
+        const container = document.getElementById("deptList");
+        container.innerHTML = "";
+        list.forEach(d => {
+            const used = d.storageUsedMb || 0;
+            const limit = d.storageLimitMb || 0;
+            const pct = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0;
+            const cls = pct > 90 ? "danger" : pct > 70 ? "warn" : "";
+            const card = document.createElement("div");
+            card.className = "dept-card";
+            card.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div style="font-weight:600; color:#1e293b;">${d.name}</div>
+                        <div style="font-size:0.8rem; color:#64748b;">${used} MB used of ${limit} MB (${pct}%)</div>
+                    </div>
+                    <div class="d-flex" style="gap: 8px;">
+                        <input type="number" min="0" class="form-control" style="width: 130px;" id="quota-${d.departmentId}" value="${limit}">
+                        <button class="btn-save" data-id="${d.departmentId}">Update</button>
+                    </div>
+                </div>
+                <div class="quota-bar"><div class="quota-fill ${cls}" style="width: ${pct}%"></div></div>
+            `;
+            container.appendChild(card);
+        });
+        container.querySelectorAll(".btn-save").forEach(btn => {
+            btn.addEventListener("click", () => updateQuota(btn.dataset.id));
+        });
+    } catch (e) {
+        document.getElementById("deptList").textContent = "Failed to load departments.";
+    }
+}
+
+async function updateQuota(id) {
+    const limitMb = parseInt(document.getElementById("quota-" + id).value, 10);
+    if (isNaN(limitMb) || limitMb < 0) { showAlert("Enter a valid number", false); return; }
+    try {
+        const res = await fetch(`/api/admin/departments/${id}/quota?actorId=${actorId}`, {
+            method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ limitMb })
+        });
+        if (res.ok) { showAlert("Quota updated", true); loadQuotas(); }
+        else showAlert(await res.text(), false);
+    } catch (e) { showAlert("Network error", false); }
+}
+
+// ====================================================
+// INIT
+// ====================================================
+document.addEventListener("DOMContentLoaded", async () => {
+    await loadRolesAndDepts();
+    loadUsers();
+});
+</script>
+</body>
+</html>

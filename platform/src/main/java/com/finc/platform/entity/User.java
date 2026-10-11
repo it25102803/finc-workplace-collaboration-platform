@@ -2,8 +2,6 @@ package com.finc.platform.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -25,15 +23,18 @@ public class User {
 
     private String firstName;
     private String lastName;
+    private String phone;
+    private String profilePictureUrl;
 
     @Column(nullable = false)
     private Boolean enabled = true;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private UserStatus status = UserStatus.ONLINE;
+    private UserStatus status = UserStatus.OFFLINE;
 
     private LocalDateTime createdAt;
+    private LocalDateTime lastSeen;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "department_id")
@@ -53,110 +54,56 @@ public class User {
         this.firstName = firstName;
         this.lastName = lastName;
         this.enabled = true;
-        this.status = UserStatus.ONLINE;
+        this.status = UserStatus.OFFLINE;
         this.createdAt = LocalDateTime.now();
     }
 
     @PrePersist
     protected void onCreate() {
-        if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now();
-        }
-        if (this.enabled == null) {
-            this.enabled = true;
-        }
-        if (this.status == null) {
-            this.status = UserStatus.ONLINE;
-        }
+        if (this.createdAt == null) this.createdAt = LocalDateTime.now();
+        if (this.enabled == null) this.enabled = true;
+        if (this.status == null) this.status = UserStatus.OFFLINE;
     }
 
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
 
-    public String getUsername() {
-        return username;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 
-    public String getEmail() {
-        return email;
-    }
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
 
-    public String getPassword() {
-        return password;
-    }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
+    public String getProfilePictureUrl() { return profilePictureUrl; }
+    public void setProfilePictureUrl(String profilePictureUrl) { this.profilePictureUrl = profilePictureUrl; }
 
-    public String getFirstName() {
-        return firstName;
-    }
+    public Boolean getEnabled() { return enabled; }
+    public void setEnabled(Boolean enabled) { this.enabled = enabled; }
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
+    public UserStatus getStatus() { return status; }
+    public void setStatus(UserStatus status) { this.status = status; }
 
-    public String getLastName() {
-        return lastName;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
+    public LocalDateTime getLastSeen() { return lastSeen; }
+    public void setLastSeen(LocalDateTime lastSeen) { this.lastSeen = lastSeen; }
 
-    public Boolean getEnabled() {
-        return enabled;
-    }
+    public Department getDepartment() { return department; }
+    public void setDepartment(Department department) { this.department = department; }
 
-    public void setEnabled(Boolean enabled) {
-        this.enabled = enabled;
-    }
-
-    public UserStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(UserStatus status) {
-        this.status = status;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Department getDepartment() {
-        return department;
-    }
-
-    public void setDepartment(Department department) {
-        this.department = department;
-    }
-
-    // Solves setRole(Role) and getRole() compilation errors
-    public Role getRole() {
-        return role;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
-    }
+    public Role getRole() { return role; }
+    public void setRole(Role role) { this.role = role; }
 }
