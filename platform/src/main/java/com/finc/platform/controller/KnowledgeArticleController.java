@@ -29,8 +29,9 @@ public class KnowledgeArticleController {
     }
 
     @PostMapping
-    public ResponseEntity<KnowledgeArticleResponse> create(@RequestBody CreateArticleRequest request) {
-        return ResponseEntity.ok(KnowledgeArticleResponse.from(articleService.create(request)));
+    public ResponseEntity<KnowledgeArticleResponse> create(@RequestBody CreateArticleRequest request,
+                                                           @RequestParam(required = false) Long actorId) {
+        return ResponseEntity.ok(KnowledgeArticleResponse.from(articleService.create(request, actorId)));
     }
 
     @GetMapping
@@ -49,19 +50,22 @@ public class KnowledgeArticleController {
     }
 
     @PostMapping("/{articleId}/publish")
-    public ResponseEntity<KnowledgeArticleResponse> publish(@PathVariable Long articleId) {
-        return ResponseEntity.ok(KnowledgeArticleResponse.from(articleService.publish(articleId)));
+    public ResponseEntity<KnowledgeArticleResponse> publish(@PathVariable Long articleId,
+                                                            @RequestParam(required = false) Long actorId) {
+        return ResponseEntity.ok(KnowledgeArticleResponse.from(articleService.publish(articleId, actorId)));
     }
 
     @PostMapping("/{articleId}/archive")
-    public ResponseEntity<KnowledgeArticleResponse> archive(@PathVariable Long articleId) {
-        return ResponseEntity.ok(KnowledgeArticleResponse.from(articleService.archive(articleId)));
+    public ResponseEntity<KnowledgeArticleResponse> archive(@PathVariable Long articleId,
+                                                            @RequestParam(required = false) Long actorId) {
+        return ResponseEntity.ok(KnowledgeArticleResponse.from(articleService.archive(articleId, actorId)));
     }
 
     @PostMapping("/{articleId}/attachments")
     public ResponseEntity<KnowledgeArticleResponse> attachFile(@PathVariable Long articleId,
-                                                               @RequestParam Long fileId) {
-        return ResponseEntity.ok(KnowledgeArticleResponse.from(articleService.attachFile(articleId, fileId)));
+                                                               @RequestParam Long fileId,
+                                                               @RequestParam(required = false) Long actorId) {
+        return ResponseEntity.ok(KnowledgeArticleResponse.from(articleService.attachFile(articleId, fileId, actorId)));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -72,5 +76,10 @@ public class KnowledgeArticleController {
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<String> notFound(NoSuchElementException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(SecurityException.class)
+    public ResponseEntity<String> forbidden(SecurityException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
     }
 }

@@ -23,12 +23,13 @@
         </div>
         <nav class="nav-menu">
             <a href="dashboard.html" class="nav-item"><i class="fa-solid fa-chart-pie"></i><span>Overview</span></a>
-            <a href="user-directory.html" class="nav-item"><i class="fa-solid fa-users"></i><span>User Directory</span></a>
+            <a href="user-directory.html" id="userDirectoryLink" class="nav-item" style="display: none;"><i class="fa-solid fa-users"></i><span>User Directory</span></a>
             <a href="channels.html" class="nav-item"><i class="fa-solid fa-comments"></i><span>Channels & Chat</span></a>
             <a href="tasks.html" class="nav-item"><i class="fa-solid fa-list-check"></i><span>Task Management</span></a>
             <a href="calendar.html" class="nav-item"><i class="fa-solid fa-calendar-days"></i><span>Calendar & Meetings</span></a>
-            <a href="files.html" class="nav-item"><i class="fa-solid fa-folder"></i><span>File Manager</span></a>
+            <a href="files.html" class="nav-item"><i class="fa-solid fa-folder-open"></i><span>File Manager</span></a>
             <a href="knowledge-base.html" class="nav-item active"><i class="fa-solid fa-book"></i><span>Knowledge Base</span></a>
+            <a href="admin-settings.html" id="adminSettingsLink" class="nav-item" style="display: none;"><i class="fa-solid fa-gear"></i><span>Admin Settings</span></a>
         </nav>
     </aside>
 
@@ -40,14 +41,17 @@
                 <p class="page-desc">Company policies, SOPs, templates, training material and FAQs in one place.</p>
             </div>
             <div class="header-actions">
-                <button class="btn btn-outline" id="btnNewCategory"><i class="fa-solid fa-folder-plus"></i> New Category</button>
-                <button class="btn btn-primary" id="btnNewArticle"><i class="fa-solid fa-plus"></i> New Article</button>
+                <button class="btn btn-outline" id="btnNewCategory" hidden><i class="fa-solid fa-folder-plus"></i> New Category</button>
+                <button class="btn btn-primary" id="btnNewArticle" hidden><i class="fa-solid fa-plus"></i> New Article</button>
             </div>
         </header>
 
         <div id="sessionWarning" class="notice" hidden>
-            You're not logged in, so you can read articles but not write them.
-            <a href="index.html">Log in</a>
+            You're not logged in. <a href="index.html">Log in</a> to read and search the Knowledge Base.
+        </div>
+
+        <div id="readOnlyNote" class="notice notice-info" hidden>
+            You can read and search articles. Only department or system administrators can publish them.
         </div>
 
         <section class="stats-grid">
@@ -188,6 +192,9 @@
     </div>
 </div>
 
+<script src="js/api.js"></script>
 <script src="js/knowledge-base.js"></script>
+<script src="js/presence.js"></script>
+<script src="js/roleguard.js"></script>
 </body>
 </html>

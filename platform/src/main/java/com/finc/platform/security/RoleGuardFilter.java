@@ -131,8 +131,8 @@ if ("GET".equals(method) && "/api/users".equals(path)) {
             }
         }
 
-        // ---- /api/knowledge/** mutations : DEPT_ADMIN or SYSTEM_ADMIN ----
-        else if (path.startsWith("/api/knowledge") && mutating) {
+        // ---- /api/kb/** (Knowledge Base) mutations : DEPT_ADMIN or SYSTEM_ADMIN ----
+        else if (path.startsWith("/api/kb") && mutating) {
             if (role != RoleType.ROLE_SYSTEM_ADMIN && role != RoleType.ROLE_DEPT_ADMIN) {
                 deny(res, "Access denied: DEPARTMENT_ADMIN or SYSTEM_ADMIN required");
                 return;

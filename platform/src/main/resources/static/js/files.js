@@ -8,9 +8,12 @@ let uploadTargetFileId = null;
 
 document.addEventListener("DOMContentLoaded", () => {
 
-    const savedUserId = localStorage.getItem("filesUserId");
-    if (savedUserId) {
-        document.getElementById("actingUserId").value = savedUserId;
+    const loggedInUserId = localStorage.getItem("userId");
+    if (loggedInUserId) {
+        document.getElementById("actingUserId").value = loggedInUserId;
+    } else {
+        document.getElementById("userIdHint").innerHTML =
+            'You are not logged in. <a href="index.html">Log in</a> to use the File Manager.';
     }
 
     loadCurrentLevel();
@@ -32,18 +35,29 @@ document.addEventListener("DOMContentLoaded", () => {
    USER ID
 ========================= */
 
-function onUserIdChanged() {
-    const value = document.getElementById("actingUserId").value;
-    localStorage.setItem("filesUserId", value);
-}
-
 function getUserId() {
     const value = Number(document.getElementById("actingUserId").value);
     if (!value) {
-        alert("Enter your user ID first (top of the page).");
+        alert("Log in first to use the File Manager.");
         return null;
     }
     return value;
+}
+
+function withActor(url) {
+    const actorId = localStorage.getItem("userId");
+    if (!actorId) return url;
+    return url + (url.includes("?") ? "&" : "?") + "actorId=" + encodeURIComponent(actorId);
+}
+
+async function readError(response, fallback) {
+    const text = await response.text();
+    try {
+        const data = JSON.parse(text);
+        return data.error || data.message || fallback;
+    } catch (e) {
+        return text || fallback;
+    }
 }
 
 
@@ -68,7 +82,7 @@ async function loadCurrentLevel() {
                 return;
             }
 
-            const response = await fetch("/api/folders/roots?ownerId=" + encodeURIComponent(ownerId));
+            const response = await apiFetch("/api/folders/roots?ownerId=" + encodeURIComponent(ownerId));
             if (!response.ok) throw new Error("Unable to load folders");
             folders = await response.json();
             currentFiles = [];
@@ -76,8 +90,8 @@ async function loadCurrentLevel() {
         } else {
 
             const [folderRes, filesRes] = await Promise.all([
-                fetch("/api/folders/" + currentFolderId + "/subfolders"),
-                fetch("/api/folders/" + currentFolderId + "/contents")
+                apiFetch("/api/folders/" + currentFolderId + "/subfolders"),
+                apiFetch("/api/folders/" + currentFolderId + "/contents")
             ]);
 
             if (!folderRes.ok || !filesRes.ok) throw new Error("Unable to load folder contents");
@@ -148,7 +162,7 @@ function renderFolders() {
     grid.innerHTML = "";
 
     if (currentFolderId === null && !document.getElementById("actingUserId").value) {
-        grid.innerHTML = `<div class="empty-state">Enter your user ID above to see your folders.</div>`;
+        grid.innerHTML = `<div class="empty-state">Log in to see your folders.</div>`;
         return;
     }
 
@@ -309,7 +323,7 @@ async function saveFolder() {
 
         if (currentFolderId === null) {
 
-            response = await fetch("/api/folders", {
+            response = await apiFetch("/api/folders", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name: name, ownerId: ownerId, departmentId: null })
@@ -317,7 +331,7 @@ async function saveFolder() {
 
         } else {
 
-            response = await fetch("/api/folders/" + currentFolderId + "/subfolders", {
+            response = await apiFetch("/api/folders/" + currentFolderId + "/subfolders", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name: name, ownerId: ownerId })
@@ -325,8 +339,7 @@ async function saveFolder() {
         }
 
         if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(errorText || "Unable to create folder");
+            throw new Error(await readError(response, "Unable to create folder"));
         }
 
         closeFolderModal();
@@ -347,7 +360,7 @@ async function renameFolder(folder) {
 
     try {
 
-        const response = await fetch("/api/folders/" + folder.folderId + "/rename", {
+        const response = await apiFetch("/api/folders/" + folder.folderId + "/rename", {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name: name.trim() })
@@ -372,7 +385,7 @@ async function deleteFolder(folder) {
 
     try {
 
-        const response = await fetch("/api/folders/" + folder.folderId, { method: "DELETE" });
+        const response = await apiFetch("/api/folders/" + folder.folderId, { method: "DELETE" });
         if (!response.ok) throw new Error("Delete failed");
 
         await loadCurrentLevel();
@@ -450,22 +463,21 @@ async function submitUpload() {
             formData.append("uploaderId", userId);
             formData.append("fileType", document.getElementById("uploadFileType").value);
 
-            response = await fetch("/api/files/upload", { method: "POST", body: formData });
+            response = await apiFetch("/api/files/upload", { method: "POST", body: formData });
 
         } else {
 
             formData.append("createdById", userId);
             formData.append("changeNote", document.getElementById("changeNote").value || "");
 
-            response = await fetch("/api/files/" + uploadTargetFileId + "/versions", {
+            response = await apiFetch("/api/files/" + uploadTargetFileId + "/versions", {
                 method: "POST",
                 body: formData
             });
         }
 
         if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(errorText || "Upload failed");
+            throw new Error(await readError(response, "Upload failed"));
         }
 
         closeUploadModal();
@@ -484,7 +496,7 @@ async function submitUpload() {
 ========================= */
 
 function downloadFile(file) {
-    window.open("/api/files/" + file.fileId + "/download", "_blank");
+    window.open(withActor("/api/files/" + file.fileId + "/download"), "_blank");
 }
 
 
@@ -495,7 +507,7 @@ async function renameFile(file) {
 
     try {
 
-        const response = await fetch("/api/files/" + file.fileId + "/rename", {
+        const response = await apiFetch("/api/files/" + file.fileId + "/rename", {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name: name.trim() })
@@ -518,7 +530,7 @@ async function deleteFile(file) {
 
     try {
 
-        const response = await fetch("/api/files/" + file.fileId, { method: "DELETE" });
+        const response = await apiFetch("/api/files/" + file.fileId, { method: "DELETE" });
         if (!response.ok) throw new Error("Delete failed");
 
         await loadCurrentLevel();
@@ -541,7 +553,7 @@ async function openVersionsModal(file) {
 
     try {
 
-        const response = await fetch("/api/files/" + file.fileId + "/versions");
+        const response = await apiFetch("/api/files/" + file.fileId + "/versions");
         if (!response.ok) throw new Error("Unable to load versions");
 
         const versions = await response.json();
@@ -603,7 +615,7 @@ async function restoreVersion(version, file) {
 
     try {
 
-        const response = await fetch("/api/files/versions/" + version.versionId + "/restore", {
+        const response = await apiFetch("/api/files/versions/" + version.versionId + "/restore", {
             method: "POST"
         });
 
@@ -625,6 +637,7 @@ async function restoreVersion(version, file) {
 function formatSize(bytes) {
 
     if (!bytes || bytes <= 0) return "0 KB";
+    if (bytes < 1024) return bytes + " B";
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
     return (bytes / (1024 * 1024)).toFixed(1) + " MB";
 }

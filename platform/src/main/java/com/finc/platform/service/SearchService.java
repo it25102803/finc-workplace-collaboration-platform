@@ -15,7 +15,7 @@ public class SearchService {
     @Autowired private ChannelRepository channelRepository;
     @Autowired private TaskRepository taskRepository;
     @Autowired private FileRepository fileRepository;
-    @Autowired private KnowledgeRepository knowledgeRepository;
+    @Autowired private KnowledgeArticleRepository knowledgeArticleRepository;
 
     public SearchResult search(String q) {
         SearchResult result = new SearchResult(q);
@@ -86,16 +86,16 @@ public class SearchService {
                 )));
 
         // ---- Knowledge articles ----
-        knowledgeRepository.findAll().stream()
+        knowledgeArticleRepository.findByStatus(ArticleStatus.PUBLISHED).stream()
                 .filter(k -> contains(k.getTitle(), query)
                         || contains(k.getContent(), query)
-                        || contains(k.getCategory(), query))
+                        || contains(k.getCategory().getName(), query))
                 .limit(5)
                 .forEach(k -> result.add(new SearchHit(
-                        "ARTICLE", k.getId(),
+                        "ARTICLE", k.getArticleId(),
                         k.getTitle(),
-                        "Category: " + (k.getCategory() == null ? "—" : k.getCategory()),
-                        "knowledge.html?article=" + k.getId()
+                        "Category: " + k.getCategory().getName(),
+                        "knowledge-base.html?article=" + k.getArticleId()
                 )));
 
         return result;

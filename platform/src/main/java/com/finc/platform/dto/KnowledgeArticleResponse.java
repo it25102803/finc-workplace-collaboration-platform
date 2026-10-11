@@ -22,6 +22,6 @@ public record KnowledgeArticleResponse(Long articleId, String title, String cont
                 a.getPublishedAt(), a.getUpdatedAt(),
                 a.getCategory().getId(), a.getCategory().getName(),
                 a.getAuthor().getId(), a.getAuthor().getUsername(),
-                a.getAttachedFiles().stream().map(File::getFileId).toList());
+                a.getAttachedFiles().stream().filter(f -> !f.isDeleted()).map(File::getFileId).toList());
     }
 }

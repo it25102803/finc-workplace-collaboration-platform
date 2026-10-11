@@ -39,7 +39,7 @@ public class SecurityConfig {
                         "/api/files/**",
                         "/api/folders/**",
                         "/api/channels/**",
-                        "/api/knowledge/**",
+                        "/api/kb/**",
                         "/api/messages/**",
                         "/api/notifications/**",
                         "/api/calendar/**",
