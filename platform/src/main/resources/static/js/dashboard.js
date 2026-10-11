@@ -1,17 +1,14 @@
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. Retrieve session data from localStorage
     const userSession = JSON.parse(localStorage.getItem("user") || "{}");
     const username = localStorage.getItem("username") || userSession.username || "Employee";
     const rawId = localStorage.getItem("badgeId") || localStorage.getItem("userId") || userSession.userId || "1";
     const status = localStorage.getItem("status") || "Online";
-    const departmentName = localStorage.getItem("departmentName") || (userSession.department ? userSession.department.name : "Software Engineering");
+    const departmentName = localStorage.getItem("departmentName") || (userSession.department ? userSession.department.name : "Not Assigned");
     const roleName = localStorage.getItem("role") || (userSession.role ? userSession.role.replace("ROLE_", "") : "EMPLOYEE");
 
-    // 2. Format numerical ID strictly as clean 3 digits ("001", "002", "003")
     const cleanNumericId = String(rawId).replace(/[^0-9]/g, "");
     const formattedId = cleanNumericId ? cleanNumericId.padStart(3, "0") : "001";
 
-    // 3. Render Header, Welcome Banner, Role & Department (FR-UM-04, FR-UM-08)
     const displayNameElem = document.getElementById("displayName");
     const welcomeHeadingElem = document.getElementById("welcomeHeading");
     const userDepartmentElem = document.getElementById("userDepartment");
@@ -22,21 +19,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (userDepartmentElem) userDepartmentElem.textContent = departmentName;
     if (userRoleBadgeElem) userRoleBadgeElem.textContent = roleName.replace("ROLE_", "");
 
-    // 4. Update Metric Cards
     const userScopeEl = document.getElementById("metric-user-scope");
-    if (userScopeEl) {
-        userScopeEl.textContent = formattedId;
-    }
+    if (userScopeEl) userScopeEl.textContent = formattedId;
 
     const systemStatusEl = document.getElementById("metric-system-status");
-    if (systemStatusEl) {
-        systemStatusEl.textContent = status;
-    }
+    if (systemStatusEl) systemStatusEl.textContent = status;
 
-    // 5. Load Task & File Summary Metrics (FR-UM-08)
     loadDashboardSummaries(cleanNumericId || "1");
 
-    // 6. Session Logout & Database Status Sync (FR-UM-07)
     const logoutBtn = document.getElementById("logoutBtn");
     if (logoutBtn) {
         logoutBtn.addEventListener("click", async () => {
@@ -48,20 +38,19 @@ document.addEventListener("DOMContentLoaded", () => {
                     console.error("Logout status update failed:", err);
                 }
             }
-
             localStorage.clear();
             window.location.href = "index.html";
         });
     }
+
+    // Global search (FR-UM-23)
+    initGlobalSearch();
 });
 
-/**
- * Fetches real-time task and file counts for the active user dashboard summary (FR-UM-08)
- */
 async function loadDashboardSummaries(userId) {
-    // Fetch Active Tasks Count
+    const actorId = localStorage.getItem("userId") || userId;
     try {
-        const tasksRes = await fetch(`/api/tasks/user/${userId}`);
+        const tasksRes = await fetch(`/api/tasks/user/${userId}?actorId=${actorId}`);
         if (tasksRes.ok) {
             const tasks = await tasksRes.json();
             const activeTasksCount = Array.isArray(tasks) ? tasks.length : 0;
@@ -71,17 +60,99 @@ async function loadDashboardSummaries(userId) {
     } catch (err) {
         console.warn("Could not load tasks metric summary:", err);
     }
+}
 
-    // Fetch Files Count / Articles
-    try {
-        const filesRes = await fetch(`/api/files`);
-        if (filesRes.ok) {
-            const files = await filesRes.json();
-            const filesCount = Array.isArray(files) ? files.length : 0;
-            const articlesMetricEl = document.getElementById("metric-articles");
-            if (articlesMetricEl) articlesMetricEl.textContent = filesCount;
+/* =========================================================
+   Global Search — FR-UM-23
+   ========================================================= */
+function initGlobalSearch() {
+    const input = document.getElementById("globalSearchInput");
+    const panel = document.getElementById("searchResults");
+    if (!input || !panel) return;
+
+    const ICONS = {
+        USER: "fa-user",
+        DEPARTMENT: "fa-sitemap",
+        CHANNEL: "fa-hashtag",
+        TASK: "fa-list-check",
+        FILE: "fa-file",
+        ARTICLE: "fa-book"
+    };
+
+    let timer = null;
+
+    input.addEventListener("input", () => {
+        clearTimeout(timer);
+        const q = input.value.trim();
+        if (q.length < 2) {
+            panel.style.display = "none";
+            panel.innerHTML = "";
+            return;
         }
-    } catch (err) {
-        console.warn("Could not load files metric summary:", err);
+
+        timer = setTimeout(async () => {
+            try {
+                const actorId = localStorage.getItem("userId") || "";
+                const url = `/api/search?q=${encodeURIComponent(q)}&actorId=${encodeURIComponent(actorId)}`;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error("Search failed: " + res.status);
+                const data = await res.json();
+
+                panel.innerHTML = "";
+
+                if (!data.hits || data.hits.length === 0) {
+                    panel.innerHTML = `<div class="search-empty">No results for "${escapeHtml(q)}"</div>`;
+                } else {
+                    data.hits.forEach(hit => {
+                        const a = document.createElement("a");
+                        a.className = "result-item";
+                        a.href = hit.link || "#";
+                        a.innerHTML = `
+                            <div class="result-icon"><i class="fa-solid ${ICONS[hit.type] || 'fa-circle'}"></i></div>
+                            <div style="min-width:0; flex-grow:1;">
+                                <div class="result-title">${escapeHtml(hit.title || "(untitled)")}</div>
+                                <div class="result-sub">${escapeHtml(hit.subtitle || "")}</div>
+                            </div>
+                            <span class="result-type">${escapeHtml(hit.type || "")}</span>
+                        `;
+                        panel.appendChild(a);
+                    });
+                }
+
+                panel.style.display = "block";
+            } catch (err) {
+                console.warn("Search error:", err);
+                panel.innerHTML = `<div class="search-empty">Search unavailable.</div>`;
+                panel.style.display = "block";
+            }
+        }, 280);
+    });
+
+    // Enter → open top result
+    input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            const first = panel.querySelector(".result-item");
+            if (first) window.location.href = first.getAttribute("href");
+        }
+        if (e.key === "Escape") {
+            panel.style.display = "none";
+        }
+    });
+
+    // Click outside closes panel
+    document.addEventListener("click", (e) => {
+        if (!e.target.closest(".global-search-wrap")) {
+            panel.style.display = "none";
+        }
+    });
+
+    function escapeHtml(s) {
+        return String(s)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
     }
 }

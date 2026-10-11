@@ -20,6 +20,7 @@
                 <a href="calendar.html">Calendar</a>
                 <a href="files.html">File Manager</a>
                 <a class="active" href="knowledge.html" aria-current="page">Knowledge Base</a>
+                <a href="admin-settings.html" id="adminSettingsLink" class="nav-link-custom" style="display: none;"><i class="fa-solid fa-gear"></i> Admin Settings</a>
             </nav>
         </aside>
 
@@ -37,6 +38,19 @@
             <section id="knowledgeList" class="knowledge-list" aria-label="Knowledge articles"></section>
         </main>
     </div>
+    <script src="js/api.js"></script>
     <script src="js/knowledge.js" defer></script>
+    <script src="js/presence.js"></script>
+    <script>
+    // Show Admin Settings link only for SYSTEM_ADMIN users
+    (function () {
+        const role = (localStorage.getItem("role") || "").replace("ROLE_", "");
+        const link = document.getElementById("adminSettingsLink");
+        if (link && role === "SYSTEM_ADMIN") {
+            link.style.display = "";
+        }
+    })();
+</script>
+<script src="js/roleguard.js"></script>
 </body>
 </html>

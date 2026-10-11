@@ -3,10 +3,12 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function loadUserDirectory() {
-    fetch('/api/users')
+    const actorId = localStorage.getItem("userId") || "1";
+
+    fetch(`/api/users?actorId=${encodeURIComponent(actorId)}`)
         .then(response => {
             if (!response.ok) {
-                throw new Error("Failed to fetch user directory");
+                throw new Error("Failed to fetch user directory (HTTP " + response.status + ")");
             }
             return response.json();
         })
@@ -14,33 +16,45 @@ function loadUserDirectory() {
             const tbody = document.getElementById("userTableBody");
             tbody.innerHTML = "";
 
+            if (!users || users.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            No users found.
+                        </td>
+                    </tr>`;
+                return;
+            }
+
             users.forEach(user => {
-                // Formats ID strictly as clean 3-digit numerical string ("001", "002", "003")
+                // 3-digit badge ("001", "002")
                 const userIdNum = user.id || user.userId || 0;
                 const formattedBadge = String(userIdNum).padStart(3, '0');
 
-                // Determine Name display
+                // Full name fallback to username
                 let fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
                 if (!fullName) {
                     fullName = user.username || "Employee User";
                 }
 
-                // Department Allocation (FR-UM-04)
-                const deptName = user.department && user.department.name 
-                    ? user.department.name 
-                    : "Software Engineering";
+                // Department (FR-UM-04)
+                const deptName = user.department && user.department.name
+                    ? user.department.name
+                    : "Not Assigned";
 
-                // Role Allocation (FR-UM-03)
+                // Role (FR-UM-03)
                 let roleName = "EMPLOYEE";
                 if (user.role) {
-                    roleName = user.role.roleType ? user.role.roleType.replace("ROLE_", "") : "EMPLOYEE";
+                    roleName = user.role.roleType
+                        ? user.role.roleType.replace("ROLE_", "")
+                        : "EMPLOYEE";
                 }
                 const roleBadgeClass = roleName.includes("ADMIN") ? "badge-admin" : "badge-role";
 
-                // Online/Offline Status Badge (FR-UM-06)
+                // Status badge (FR-UM-06)
                 const isOnline = user.status === "ONLINE";
-                const statusBadge = isOnline 
-                    ? `<span class="badge-online">ONLINE</span>` 
+                const statusBadge = isOnline
+                    ? `<span class="badge-online">ONLINE</span>`
                     : `<span class="badge-offline">OFFLINE</span>`;
 
                 const row = `
@@ -58,5 +72,14 @@ function loadUserDirectory() {
         })
         .catch(error => {
             console.error("Error loading user directory:", error);
+            const tbody = document.getElementById("userTableBody");
+            if (tbody) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-danger py-4">
+                            Failed to load users. Check that you are logged in as an administrator.
+                        </td>
+                    </tr>`;
+            }
         });
 }

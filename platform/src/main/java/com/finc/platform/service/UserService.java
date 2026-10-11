@@ -1,125 +1,88 @@
 package com.finc.platform.service;
 
-import com.finc.platform.entity.UserEmail;
+import com.finc.platform.entity.Department;
+import com.finc.platform.entity.User;
+import com.finc.platform.entity.UserStatus;
+import com.finc.platform.repository.DepartmentRepository;
+import com.finc.platform.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class UserService {
 
-    private final List<UserEmail> users = new ArrayList<>();
+    @Autowired private UserRepository userRepository;
+    @Autowired private DepartmentRepository departmentRepository;
+    @Autowired private PasswordEncoder passwordEncoder;
+    @Autowired private AuditLogService auditLogService;
 
-    private int nextId = 1;
-
-    public UserService() {
-        users.add(new UserEmail(
-                nextId++,
-                "Admin User",
-                "admin@fincacademy.com",
-                "admin123",
-                "Management",
-                "SYSTEM_ADMINISTRATOR"
-        ));
-
-        users.add(new UserEmail(
-                nextId++,
-                "John Employee",
-                "john@fincacademy.com",
-                "123456",
-                "Finance",
-                "EMPLOYEE"
-        ));
+    public List<User> getAllUsers() {
+        return userRepository.findAllByOrderByUsernameAsc();
     }
 
-    public List<UserEmail> getAllUsers() {
-        return users;
+    public User getUserById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 
-    public UserEmail getUserById(int id) {
-        for (UserEmail user : users) {
-            if (user.getId() == id) {
-                return user;
+    public List<User> searchUsers(String keyword) {
+        if (keyword == null || keyword.isBlank()) return getAllUsers();
+        String k = keyword.toLowerCase();
+        return userRepository.findAll().stream()
+                .filter(u -> u.getUsername().toLowerCase().contains(k)
+                        || u.getEmail().toLowerCase().contains(k)
+                        || (u.getFirstName() != null && u.getFirstName().toLowerCase().contains(k))
+                        || (u.getLastName() != null && u.getLastName().toLowerCase().contains(k)))
+                .toList();
+    }
+
+    @Transactional
+    public User updateProfile(Long userId, String firstName, String lastName,
+                              String email, String phone, Long departmentId) {
+        User user = getUserById(userId);
+        if (firstName != null) user.setFirstName(firstName);
+        if (lastName != null) user.setLastName(lastName);
+        if (phone != null) user.setPhone(phone);
+
+        if (email != null && !email.equals(user.getEmail())) {
+            if (userRepository.existsByEmail(email)) {
+                throw new IllegalArgumentException("Email already in use");
             }
+            user.setEmail(email);
+        }
+        if (departmentId != null) {
+            Department dept = departmentRepository.findById(departmentId)
+                    .orElseThrow(() -> new IllegalArgumentException("Department not found"));
+            user.setDepartment(dept);
         }
 
-        return null;
+        User saved = userRepository.save(user);
+        auditLogService.log("UPDATE_PROFILE", userId, userId, "User updated own profile");
+        return saved;
     }
 
-    public UserEmail createUser(UserEmail user) {
-        user.setId(nextId++);
-        user.setActive(true);
-        user.setOnline(false);
-
-        users.add(user);
-
-        return user;
-    }
-
-    public UserEmail updateUser(int id, UserEmail updatedUser) {
-        UserEmail existingUser = getUserById(id);
-
-        if (existingUser == null) {
-            return null;
+    @Transactional
+    public void changePassword(Long userId, String currentPassword, String newPassword) {
+        User user = getUserById(userId);
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect");
         }
-
-        existingUser.setName(updatedUser.getName());
-        existingUser.setEmail(updatedUser.getEmail());
-        existingUser.setDepartment(updatedUser.getDepartment());
-        existingUser.setRole(updatedUser.getRole());
-
-        return existingUser;
+        if (newPassword == null || newPassword.length() < 6) {
+            throw new IllegalArgumentException("New password must be at least 6 characters");
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        auditLogService.log("CHANGE_PASSWORD", userId, userId, "Password changed");
     }
 
-    public boolean disableUser(int id) {
-        UserEmail user = getUserById(id);
-
-        if (user == null) {
-            return false;
-        }
-
-        user.setActive(false);
-
-        return true;
-    }
-
-    public boolean resetPassword(int id, String newPassword) {
-        UserEmail user = getUserById(id);
-
-        if (user == null) {
-            return false;
-        }
-
-        user.setPassword(newPassword);
-
-        return true;
-    }
-
-    public UserEmail login(String email, String password) {
-        for (UserEmail user : users) {
-            if (user.getEmail().equals(email)
-                    && user.getPassword().equals(password)
-                    && user.isActive()) {
-
-                user.setOnline(true);
-                return user;
-            }
-        }
-
-        return null;
-    }
-
-    public List<UserEmail> searchUsers(String keyword) {
-        List<UserEmail> result = new ArrayList<>();
-
-        for (UserEmail user : users) {
-            if (user.getName().toLowerCase().contains(keyword.toLowerCase())
-                    || user.getEmail().toLowerCase().contains(keyword.toLowerCase())) {
-                result.add(user);
-            }
-        }
-
-        return result;
+    @Transactional
+    public User setStatus(Long userId, UserStatus status) {
+        User user = getUserById(userId);
+        user.setStatus(status);
+        return userRepository.save(user);
     }
 }
