@@ -1,11 +1,13 @@
 package com.finc.platform.controller;
 
 import com.finc.platform.entity.Message;
+import com.finc.platform.dto.MessageSearchResult;
 import com.finc.platform.service.CommunicationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -38,6 +40,51 @@ public class MessageController {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    @GetMapping("/messages/search")
+    public List<MessageSearchResult> searchMessages(@RequestParam("q") String query) {
+        return communicationService.searchMessages(query);
+    }
+
+    @PutMapping("/messages/{id}")
+    public ResponseEntity<Message> editMessage(
+            @PathVariable Long id,
+            @RequestParam String sender,
+            @RequestBody Map<String, String> request) {
+        try {
+            return ResponseEntity.ok(communicationService.editMessage(id, sender, request.get("content")));
+        } catch (SecurityException ex) {
+            return ResponseEntity.status(403).build();
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PutMapping("/messages/{id}/reactions")
+    public ResponseEntity<Message> toggleReaction(
+            @PathVariable Long id,
+            @RequestParam String sender,
+            @RequestBody Map<String, String> request) {
+        try {
+            return ResponseEntity.ok(communicationService.toggleReaction(id, sender, request.get("emoji")));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PutMapping("/messages/{id}/pin")
+    public ResponseEntity<Message> togglePin(
+            @PathVariable Long id,
+            @RequestParam("memberEmail") String memberEmail) {
+        try {
+            return ResponseEntity.ok(communicationService.togglePin(id, memberEmail));
+        } catch (SecurityException ex) {
+            return ResponseEntity.status(403).build();
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
     @DeleteMapping("/messages/{id}")
     public ResponseEntity<Void> deleteMessage(
             @PathVariable Long id,
