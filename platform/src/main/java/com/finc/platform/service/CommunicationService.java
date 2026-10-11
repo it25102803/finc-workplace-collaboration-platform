@@ -4,9 +4,11 @@ import com.finc.platform.entity.Channel;
 import com.finc.platform.entity.ChannelType;
 import com.finc.platform.entity.KnowledgeItem;
 import com.finc.platform.entity.Message;
+import com.finc.platform.dto.MessageSearchResult;
 import com.finc.platform.repository.ChannelRepository;
 import com.finc.platform.repository.KnowledgeRepository;
 import com.finc.platform.repository.MessageRepository;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -93,6 +95,23 @@ public class CommunicationService {
         return messageRepository.findByChannelIdOrderByTimestampAsc(channelId);
     }
 
+    @Transactional(readOnly = true)
+    public List<MessageSearchResult> searchMessages(String query) {
+        if (query == null || query.isBlank()) {
+            return List.of();
+        }
+        return messageRepository.searchByContent(query.trim(), PageRequest.of(0, 50))
+                .stream()
+                .map(message -> new MessageSearchResult(
+                        message.getId(),
+                        message.getChannel().getId(),
+                        message.getChannel().getName(),
+                        message.getSender(),
+                        message.getContent(),
+                        message.getTimestamp()))
+                .toList();
+    }
+
     @Transactional
     public Message createMessage(Long channelId, Message message) {
         if (message == null || ((message.getContent() == null || message.getContent().isBlank())
@@ -143,6 +162,82 @@ public class CommunicationService {
             throw new IllegalArgumentException("Unable to read attachment", ex);
         }
     }
+
+    @Transactional
+    public Message editMessage(Long messageId, String requester, String content) {
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new IllegalArgumentException("Message not found"));
+        if (message.getSender() == null || !message.getSender().equals(requester)) {
+            throw new SecurityException("Only the sender can edit this message");
+        }
+        if ((content == null || content.isBlank())
+                && (message.getAttachmentData() == null || message.getAttachmentData().isBlank())) {
+            throw new IllegalArgumentException("Message content cannot be empty");
+        }
+        message.setContent(content == null ? "" : content.trim());
+        Message saved = messageRepository.save(message);
+        messagingTemplate.convertAndSend("/topic/channels/" + message.getChannel().getId(), saved);
+        return saved;
+    }
+
+    @Transactional
+    public Message toggleReaction(Long messageId, String requester, String emoji) {
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new IllegalArgumentException("Message not found"));
+        if (requester == null || requester.isBlank() || emoji == null || emoji.isBlank()) {
+            throw new IllegalArgumentException("Sender and emoji are required");
+        }
+
+        java.util.Map<String, List<String>> reactions = new java.util.LinkedHashMap<>();
+        message.getReactions().forEach((reactionEmoji, reactors) ->
+                reactions.put(reactionEmoji, new java.util.ArrayList<>(reactors)));
+        List<String> reactors = reactions.computeIfAbsent(emoji, ignored -> new java.util.ArrayList<>());
+        if (reactors.contains(requester)) {
+            reactors.remove(requester);
+            if (reactors.isEmpty()) {
+                reactions.remove(emoji);
+            }
+        } else {
+            reactors.add(requester);
+        }
+
+        message.setReactions(reactions);
+        Message saved = messageRepository.save(message);
+        messagingTemplate.convertAndSend("/topic/channels/" + message.getChannel().getId(), saved);
+        return saved;
+    }
+
+    @Transactional
+    public Message togglePin(Long messageId, String memberEmail) {
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new IllegalArgumentException("Message not found"));
+        if (memberEmail == null || memberEmail.isBlank()) {
+            throw new IllegalArgumentException("Member email is required");
+        }
+
+        Channel channel = message.getChannel();
+        boolean isMember = channel.getMemberEmails().stream()
+                .filter(email -> email != null)
+                .anyMatch(email -> email.equalsIgnoreCase(memberEmail.trim()));
+        if (!isMember) {
+            throw new SecurityException("Only conversation members can pin messages");
+        }
+
+        if (message.isPinned()) {
+            message.setPinned(false);
+            message.setPinnedBy(null);
+            message.setPinnedAt(null);
+        } else {
+            message.setPinned(true);
+            message.setPinnedBy(memberEmail.trim());
+            message.setPinnedAt(java.time.LocalDateTime.now());
+        }
+
+        Message saved = messageRepository.save(message);
+        messagingTemplate.convertAndSend("/topic/channels/" + channel.getId(), saved);
+        return saved;
+    }
+
     @Transactional
     public boolean deleteMessage(Long messageId, String requesterEmail) {
         Message message = messageRepository.findById(messageId)
