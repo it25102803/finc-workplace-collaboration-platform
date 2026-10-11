@@ -26,13 +26,18 @@ const state = {
     channels: [],
     selectedChannelId: null,
     notifications: [],
-    renderedMessages: []
+    renderedMessages: [],
+    pendingMessageId: null,
+    editingMessageId: null
 };
 
 let users = [];
 let messagePollingTimer;
 let stompClient;
 let channelSubscription;
+let voiceRecorder;
+let voiceChunks = [];
+let searchDebounceTimer;
 
 
 // ==========================================
@@ -944,6 +949,9 @@ function changeMonth(step){
 loadUsers();
 renderCalendar();
 document.addEventListener("DOMContentLoaded", () => {
+    if (window.matchMedia("(max-width: 760px)").matches) {
+        document.body.classList.add("sidebar-collapsed");
+    }
     bindEvents();
     loadUsers();
     loadChannels();
@@ -965,6 +973,18 @@ function bindEvents() {
     document.getElementById("clearAttachmentBtn").addEventListener("click", () => {
         document.getElementById("attachmentInput").value = "";
         setAttachmentStatus("");
+    });
+    document.getElementById("voiceMessageBtn").addEventListener("click", toggleVoiceRecording);
+    document.getElementById("conversationSearch").addEventListener("input", event => {
+        clearTimeout(searchDebounceTimer);
+        const query = event.currentTarget.value.trim();
+        searchDebounceTimer = setTimeout(() => searchConversations(query), 250);
+    });
+    document.getElementById("conversationSearch").addEventListener("keydown", event => {
+        if (event.key === "Escape") {
+            event.currentTarget.value = "";
+            document.getElementById("searchResults").classList.add("hidden");
+        }
     });
     document.getElementById("notificationBtn").addEventListener("click", toggleNotifications);
     document.getElementById("sidebarToggle").addEventListener("click", toggleSidebar);
@@ -993,6 +1013,12 @@ function bindEvents() {
             if (event.target !== notificationBtn && !notificationBtn.contains(event.target)) {
                 notificationPanel.classList.add("hidden");
             }
+        }
+
+        const searchResults = document.getElementById("searchResults");
+        const searchInput = document.getElementById("conversationSearch");
+        if (searchResults && !searchResults.contains(event.target) && event.target !== searchInput) {
+            searchResults.classList.add("hidden");
         }
     });
 
@@ -1035,9 +1061,14 @@ function subscribeToChannel() {
     channelSubscription?.unsubscribe();
     channelSubscription = stompClient.subscribe(`/topic/channels/${state.selectedChannelId}`, frame => {
         const message = JSON.parse(frame.body);
-        if (!state.renderedMessages.some(existing => existing.id === message.id)) {
-            renderMessages([...state.renderedMessages, message]);
+        const existingIndex = state.renderedMessages.findIndex(existing => existing.id === message.id);
+        const messages = [...state.renderedMessages];
+        if (existingIndex >= 0) {
+            messages[existingIndex] = message;
+        } else {
+            messages.push(message);
         }
+        renderMessages(messages);
     });
 }
 
@@ -1144,6 +1175,50 @@ async function loadMessages(channelId) {
     renderMessages(messages);
 }
 
+async function searchConversations(query) {
+    const panel = document.getElementById("searchResults");
+    if (query.length < 2) {
+        panel.classList.add("hidden");
+        panel.innerHTML = "";
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/messages/search?q=${encodeURIComponent(query)}`);
+        if (!response.ok) {
+            throw new Error("Search failed");
+        }
+        const results = await response.json();
+        if (document.getElementById("conversationSearch").value.trim() !== query) {
+            return;
+        }
+
+        panel.innerHTML = results.length
+            ? results.map(result => `
+                <button type="button" class="search-result" data-channel-id="${result.channelId}"
+                        data-message-id="${result.id}" role="option">
+                    <strong># ${escapeHtml(result.channelName)} · ${escapeHtml(result.sender)}</strong>
+                    <span>${escapeHtml(result.content || "")}</span>
+                    <time>${formatDate(result.timestamp)}</time>
+                </button>
+            `).join("")
+            : '<div class="search-empty">No matching messages</div>';
+        panel.classList.remove("hidden");
+        panel.querySelectorAll(".search-result").forEach(button => {
+            button.addEventListener("click", () => {
+                state.pendingMessageId = Number(button.dataset.messageId);
+                selectChannel(Number(button.dataset.channelId));
+                panel.classList.add("hidden");
+                document.getElementById("conversationSearch").blur();
+            });
+        });
+    } catch (error) {
+        console.error(error);
+        panel.innerHTML = '<div class="search-empty">Search is unavailable</div>';
+        panel.classList.remove("hidden");
+    }
+}
+
 function renderChannelList() {
     const container = document.getElementById("channelList");
     const channels = state.channels.filter(channel => channel.type !== "DIRECT");
@@ -1188,65 +1263,23 @@ function renderDirectMessageList() {
         .forEach(channel => {
             const members = [...new Set((channel.memberEmails || [])
                 .filter(email => typeof email === "string" && email.trim())
-                .map(email => email.trim()))];
-            const normalizedMembers = members.map(email => email.toLowerCase());
-            if (!normalizedMembers.includes(currentEmail)) {
+                .map(email => email.trim().toLowerCase()))];
+            if (members.length !== 2 || !members.includes(currentEmail)) {
                 return;
             }
 
-            members
-                .filter(email => email.toLowerCase() !== currentEmail)
-                .forEach(email => {
-                    const key = email.toLowerCase();
-                    const user = usersByEmail.get(key);
-                    const emailName = email.split("@")[0]
-                        .split(/[._-]/)
-                        .filter(Boolean)
-                        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-                        .join(" ");
-                    const pairChannel = state.channels.find(candidate => {
-                        if (candidate.type !== "DIRECT") {
-                            return false;
-                        }
-
-                        const candidateMembers = [...new Set((candidate.memberEmails || [])
-                            .filter(member => typeof member === "string" && member.trim())
-                            .map(member => member.trim().toLowerCase()))];
-                        return candidateMembers.length === 2
-                            && candidateMembers.includes(currentEmail)
-                            && candidateMembers.includes(key);
-                    });
-                    contactsByEmail.set(key, {
-                        email,
-                        name: user?.name || FALLBACK_USER_NAMES[key] || emailName || email,
-                        channelId: pairChannel?.id ?? null
-                    });
-                });
-        });
-
-    usersByEmail.forEach((user, key) => {
-        if (key === currentEmail || contactsByEmail.has(key)) {
-            return;
-        }
-
-        const pairChannel = state.channels.find(candidate => {
-            if (candidate.type !== "DIRECT") {
-                return false;
+            const contactEmail = members.find(email => email !== currentEmail);
+            const user = usersByEmail.get(contactEmail);
+            if (!user || contactsByEmail.has(contactEmail)) {
+                return;
             }
 
-            const candidateMembers = [...new Set((candidate.memberEmails || [])
-                .filter(member => typeof member === "string" && member.trim())
-                .map(member => member.trim().toLowerCase()))];
-            return candidateMembers.length === 2
-                && candidateMembers.includes(currentEmail)
-                && candidateMembers.includes(key);
+            contactsByEmail.set(contactEmail, {
+                email: user.email,
+                name: (user.name || user.username || "").trim() || user.email,
+                channelId: channel.id
+            });
         });
-        contactsByEmail.set(key, {
-            email: user.email,
-            name: user.name || FALLBACK_USER_NAMES[key] || user.email,
-            channelId: pairChannel?.id ?? null
-        });
-    });
 
     const contacts = [...contactsByEmail.values()];
 
@@ -1263,7 +1296,7 @@ function renderDirectMessageList() {
                 <button class="channel-item ${isActive}" data-channel-id="${contact.channelId || ""}"
                     data-user-email="${escapeHtml(contact.email)}" data-user-name="${escapeHtml(name)}">
                 <span class="channel-hash">${escapeHtml(name.charAt(0).toUpperCase())}</span>
-                <span>${escapeHtml(name)}</span>
+                <span>${escapeHtml(name)} <small>(${escapeHtml(contact.email)})</small></span>
             </button>
         `;
         })
@@ -1307,9 +1340,99 @@ async function deleteMessage(messageId) {
         showToast("Could not delete message");
     }
 }
+
+async function editMessage(messageId) {
+    state.editingMessageId = messageId;
+    renderMessages(state.renderedMessages);
+    document.querySelector(`#edit-message-${messageId} textarea`)?.focus();
+}
+
+async function saveMessageEdit(messageId, content) {
+    try {
+        const response = await fetch(`/api/messages/${messageId}?sender=${encodeURIComponent(CURRENT_USER.name)}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content })
+        });
+        if (response.status === 403) {
+            showToast("You can only edit your own messages");
+            return;
+        }
+        if (!response.ok) {
+            throw new Error("Unable to edit message");
+        }
+        const updated = await response.json();
+        state.editingMessageId = null;
+        renderMessages(state.renderedMessages.map(item => item.id === updated.id ? updated : item));
+    } catch (error) {
+        console.error(error);
+        showToast("Could not edit message");
+    }
+}
+
+async function toggleMessageReaction(messageId, emoji) {
+    try {
+        const response = await fetch(`/api/messages/${messageId}/reactions?sender=${encodeURIComponent(CURRENT_USER.name)}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ emoji })
+        });
+        if (!response.ok) {
+            throw new Error("Unable to save reaction");
+        }
+        const updated = await response.json();
+        renderMessages(state.renderedMessages.map(item => item.id === updated.id ? updated : item));
+    } catch (error) {
+        console.error(error);
+        showToast("Could not save reaction");
+    }
+}
+
+async function toggleMessagePin(messageId) {
+    try {
+        const response = await fetch(`/api/messages/${messageId}/pin?memberEmail=${encodeURIComponent(CURRENT_USER.email)}`, {
+            method: "PUT"
+        });
+        if (response.status === 403) {
+            showToast("Only conversation members can pin messages");
+            return;
+        }
+        if (!response.ok) {
+            throw new Error("Unable to update pin");
+        }
+        const updated = await response.json();
+        renderMessages(state.renderedMessages.map(item => item.id === updated.id ? updated : item));
+    } catch (error) {
+        console.error(error);
+        showToast("Could not update pinned message");
+    }
+}
+
+function renderPinnedMessages(messages) {
+    const container = document.getElementById("pinnedMessages");
+    const pinnedMessages = messages.filter(message => message.pinned);
+    container.classList.toggle("hidden", pinnedMessages.length === 0);
+    container.innerHTML = pinnedMessages.map(message => `
+        <button type="button" class="pinned-message-link" data-message-id="${message.id}"
+                title="Jump to pinned message">
+            <strong>📌 ${escapeHtml(message.sender)}</strong>
+            <span>${escapeHtml(message.content || message.attachmentName || "Attachment")}</span>
+        </button>
+    `).join("");
+    container.querySelectorAll(".pinned-message-link").forEach(button => {
+        button.addEventListener("click", () => {
+            document.getElementById(`message-${button.dataset.messageId}`)?.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+        });
+    });
+}
+
 function renderMessages(messages) {
     const container = document.getElementById("messageList");
     state.renderedMessages = messages;
+    renderPinnedMessages(messages);
 
     if (!messages.length) {
         container.innerHTML = '<div class="empty-state">No messages in this channel yet.</div>';
@@ -1319,22 +1442,95 @@ function renderMessages(messages) {
     container.innerHTML = messages
         .map(message => {
             const isMine = message.sender === CURRENT_USER.name;
+            const reactions = Object.entries(message.reactions || {})
+                .filter(([, reactors]) => Array.isArray(reactors) && reactors.length)
+                .map(([emoji, reactors]) => `
+                    <button type="button" class="reaction-badge ${reactors.includes(CURRENT_USER.name) ? "selected" : ""}"
+                            data-message-id="${message.id}" data-emoji="${escapeHtml(emoji)}"
+                            aria-label="${escapeHtml(emoji)} reaction, ${reactors.length} people">
+                        ${escapeHtml(emoji)} <span>${reactors.length}</span>
+                    </button>
+                `).join("");
+            const contentMarkup = state.editingMessageId === message.id
+                ? `<form id="edit-message-${message.id}" class="message-edit-form">
+                    <textarea maxlength="500" required>${escapeHtml(message.content || "")}</textarea>
+                    <div>
+                        <button type="submit" class="message-action-btn">Save</button>
+                        <button type="button" class="message-action-btn cancel-edit-btn" data-message-id="${message.id}">Cancel</button>
+                    </div>
+                </form>`
+                : (message.content ? `<p>${escapeHtml(message.content)}</p>` : "");
             return `
-                <div class="message-bubble ${isMine ? "mine" : ""}">
+                <div class="message-bubble ${isMine ? "mine" : ""}" id="message-${message.id}">
                     <div class="message-meta">
                         <div>
                             <strong>${escapeHtml(message.sender)}</strong>
                             <span>${formatDate(message.timestamp)}</span>
                         </div>
-                        ${isMine ? `<button class="delete-message-btn" onclick="deleteMessage(${message.id})" title="Delete message">🗑️</button>` : ""}
                     </div>
-                    ${message.content ? `<p>${escapeHtml(message.content)}</p>` : ""}
+                    ${contentMarkup}
                     ${renderAttachment(message)}
+                    <div class="message-actions">
+                        <div class="reaction-picker">
+                            <button type="button" class="reaction-picker-trigger" aria-label="React to message" title="React">☺</button>
+                            <div class="reaction-options">
+                                ${["👍", "❤️", "😂", "🎉"].map(emoji => `
+                                    <button type="button" class="reaction-option" data-message-id="${message.id}"
+                                            data-emoji="${emoji}" aria-label="React ${emoji}">${emoji}</button>
+                                `).join("")}
+                            </div>
+                        </div>
+                        ${isMine ? `
+                            <button type="button" class="message-action-btn edit-message-btn" data-message-id="${message.id}" title="Edit message">Edit</button>
+                            <button type="button" class="message-action-btn delete-message-btn" data-message-id="${message.id}" title="Delete message">Delete</button>
+                        ` : ""}
+                        <button type="button" class="message-action-btn pin-message-btn ${message.pinned ? "pinned" : ""}"
+                                data-message-id="${message.id}" title="${message.pinned ? "Unpin message" : "Pin message"}">
+                            ${message.pinned ? "Unpin" : "Pin"}
+                        </button>
+                    </div>
+                    ${reactions ? `<div class="message-reactions">${reactions}</div>` : ""}
                 </div>
             `;
         })
         .join("");
 
+    container.querySelectorAll(".edit-message-btn").forEach(button => {
+        button.addEventListener("click", () => editMessage(Number(button.dataset.messageId)));
+    });
+    container.querySelectorAll(".message-edit-form").forEach(form => {
+        form.addEventListener("submit", event => {
+            event.preventDefault();
+            saveMessageEdit(Number(form.id.replace("edit-message-", "")), form.querySelector("textarea").value);
+        });
+    });
+    container.querySelectorAll(".cancel-edit-btn").forEach(button => {
+        button.addEventListener("click", () => {
+            state.editingMessageId = null;
+            renderMessages(state.renderedMessages);
+        });
+    });
+    container.querySelectorAll(".delete-message-btn").forEach(button => {
+        button.addEventListener("click", () => deleteMessage(Number(button.dataset.messageId)));
+    });
+    container.querySelectorAll(".reaction-option, .reaction-badge").forEach(button => {
+        button.addEventListener("click", () => toggleMessageReaction(
+            Number(button.dataset.messageId), button.dataset.emoji));
+    });
+    container.querySelectorAll(".pin-message-btn").forEach(button => {
+        button.addEventListener("click", () => toggleMessagePin(Number(button.dataset.messageId)));
+    });
+
+    if (state.pendingMessageId) {
+        const target = document.getElementById(`message-${state.pendingMessageId}`);
+        if (target) {
+            target.scrollIntoView({ block: "center" });
+            target.classList.add("message-highlight");
+            setTimeout(() => target.classList.remove("message-highlight"), 1800);
+            state.pendingMessageId = null;
+            return;
+        }
+    }
     container.scrollTop = container.scrollHeight;
 }
 
@@ -1356,6 +1552,10 @@ function renderAttachment(message) {
                 <img src="${attachmentUrl}" alt="${attachmentName}" class="message-image">
             </a>
         `;
+    }
+
+    if ((message.attachmentType || "").startsWith("audio/")) {
+        return `<audio class="message-audio" controls preload="metadata" src="${attachmentUrl}">${attachmentName}</audio>`;
     }
 
     return `<a href="${attachmentUrl}" download="${attachmentName}" class="attachment-link">${attachmentName}</a>`;
@@ -1524,6 +1724,55 @@ async function sendMessage(event) {
     } catch (error) {
         console.error("Unable to send message", error);
         setAttachmentStatus(error instanceof Error ? error.message : "Unable to send message. Please try again.", true);
+    }
+}
+
+async function toggleVoiceRecording() {
+    const button = document.getElementById("voiceMessageBtn");
+    if (voiceRecorder?.state === "recording") {
+        button.disabled = true;
+        button.textContent = "Preparing voice...";
+        voiceRecorder.stop();
+        return;
+    }
+    if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+        showToast("Voice recording is not supported by this browser");
+        return;
+    }
+
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        voiceChunks = [];
+        voiceRecorder = new MediaRecorder(stream);
+        voiceRecorder.addEventListener("dataavailable", event => {
+            if (event.data.size) {
+                voiceChunks.push(event.data);
+            }
+        });
+        voiceRecorder.addEventListener("stop", () => {
+            const mimeType = voiceRecorder.mimeType || "audio/webm";
+            const extension = mimeType.includes("ogg") ? "ogg" : "webm";
+            const voiceFile = new File(voiceChunks, `voice-message-${Date.now()}.${extension}`, { type: mimeType });
+            const transfer = new DataTransfer();
+            transfer.items.add(voiceFile);
+            document.getElementById("attachmentInput").files = transfer.files;
+            stream.getTracks().forEach(track => track.stop());
+            voiceRecorder = null;
+            button.disabled = false;
+            button.classList.remove("recording");
+            button.textContent = "Record voice";
+            setAttachmentStatus("Voice message ready. Select Send to upload.");
+        });
+        voiceRecorder.start();
+        button.textContent = "Stop recording";
+        button.classList.add("recording");
+        setAttachmentStatus("Recording voice message...");
+    } catch (error) {
+        console.error(error);
+        button.disabled = false;
+        button.classList.remove("recording");
+        button.textContent = "Record voice";
+        showToast("Microphone permission is required to record a voice message");
     }
 }
 
