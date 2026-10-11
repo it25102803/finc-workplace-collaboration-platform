@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knowledge Base | FINC Workspace</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/knowledge-base.css">
+</head>
+<body>
+<div class="app-layout">
+
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-logo-card">
+                <img src="images/finc-logo.png" alt="Finc Academy & Consultants" class="brand-logo-img" onerror="this.onerror=null; this.src='images/Finc_Main.jpg';">
+            </div>
+            <div class="brand-portal-title">
+                <span class="title">Enterprise</span>
+                <span class="subtitle">Portal</span>
+            </div>
+        </div>
+        <nav class="nav-menu">
+            <a href="dashboard.html" class="nav-item"><i class="fa-solid fa-chart-pie"></i><span>Overview</span></a>
+            <a href="user-directory.html" class="nav-item"><i class="fa-solid fa-users"></i><span>User Directory</span></a>
+            <a href="channels.html" class="nav-item"><i class="fa-solid fa-comments"></i><span>Channels & Chat</span></a>
+            <a href="tasks.html" class="nav-item"><i class="fa-solid fa-list-check"></i><span>Task Management</span></a>
+            <a href="calendar.html" class="nav-item"><i class="fa-solid fa-calendar-days"></i><span>Calendar & Meetings</span></a>
+            <a href="files.html" class="nav-item"><i class="fa-solid fa-folder"></i><span>File Manager</span></a>
+            <a href="knowledge-base.html" class="nav-item active"><i class="fa-solid fa-book"></i><span>Knowledge Base</span></a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+
+        <header class="top-header">
+            <div>
+                <h1 class="page-title">Knowledge Base</h1>
+                <p class="page-desc">Company policies, SOPs, templates, training material and FAQs in one place.</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-outline" id="btnNewCategory"><i class="fa-solid fa-folder-plus"></i> New Category</button>
+                <button class="btn btn-primary" id="btnNewArticle"><i class="fa-solid fa-plus"></i> New Article</button>
+            </div>
+        </header>
+
+        <div id="sessionWarning" class="notice" hidden>
+            You're not logged in, so you can read articles but not write them.
+            <a href="index.html">Log in</a>
+        </div>
+
+        <section class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon icon-articles"><i class="fa-solid fa-file-lines"></i></div>
+                <div><span class="stat-label">Published articles</span><strong id="statArticles">0</strong></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-categories"><i class="fa-solid fa-layer-group"></i></div>
+                <div><span class="stat-label">Categories</span><strong id="statCategories">0</strong></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-views"><i class="fa-solid fa-eye"></i></div>
+                <div><span class="stat-label">Total views</span><strong id="statViews">0</strong></div>
+            </div>
+        </section>
+
+        <section class="toolbar">
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="search" id="searchInput" placeholder="Search articles by title or content">
+            </div>
+            <div class="category-chips" id="categoryChips"></div>
+        </section>
+
+        <section id="articleGrid" class="article-grid" aria-live="polite"></section>
+
+    </main>
+</div>
+
+
+<div class="modal-overlay" id="categoryModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h2>New category</h2>
+            <button class="close-btn" data-close="categoryModal" aria-label="Close">&times;</button>
+        </div>
+        <form id="categoryForm">
+            <div class="form-group">
+                <label class="form-label" for="categoryName">Name *</label>
+                <input class="form-input" id="categoryName" placeholder="HR">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="categoryDescription">Description</label>
+                <input class="form-input" id="categoryDescription" placeholder="Leave, benefits and workplace policies">
+            </div>
+            <div class="form-message" id="categoryMessage"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" data-close="categoryModal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create category</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<div class="modal-overlay" id="articleModal">
+    <div class="modal-box modal-large">
+        <div class="modal-header">
+            <h2>New article</h2>
+            <button class="close-btn" data-close="articleModal" aria-label="Close">&times;</button>
+        </div>
+        <form id="articleForm">
+            <div class="form-group">
+                <label class="form-label" for="articleTitle">Title *</label>
+                <input class="form-input" id="articleTitle" placeholder="Annual Leave Policy">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="articleType">Article type *</label>
+                    <select class="form-select" id="articleType">
+                        <option value="">Choose a type</option>
+                        <option value="POLICY">Policy</option>
+                        <option value="SOP">SOP</option>
+                        <option value="TEMPLATE">Template</option>
+                        <option value="TRAINING">Training</option>
+                        <option value="FAQ">FAQ</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="articleCategory">Category *</label>
+                    <select class="form-select" id="articleCategory"></select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="articleContent">Content *</label>
+                <textarea class="form-input" id="articleContent" rows="8" placeholder="Write the article here"></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="articleTags">Tags</label>
+                    <input class="form-input" id="articleTags" placeholder="leave, hr, holidays">
+                    <small class="hint">Separate tags with commas.</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="articleFiles">Attach files</label>
+                    <input class="form-input" id="articleFiles" placeholder="12, 15">
+                    <small class="hint">File IDs from the File Manager, separated by commas.</small>
+                </div>
+            </div>
+            <div class="form-message" id="articleMessage"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" data-close="articleModal">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i> Publish</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<div class="modal-overlay" id="viewModal">
+    <div class="modal-box modal-large">
+        <div class="modal-header">
+            <div>
+                <div class="view-badges" id="viewBadges"></div>
+                <h2 id="viewTitle"></h2>
+            </div>
+            <button class="close-btn" data-close="viewModal" aria-label="Close">&times;</button>
+        </div>
+        <p class="view-meta" id="viewMeta"></p>
+        <div class="view-content" id="viewContent"></div>
+        <div class="view-tags" id="viewTags"></div>
+
+        <div class="attachments">
+            <h3><i class="fa-solid fa-paperclip"></i> Attachments</h3>
+            <ul id="viewAttachments"></ul>
+            <div class="attach-row" id="attachRow">
+                <input class="form-input" id="attachFileId" type="number" min="1" placeholder="File ID">
+                <button class="btn btn-outline" id="btnAttach">Attach</button>
+            </div>
+            <div class="form-message" id="viewMessage"></div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn btn-danger" id="btnArchive" hidden><i class="fa-solid fa-box-archive"></i> Archive</button>
+            <button class="btn btn-outline" data-close="viewModal">Close</button>
+        </div>
+    </div>
+</div>
+
+<script src="js/knowledge-base.js"></script>
+</body>
+</html>
