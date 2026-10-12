@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -29,9 +30,10 @@ public class KnowledgeCategoryController {
     }
 
     @PostMapping
-    public ResponseEntity<KnowledgeCategoryResponse> create(@RequestBody CreateCategoryRequest request) {
+    public ResponseEntity<KnowledgeCategoryResponse> create(@RequestBody CreateCategoryRequest request,
+                                                            @RequestParam(required = false) Long actorId) {
         return ResponseEntity.ok(KnowledgeCategoryResponse.from(
-                categoryService.create(request.name(), request.description())));
+                categoryService.create(request.name(), request.description(), actorId)));
     }
 
     @GetMapping
@@ -58,5 +60,10 @@ public class KnowledgeCategoryController {
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<String> notFound(NoSuchElementException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(SecurityException.class)
+    public ResponseEntity<String> forbidden(SecurityException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
     }
 }

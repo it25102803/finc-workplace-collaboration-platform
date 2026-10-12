@@ -183,6 +183,12 @@ body {
     font-size: 0.9rem;
 }
 
+.notice-info {
+    background: var(--primary-light);
+    border-color: #c7d2fe;
+    color: #3730a3;
+}
+
 .notice a {
     color: var(--primary);
     font-weight: 600;

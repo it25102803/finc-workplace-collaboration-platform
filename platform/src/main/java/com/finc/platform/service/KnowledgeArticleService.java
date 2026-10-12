@@ -12,7 +12,6 @@ import com.finc.platform.entity.KnowledgeCategory;
 import com.finc.platform.entity.User;
 import com.finc.platform.repository.FileRepository;
 import com.finc.platform.repository.KnowledgeArticleRepository;
-import com.finc.platform.repository.UserRepository;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,31 +21,30 @@ public class KnowledgeArticleService {
 
     private final KnowledgeArticleRepository articleRepository;
     private final KnowledgeCategoryService categoryService;
-    private final UserRepository userRepository;
     private final FileRepository fileRepository;
+    private final KnowledgePermissions permissions;
 
     public KnowledgeArticleService(KnowledgeArticleRepository articleRepository,
                                    KnowledgeCategoryService categoryService,
-                                   UserRepository userRepository,
-                                   FileRepository fileRepository) {
+                                   FileRepository fileRepository,
+                                   KnowledgePermissions permissions) {
         this.articleRepository = articleRepository;
         this.categoryService = categoryService;
-        this.userRepository = userRepository;
         this.fileRepository = fileRepository;
+        this.permissions = permissions;
     }
 
     @Transactional
-    public KnowledgeArticle create(CreateArticleRequest request) {
+    public KnowledgeArticle create(CreateArticleRequest request, Long actorId) {
+        User author = permissions.requireEditor(actorId);
+
         if (isBlank(request.title()) || isBlank(request.content()) || request.articleType() == null
-                || request.categoryId() == null || request.authorId() == null) {
+                || request.categoryId() == null) {
             throw new IllegalArgumentException(
-                    "Required fields missing: title, content, article type, category and author are required");
+                    "Required fields missing: title, content, article type and category are required");
         }
 
         KnowledgeCategory category = categoryService.getOrThrow(request.categoryId());
-        User author = userRepository.findById(request.authorId())
-                .orElseThrow(() -> new NoSuchElementException("User not found: " + request.authorId()));
-
         KnowledgeArticle article = new KnowledgeArticle(request.title().trim(), request.content().trim(),
                 request.articleType(), category, author);
         if (request.tags() != null) {
@@ -59,21 +57,24 @@ public class KnowledgeArticleService {
     }
 
     @Transactional
-    public KnowledgeArticle publish(Long articleId) {
+    public KnowledgeArticle publish(Long articleId, Long actorId) {
+        permissions.requireEditor(actorId);
         KnowledgeArticle article = getOrThrow(articleId);
         article.publish();
         return article;
     }
 
     @Transactional
-    public KnowledgeArticle archive(Long articleId) {
+    public KnowledgeArticle archive(Long articleId, Long actorId) {
+        permissions.requireEditor(actorId);
         KnowledgeArticle article = getOrThrow(articleId);
         article.archive();
         return article;
     }
 
     @Transactional
-    public KnowledgeArticle attachFile(Long articleId, Long fileId) {
+    public KnowledgeArticle attachFile(Long articleId, Long fileId, Long actorId) {
+        permissions.requireEditor(actorId);
         KnowledgeArticle article = getOrThrow(articleId);
         File file = fileRepository.findById(fileId)
                 .filter(f -> !f.isDeleted())

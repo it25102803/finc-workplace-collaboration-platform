@@ -17,15 +17,19 @@ public class KnowledgeCategoryService {
 
     private final KnowledgeCategoryRepository categoryRepository;
     private final KnowledgeArticleRepository articleRepository;
+    private final KnowledgePermissions permissions;
 
     public KnowledgeCategoryService(KnowledgeCategoryRepository categoryRepository,
-                                    KnowledgeArticleRepository articleRepository) {
+                                    KnowledgeArticleRepository articleRepository,
+                                    KnowledgePermissions permissions) {
         this.categoryRepository = categoryRepository;
         this.articleRepository = articleRepository;
+        this.permissions = permissions;
     }
 
     @Transactional
-    public KnowledgeCategory create(String name, String description) {
+    public KnowledgeCategory create(String name, String description, Long actorId) {
+        permissions.requireEditor(actorId);
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Category name is required");
         }

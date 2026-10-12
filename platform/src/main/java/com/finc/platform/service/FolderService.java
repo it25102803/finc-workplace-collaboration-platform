@@ -1,11 +1,13 @@
 package com.finc.platform.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
 import com.finc.platform.entity.Department;
 import com.finc.platform.entity.File;
 import com.finc.platform.entity.Folder;
+import com.finc.platform.entity.KnowledgeArticle;
 import com.finc.platform.entity.User;
 import com.finc.platform.repository.DepartmentRepository;
 import com.finc.platform.repository.FileRepository;
@@ -23,13 +25,16 @@ public class FolderService {
     private final FileRepository fileRepository;
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
+    private final FileStorageQuota storageQuota;
 
     public FolderService(FolderRepository folderRepository, FileRepository fileRepository,
-                         UserRepository userRepository, DepartmentRepository departmentRepository) {
+                         UserRepository userRepository, DepartmentRepository departmentRepository,
+                         FileStorageQuota storageQuota) {
         this.folderRepository = folderRepository;
         this.fileRepository = fileRepository;
         this.userRepository = userRepository;
         this.departmentRepository = departmentRepository;
+        this.storageQuota = storageQuota;
     }
 
     @Transactional
@@ -91,7 +96,27 @@ public class FolderService {
 
     @Transactional
     public void delete(Long folderId) {
-        folderRepository.deleteById(folderId);
+        Folder folder = getOrThrow(folderId);
+        prepareForDelete(folder);
+        folderRepository.delete(folder);
+    }
+
+    // Gives back quota space and unlinks files from Knowledge Base articles, otherwise the delete hits a foreign key.
+    private void prepareForDelete(Folder folder) {
+        for (File file : folder.getFiles()) {
+            if (!file.isDeleted()) {
+                long sizeMb = file.getVersions().stream()
+                        .mapToLong(v -> FileStorageQuota.toMb(v.getFileSizeBytes() == null ? 0 : v.getFileSizeBytes()))
+                        .sum();
+                storageQuota.release(folder, file.getUploadedBy().getId(), sizeMb);
+            }
+            for (KnowledgeArticle article : new ArrayList<>(file.getArticles())) {
+                article.getAttachedFiles().remove(file);
+            }
+        }
+        for (Folder child : folder.getSubFolders()) {
+            prepareForDelete(child);
+        }
     }
 
     @Transactional(readOnly = true)

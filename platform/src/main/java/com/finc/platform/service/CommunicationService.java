@@ -2,11 +2,9 @@ package com.finc.platform.service;
 
 import com.finc.platform.entity.Channel;
 import com.finc.platform.entity.ChannelType;
-import com.finc.platform.entity.KnowledgeItem;
 import com.finc.platform.entity.Message;
 import com.finc.platform.dto.MessageSearchResult;
 import com.finc.platform.repository.ChannelRepository;
-import com.finc.platform.repository.KnowledgeRepository;
 import com.finc.platform.repository.MessageRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -27,18 +25,15 @@ public class CommunicationService {
 
     private final ChannelRepository channelRepository;
     private final MessageRepository messageRepository;
-    private final KnowledgeRepository knowledgeRepository;
     private final NotificationService notificationService;
     private final SimpMessagingTemplate messagingTemplate;
 
     public CommunicationService(ChannelRepository channelRepository,
                                 MessageRepository messageRepository,
-                                KnowledgeRepository knowledgeRepository,
                                 NotificationService notificationService,
                                 SimpMessagingTemplate messagingTemplate) {
         this.channelRepository = channelRepository;
         this.messageRepository = messageRepository;
-        this.knowledgeRepository = knowledgeRepository;
         this.notificationService = notificationService;
         this.messagingTemplate = messagingTemplate;
     }
@@ -257,27 +252,6 @@ public class CommunicationService {
         }
         
         return false; // Returns false if the requester is not the sender (triggers 403 Forbidden in controller)
-    }
-
-    public List<KnowledgeItem> getAllKnowledge() {
-        return knowledgeRepository.findAll();
-    }
-
-    @Transactional
-    public KnowledgeItem createKnowledgeItem(KnowledgeItem knowledgeItem) {
-        if (knowledgeItem == null || knowledgeItem.getTitle() == null || knowledgeItem.getTitle().isBlank()) {
-            throw new IllegalArgumentException("Knowledge title is required");
-        }
-
-        if (knowledgeItem.getCreatedAt() == null) {
-            knowledgeItem.setCreatedAt(java.time.LocalDateTime.now());
-        }
-
-        return knowledgeRepository.save(knowledgeItem);
-    }
-
-    public void deleteKnowledgeItem(Long id) {
-        knowledgeRepository.deleteById(id);
     }
 
 }

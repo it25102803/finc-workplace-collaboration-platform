@@ -6,6 +6,8 @@
 
     <title>File Manager | Finc Workplace</title>
 
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/css/files.css">
 </head>
 
@@ -17,56 +19,25 @@
     <aside class="sidebar">
 
         <div class="brand">
-            <div class="brand-logo">F</div>
-
-            <div>
-                <h2>FINC</h2>
-                <span>Workplace</span>
+            <div class="brand-logo-card">
+                <img src="images/finc-logo.png" alt="Finc Academy & Consultants" class="brand-logo-img" onerror="this.onerror=null; this.src='images/Finc_Main.jpg';">
+            </div>
+            <div class="brand-portal-title">
+                <span class="title">Enterprise</span>
+                <span class="subtitle">Portal</span>
             </div>
         </div>
 
-        <nav class="navigation">
-
-            <a href="dashboard.html" class="nav-item">
-                <span>&#9635;</span>
-                <span>Dashboard</span>
-            </a>
-
-            <a href="tasks.html" class="nav-item">
-                <span>&#10003;</span>
-                <span>Tasks</span>
-            </a>
-
-            <a href="calendar.html" class="nav-item">
-                <span>&#9635;</span>
-                <span>Calendar</span>
-            </a>
-
-            <a href="files.html" class="nav-item active">
-                <span>&#128193;</span>
-                <span>Files</span>
-            </a>
-
-            <a href="knowledge-base.html" class="nav-item">
-                <span>&#128214;</span>
-                <span>Knowledge Base</span>
-            </a>
-            <a href="admin-settings.html" id="adminSettingsLink" class="nav-link-custom" style="display: none;">
-                <i class="fa-solid fa-gear"></i> Admin Settings
-            </a>
-
+        <nav class="nav-menu">
+            <a href="dashboard.html" class="nav-item"><i class="fa-solid fa-chart-pie"></i><span>Overview</span></a>
+            <a href="user-directory.html" id="userDirectoryLink" class="nav-item" style="display: none;"><i class="fa-solid fa-users"></i><span>User Directory</span></a>
+            <a href="channels.html" class="nav-item"><i class="fa-solid fa-comments"></i><span>Channels & Chat</span></a>
+            <a href="tasks.html" class="nav-item"><i class="fa-solid fa-list-check"></i><span>Task Management</span></a>
+            <a href="calendar.html" class="nav-item"><i class="fa-solid fa-calendar-days"></i><span>Calendar & Meetings</span></a>
+            <a href="files.html" class="nav-item active"><i class="fa-solid fa-folder-open"></i><span>File Manager</span></a>
+            <a href="knowledge-base.html" class="nav-item"><i class="fa-solid fa-book"></i><span>Knowledge Base</span></a>
+            <a href="admin-settings.html" id="adminSettingsLink" class="nav-item" style="display: none;"><i class="fa-solid fa-gear"></i><span>Admin Settings</span></a>
         </nav>
-
-        <div class="sidebar-bottom">
-            <div class="member-badge">
-                <div class="avatar">M4</div>
-
-                <div>
-                    <strong>Member 4</strong>
-                    <small>Files &amp; Knowledge Base</small>
-                </div>
-            </div>
-        </div>
 
     </aside>
 
@@ -103,18 +74,17 @@
         <!-- USER ID BAR -->
         <section class="user-id-bar">
 
-            <label for="actingUserId">Acting as user ID</label>
+            <label for="actingUserId">Signed in as user ID</label>
 
             <input
                     type="number"
                     id="actingUserId"
                     min="1"
-                    placeholder="Enter your user ID"
-                    onchange="onUserIdChanged()"
+                    readonly
             >
 
-            <small>
-                Used as the owner/uploader for everything you create here. Find it in your users table.
+            <small id="userIdHint">
+                Everything you create here is owned by this account.
             </small>
 
         </section>

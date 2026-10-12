@@ -18,9 +18,6 @@ let searchTimer = null;
 
 document.addEventListener("DOMContentLoaded", () => {
 
-    if (!getUserId()) {
-        document.getElementById("sessionWarning").hidden = false;
-    }
 
     document.getElementById("btnNewCategory").addEventListener("click", openCategoryModal);
     document.getElementById("btnNewArticle").addEventListener("click", openArticleModal);
@@ -49,7 +46,24 @@ document.addEventListener("DOMContentLoaded", () => {
         document.querySelectorAll(".modal-overlay.active").forEach(overlay => closeModal(overlay.id));
     });
 
-    loadCategories().then(loadArticles);
+    if (!getUserId()) {
+        document.getElementById("sessionWarning").hidden = false;
+        document.getElementById("articleGrid").innerHTML =
+            `<div class="empty-state">Log in to read the Knowledge Base.</div>`;
+        return;
+    }
+
+    if (isEditor()) {
+        document.getElementById("btnNewCategory").hidden = false;
+        document.getElementById("btnNewArticle").hidden = false;
+    } else {
+        document.getElementById("readOnlyNote").hidden = false;
+    }
+
+    loadCategories().then(loadArticles).then(() => {
+        const articleId = Number(new URLSearchParams(window.location.search).get("article"));
+        if (articleId) openView(articleId);
+    });
 });
 
 
@@ -70,14 +84,31 @@ function getUserId() {
     return number > 0 ? number : null;
 }
 
-function isAdmin() {
-    return (localStorage.getItem("role") || "").includes("ADMIN");
+function isEditor() {
+    const role = localStorage.getItem("role") || "";
+    return role.includes("SYSTEM_ADMIN") || role.includes("DEPT_ADMIN");
 }
 
-function requireLogin() {
-    if (getUserId()) return true;
-    alert("Log in first to write in the Knowledge Base.");
+function requireEditor() {
+    if (getUserId() && isEditor()) return true;
+    alert("Only department or system administrators can change the Knowledge Base.");
     return false;
+}
+
+function withActor(url) {
+    const actorId = getUserId();
+    if (!actorId) return url;
+    return url + (url.includes("?") ? "&" : "?") + "actorId=" + encodeURIComponent(actorId);
+}
+
+async function readError(response) {
+    const text = await response.text();
+    try {
+        const data = JSON.parse(text);
+        return data.error || data.message || text;
+    } catch (e) {
+        return text;
+    }
 }
 
 
@@ -87,8 +118,8 @@ function requireLogin() {
 
 async function loadCategories() {
     try {
-        const response = await fetch(API_CATEGORIES);
-        if (!response.ok) throw new Error(await response.text());
+        const response = await apiFetch(API_CATEGORIES);
+        if (!response.ok) throw new Error(await readError(response));
         categories = await response.json();
     } catch (error) {
         console.error(error);
@@ -109,8 +140,8 @@ async function loadArticles() {
     }
 
     try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(await response.text());
+        const response = await apiFetch(url);
+        if (!response.ok) throw new Error(await readError(response));
         articles = await response.json();
 
         if (query && selectedCategoryId) {
@@ -205,7 +236,7 @@ function typeBadge(type) {
 ========================= */
 
 function openCategoryModal() {
-    if (!requireLogin()) return;
+    if (!requireEditor()) return;
     document.getElementById("categoryForm").reset();
     clearMessage("categoryMessage");
     openModal("categoryModal");
@@ -224,12 +255,12 @@ async function saveCategory(event) {
     }
 
     try {
-        const response = await fetch(API_CATEGORIES, {
+        const response = await apiFetch(API_CATEGORIES, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name: name, description: description || null })
         });
-        if (!response.ok) throw new Error(await response.text());
+        if (!response.ok) throw new Error(await readError(response));
 
         closeModal("categoryModal");
         await loadCategories();
@@ -245,7 +276,7 @@ async function saveCategory(event) {
 ========================= */
 
 function openArticleModal() {
-    if (!requireLogin()) return;
+    if (!requireEditor()) return;
 
     if (categories.length === 0) {
         alert("Create a category first, then write articles inside it.");
@@ -285,7 +316,7 @@ async function publishArticle(event) {
     }
 
     try {
-        const response = await fetch(API_ARTICLES, {
+        const response = await apiFetch(API_ARTICLES, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -294,17 +325,16 @@ async function publishArticle(event) {
                 articleType: articleType,
                 tags: tags,
                 categoryId: categoryId,
-                authorId: getUserId(),
                 publish: true
             })
         });
-        if (!response.ok) throw new Error(await response.text());
+        if (!response.ok) throw new Error(await readError(response));
 
         const article = await response.json();
 
         const failedFiles = [];
         for (const fileId of fileIds) {
-            const attach = await fetch(`${API_ARTICLES}/${article.articleId}/attachments?fileId=${fileId}`, { method: "POST" });
+            const attach = await apiFetch(`${API_ARTICLES}/${article.articleId}/attachments?fileId=${fileId}`, { method: "POST" });
             if (!attach.ok) failedFiles.push(fileId);
         }
 
@@ -323,7 +353,7 @@ async function publishArticle(event) {
 
 async function refreshStats() {
     try {
-        const response = await fetch(API_ARTICLES);
+        const response = await apiFetch(API_ARTICLES);
         if (!response.ok) return;
         const all = await response.json();
         document.getElementById("statArticles").textContent = all.length;
@@ -342,8 +372,8 @@ async function openView(articleId) {
     clearMessage("viewMessage");
 
     try {
-        const response = await fetch(`${API_ARTICLES}/${articleId}`);
-        if (!response.ok) throw new Error(await response.text());
+        const response = await apiFetch(`${API_ARTICLES}/${articleId}`);
+        if (!response.ok) throw new Error(await readError(response));
         openArticle = await response.json();
     } catch (error) {
         alert("Unable to open this article.");
@@ -360,7 +390,7 @@ async function openView(articleId) {
     document.getElementById("viewTags").innerHTML =
         (a.tags || []).map(t => `<span class="tag">#${escapeHtml(t)}</span>`).join("");
 
-    const canManage = getUserId() === a.authorId || isAdmin();
+    const canManage = isEditor();
     document.getElementById("btnArchive").hidden = !canManage;
     document.getElementById("attachRow").hidden = !canManage;
     document.getElementById("attachFileId").value = "";
@@ -382,7 +412,7 @@ async function renderAttachments(fileIds) {
     for (const fileId of fileIds) {
         let name = "File #" + fileId;
         try {
-            const response = await fetch(`/api/files/${fileId}`);
+            const response = await apiFetch(`/api/files/${fileId}`);
             if (response.ok) name = (await response.json()).fileName || name;
         } catch (e) {
             console.error(e);
@@ -390,7 +420,7 @@ async function renderAttachments(fileIds) {
 
         const item = document.createElement("li");
         item.innerHTML =
-            `<a href="/api/files/${fileId}/download" target="_blank"><i class="fa-regular fa-file"></i> ${escapeHtml(name)}</a>`;
+            `<a href="${withActor(`/api/files/${fileId}/download`)}" target="_blank"><i class="fa-regular fa-file"></i> ${escapeHtml(name)}</a>`;
         list.appendChild(item);
     }
 }
@@ -414,8 +444,8 @@ async function attachToOpenArticle() {
     }
 
     try {
-        const response = await fetch(`${API_ARTICLES}/${openArticle.articleId}/attachments?fileId=${fileId}`, { method: "POST" });
-        if (!response.ok) throw new Error(await response.text());
+        const response = await apiFetch(`${API_ARTICLES}/${openArticle.articleId}/attachments?fileId=${fileId}`, { method: "POST" });
+        if (!response.ok) throw new Error(await readError(response));
 
         openArticle = await response.json();
         document.getElementById("attachFileId").value = "";
@@ -431,8 +461,8 @@ async function archiveOpenArticle() {
     if (!confirm(`Archive "${openArticle.title}"? It will no longer appear in the Knowledge Base.`)) return;
 
     try {
-        const response = await fetch(`${API_ARTICLES}/${openArticle.articleId}/archive`, { method: "POST" });
-        if (!response.ok) throw new Error(await response.text());
+        const response = await apiFetch(`${API_ARTICLES}/${openArticle.articleId}/archive`, { method: "POST" });
+        if (!response.ok) throw new Error(await readError(response));
 
         closeModal("viewModal");
         await loadArticles();

@@ -24,20 +24,24 @@ public class FileService {
     private final FileVersionRepository fileVersionRepository;
     private final FolderService folderService;
     private final StorageService storageService;
+    private final FileStorageQuota storageQuota;
 
     public FileService(FileRepository fileRepository,
                        FileVersionRepository fileVersionRepository,
                        FolderService folderService,
-                       StorageService storageService) {
+                       StorageService storageService,
+                       FileStorageQuota storageQuota) {
         this.fileRepository = fileRepository;
         this.fileVersionRepository = fileVersionRepository;
         this.folderService = folderService;
         this.storageService = storageService;
+        this.storageQuota = storageQuota;
     }
 
     @Transactional
     public File upload(MultipartFile data, Long folderId, User uploadedBy, FileType fileType) {
         Folder folder = folderService.getOrThrow(folderId);
+        storageQuota.charge(folder, uploadedBy.getId(), data.getSize());
 
         File file = new File(data.getOriginalFilename(), data.getContentType(), fileType, folder, uploadedBy);
         file.setFileSizeBytes(data.getSize());
@@ -83,6 +87,7 @@ public class FileService {
     @Transactional
     public FileVersion createVersion(Long fileId, MultipartFile data, User createdBy, String changeNote) {
         File file = getOrThrow(fileId);
+        storageQuota.charge(file.getFolder(), file.getUploadedBy().getId(), data.getSize());
         String storagePath = storageService.store(data, file.getFileName());
         // Not currentVersion + 1: after restoring an old version, currentVersion goes backwards.
         int nextVersionNumber = fileVersionRepository.findByFile_FileIdOrderByVersionNumberDesc(fileId)
@@ -117,7 +122,14 @@ public class FileService {
     @Transactional
     public void delete(Long fileId) {
         File file = getOrThrow(fileId);
+        storageQuota.release(file.getFolder(), file.getUploadedBy().getId(), storedSizeMb(file));
         file.markDeleted();
+    }
+
+    private long storedSizeMb(File file) {
+        return fileVersionRepository.findByFile_FileIdOrderByVersionNumberDesc(file.getFileId()).stream()
+                .mapToLong(v -> FileStorageQuota.toMb(v.getFileSizeBytes() == null ? 0 : v.getFileSizeBytes()))
+                .sum();
     }
 
     @Transactional(readOnly = true)

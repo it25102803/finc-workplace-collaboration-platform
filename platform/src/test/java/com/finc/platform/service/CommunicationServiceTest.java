@@ -4,7 +4,6 @@ import com.finc.platform.entity.Channel;
 import com.finc.platform.entity.ChannelType;
 import com.finc.platform.entity.Message;
 import com.finc.platform.repository.ChannelRepository;
-import com.finc.platform.repository.KnowledgeRepository;
 import com.finc.platform.repository.MessageRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -30,14 +29,12 @@ class CommunicationServiceTest {
     @Test
     void reusesDirectChannelWhenMemberEmailsDifferOnlyByOrderAndCase() {
         ChannelRepository channelRepository = mock(ChannelRepository.class);
-        KnowledgeRepository knowledgeRepository = mock(KnowledgeRepository.class);
         MessageRepository messageRepository = mock(MessageRepository.class);
         NotificationService notificationService = mock(NotificationService.class);
         SimpMessagingTemplate messagingTemplate = mock(SimpMessagingTemplate.class);
         CommunicationService service = new CommunicationService(
                 channelRepository,
                 messageRepository,
-                knowledgeRepository,
                 notificationService,
                 messagingTemplate
         );
@@ -56,14 +53,12 @@ class CommunicationServiceTest {
         @Test
         void storesUploadedFileInChatMessage() {
         ChannelRepository channelRepository = mock(ChannelRepository.class);
-        KnowledgeRepository knowledgeRepository = mock(KnowledgeRepository.class);
         MessageRepository messageRepository = mock(MessageRepository.class);
         NotificationService notificationService = mock(NotificationService.class);
         SimpMessagingTemplate messagingTemplate = mock(SimpMessagingTemplate.class);
         CommunicationService service = new CommunicationService(
             channelRepository,
             messageRepository,
-            knowledgeRepository,
             notificationService,
             messagingTemplate
         );
@@ -97,12 +92,11 @@ class CommunicationServiceTest {
     @Test
     void togglesReactionOnAndOff() {
         ChannelRepository channelRepository = mock(ChannelRepository.class);
-        KnowledgeRepository knowledgeRepository = mock(KnowledgeRepository.class);
         MessageRepository messageRepository = mock(MessageRepository.class);
         NotificationService notificationService = mock(NotificationService.class);
         SimpMessagingTemplate messagingTemplate = mock(SimpMessagingTemplate.class);
         CommunicationService service = new CommunicationService(
-                channelRepository, messageRepository, knowledgeRepository, notificationService, messagingTemplate);
+                channelRepository, messageRepository, notificationService, messagingTemplate);
         Channel channel = new Channel("general", "Project updates", ChannelType.PUBLIC);
         channel.setId(7L);
         Message message = new Message(channel, "John Employee", "Hello");
@@ -121,12 +115,11 @@ class CommunicationServiceTest {
     @Test
     void rejectsEditingAnotherUsersMessage() {
         ChannelRepository channelRepository = mock(ChannelRepository.class);
-        KnowledgeRepository knowledgeRepository = mock(KnowledgeRepository.class);
         MessageRepository messageRepository = mock(MessageRepository.class);
         NotificationService notificationService = mock(NotificationService.class);
         SimpMessagingTemplate messagingTemplate = mock(SimpMessagingTemplate.class);
         CommunicationService service = new CommunicationService(
-                channelRepository, messageRepository, knowledgeRepository, notificationService, messagingTemplate);
+                channelRepository, messageRepository, notificationService, messagingTemplate);
         Message message = new Message(new Channel("general", "Project updates", ChannelType.PUBLIC), "John Employee", "Hello");
         message.setId(11L);
         when(messageRepository.findById(11L)).thenReturn(Optional.of(message));
@@ -138,12 +131,11 @@ class CommunicationServiceTest {
     @Test
     void allowsConversationMemberToPinAndUnpinMessage() {
         ChannelRepository channelRepository = mock(ChannelRepository.class);
-        KnowledgeRepository knowledgeRepository = mock(KnowledgeRepository.class);
         MessageRepository messageRepository = mock(MessageRepository.class);
         NotificationService notificationService = mock(NotificationService.class);
         SimpMessagingTemplate messagingTemplate = mock(SimpMessagingTemplate.class);
         CommunicationService service = new CommunicationService(
-                channelRepository, messageRepository, knowledgeRepository, notificationService, messagingTemplate);
+                channelRepository, messageRepository, notificationService, messagingTemplate);
         Channel channel = new Channel("general", "Project updates", ChannelType.PUBLIC);
         channel.setId(7L);
         channel.setMemberEmails(List.of("admin@fincacademy.com"));
@@ -166,12 +158,11 @@ class CommunicationServiceTest {
     @Test
     void rejectsPinningMessageForNonMember() {
         ChannelRepository channelRepository = mock(ChannelRepository.class);
-        KnowledgeRepository knowledgeRepository = mock(KnowledgeRepository.class);
         MessageRepository messageRepository = mock(MessageRepository.class);
         NotificationService notificationService = mock(NotificationService.class);
         SimpMessagingTemplate messagingTemplate = mock(SimpMessagingTemplate.class);
         CommunicationService service = new CommunicationService(
-                channelRepository, messageRepository, knowledgeRepository, notificationService, messagingTemplate);
+                channelRepository, messageRepository, notificationService, messagingTemplate);
         Channel channel = new Channel("private", "Private discussion", ChannelType.PRIVATE);
         channel.setMemberEmails(List.of("member@fincacademy.com"));
         Message message = new Message(channel, "Member", "Private update");
