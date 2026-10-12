@@ -163,7 +163,7 @@ function renderKanban() {
                     ${assigneeBadge}
                     <span>${task.dueDate ? '<i class="fa-regular fa-clock"></i> ' + escapeHtml(task.dueDate) : ''}</span>
                 </div>
-           ;  
+            `;
             card.addEventListener('click', () => openTaskDetails(task));
             container.appendChild(card);
         });
@@ -243,7 +243,7 @@ async function handleStatusChange(e) {
     if (!currentTask) return;
     const status = e.target.value;
     try {
-        const res = await fetch(\`/api/tasks/${currentTask.taskId}/status?status=${encodeURIComponent(status)}\`, { method: 'PATCH' });
+        const res = await fetch(`/api/tasks/${currentTask.taskId}/status?status=${encodeURIComponent(status)}`,{ method: 'PATCH' });
         if (res.ok) {
             currentTask = await res.json();
             document.getElementById('viewStatus').textContent = currentTask.status;
@@ -405,5 +405,4 @@ function handleOpenEditTask() {
 
     document.getElementById('taskModalTitle').textContent = 'Edit Task';
     document.getElementById('taskModal').classList.add('active');
-}
 }
