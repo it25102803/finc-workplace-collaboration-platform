@@ -76,8 +76,9 @@ button {
 }
 
 .brand-block span {
-    color: #c7d2fe;
-    font-size: 0.74rem;
+    font-size: 1rem;       /* match dashboard */
+    font-weight: 700;      /* bold */
+    color: #f8fafc;        /* white text */
 }
 
 .side-section {
@@ -1864,9 +1865,34 @@ body.sidebar-collapsed .sidebar-backdrop {
     border-radius: 8px;
     padding: 8px;
 }
-.brand-logo {
-    width: 48px;       /* or whatever size you want */
-    height: auto;      /* keeps proportions */
-    display: inline-block;
-    margin-right: 8px; /* spacing before text if you keep text */
+.sidebar-brand-logo {
+    max-width: 110px;
+    height: auto;
+    object-fit: contain;
+    background: #ffffff;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+.sidebar-brand span {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #f8fafc;
+}
+.brand-portal-title {
+    display: flex;              /* stacks title + subtitle vertically */
+    flex-direction: column;
+    line-height: 1.15;          /* tight line spacing */
+}
+
+.brand-portal-title .title {
+    font-size: 0.95rem;         /* slightly larger text */
+    font-weight: 700;           /* bold */
+    color: #ffffff;             /* white text */
+    letter-spacing: -0.01em;    /* subtle tighter spacing */
+}
+
+.brand-portal-title .subtitle {
+    font-size: 0.82rem;         /* smaller text */
+    font-weight: 600;           /* semi-bold */
+    color: #ffffff;             /* white text */
 }
