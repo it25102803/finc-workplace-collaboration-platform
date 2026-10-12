@@ -32,7 +32,6 @@
             --text-2: #4b5563;
             --text-3: #94a3b8;
 
-            /* Finc brand — matched to logo */
             --accent: #1E88E5;
             --accent-2: #1565C0;
             --accent-soft: #e3f2fd;
@@ -51,7 +50,6 @@
             --shadow-lg: 0 24px 48px rgba(15, 23, 42, 0.12);
             --focus-ring: 0 0 0 4px rgba(30, 136, 229, 0.15);
 
-            /* Hero gradient — brand navy → blue → cyan */
             --hero-1: #0A1F44;
             --hero-2: #1565C0;
             --hero-3: #29ABE2;
@@ -95,7 +93,6 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        /* ============ LAYOUT ============ */
         .auth-page {
             display: grid;
             grid-template-columns: 1.05fr 1fr;
@@ -107,7 +104,6 @@
             .hero-panel { display: none; }
         }
 
-        /* ============ HERO PANEL ============ */
         .hero-panel {
             position: relative;
             overflow: hidden;
@@ -232,12 +228,11 @@
             align-items: center;
             gap: 6px;
         }
-        .hero-footer i { 
-            color: #6ee7b7; 
+        .hero-footer i {
+            color: #6ee7b7;
             font-size: 0.85rem;
         }
 
-        /* ============ FORM PANEL ============ */
         .form-panel {
             display: flex;
             align-items: center;
@@ -290,7 +285,6 @@
             margin: 0;
         }
 
-        /* ============ TABS ============ */
         .auth-tabs {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -320,7 +314,6 @@
             box-shadow: var(--shadow-sm);
         }
 
-        /* ============ FIELDS ============ */
         .form-label {
             font-size: 0.8rem;
             font-weight: 600;
@@ -383,7 +376,6 @@
         }
         .toggle-password:hover { color: var(--accent) !important; }
 
-        /* ============ BUTTONS ============ */
         .btn-primary-custom {
             background: var(--accent);
             color: var(--accent-contrast);
@@ -429,7 +421,6 @@
             box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
         }
 
-        /* ============ ALERTS ============ */
         .alert-custom {
             border-radius: 10px;
             padding: 12px 16px;
@@ -451,7 +442,6 @@
             border-color: var(--danger-border);
         }
 
-        /* ============ THEME TOGGLE ============ */
         .theme-toggle {
             position: fixed;
             top: 24px;
@@ -482,7 +472,6 @@
             }
         }
 
-        /* ============ TAB CONTENT ANIMATION ============ */
         .tab-content > .tab-pane { animation: fadeIn 0.3s ease; }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(4px); }
@@ -499,7 +488,6 @@
 
 <div class="auth-page">
 
-    <!-- ============ HERO PANEL ============ -->
     <aside class="hero-panel">
         <div class="hero-brand">
             <img src="images/finc-logo.png" alt="Finc Academy" class="hero-brand-logo" onerror="this.src='https://via.placeholder.com/52?text=FINC'">
@@ -538,7 +526,6 @@
         </div>
     </aside>
 
-    <!-- ============ FORM PANEL ============ -->
     <main class="form-panel">
         <div class="auth-card">
 
@@ -565,7 +552,6 @@
 
             <div class="tab-content">
 
-                <!-- LOGIN FORM -->
                 <div class="tab-pane fade show active" id="login" role="tabpanel">
                     <form id="loginForm" novalidate>
                         <div class="mb-3">
@@ -598,7 +584,6 @@
                     </form>
                 </div>
 
-                <!-- REGISTER FORM -->
                 <div class="tab-pane fade" id="register" role="tabpanel">
                     <form id="registerForm" novalidate>
 
@@ -672,7 +657,6 @@
         initHeadings();
     });
 
-    /* =================== Theme (NFR-14) =================== */
     function initTheme() {
         const toggle = document.getElementById("themeToggle");
         const icon = document.getElementById("themeIcon");
@@ -694,7 +678,6 @@
         }
     }
 
-    /* =================== Dynamic heading on tab switch =================== */
     function initHeadings() {
         const loginTab = document.getElementById("login-tab");
         const registerTab = document.getElementById("register-tab");
@@ -719,7 +702,6 @@
         }
     }
 
-    /* =================== Departments (FR-UM-04) =================== */
     function loadDepartments() {
         fetch('/api/departments')
             .then(res => res.json())
@@ -736,7 +718,6 @@
             .catch(err => console.error("Error loading departments:", err));
     }
 
-    /* =================== Alerts =================== */
     function showAlert(message, isSuccess) {
         const alertBox = document.getElementById("alertBox");
         alertBox.className = `alert-custom ${isSuccess ? 'alert-success' : 'alert-danger'} mb-3`;
@@ -744,7 +725,6 @@
         alertBox.classList.remove("d-none");
     }
 
-    /* =================== Login =================== */
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
         e.preventDefault();
         const usernameInput = document.getElementById("loginUsername").value;
@@ -770,6 +750,7 @@
                 localStorage.setItem("theme", savedTheme);
                 localStorage.setItem("user", JSON.stringify(data));
                 localStorage.setItem("userId", data.userId || "");
+                localStorage.setItem("email", data.email || "");
                 localStorage.setItem("badgeId", String(data.userId || 1).padStart(3, '0'));
                 localStorage.setItem("username", data.username || usernameInput);
                 localStorage.setItem("departmentName", data.departmentName || "Not Assigned");
@@ -795,7 +776,6 @@
         }
     });
 
-    /* =================== Register =================== */
     document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
         e.preventDefault();
 
@@ -844,7 +824,6 @@
         }
     });
 
-    /* =================== Password toggle =================== */
     document.addEventListener('click', function (e) {
         const toggleBtn = e.target.closest('.toggle-password');
         if (!toggleBtn) return;

@@ -31,10 +31,8 @@ public class RoleGuardFilter extends OncePerRequestFilter {
     );
 
     private static final Set<String> PUBLIC_READ_PREFIXES = Set.of(
-        "/api/departments",
-        "/api/presence",
-        "/api/search",
-        "/api/tasks/user"
+            "/api/departments",
+            "/api/presence"
     );
 
     @Override
@@ -60,7 +58,7 @@ public class RoleGuardFilter extends OncePerRequestFilter {
         boolean mutating = "POST".equals(method) || "PUT".equals(method)
                 || "PATCH".equals(method) || "DELETE".equals(method);
 
-        // Public reads (dropdowns, heartbeat, search, directory, my tasks)
+        // Public reads (dropdowns, heartbeat)
         if ("GET".equals(method)) {
             for (String p : PUBLIC_READ_PREFIXES) {
                 if (path.startsWith(p)) {
@@ -99,13 +97,13 @@ public class RoleGuardFilter extends OncePerRequestFilter {
         }
 
         // ---- GET /api/users (list) : SYSTEM_ADMIN only ----
-// Single-user lookups like /api/users/{id} are still allowed for authenticated users.
-if ("GET".equals(method) && "/api/users".equals(path)) {
-    if (role != RoleType.ROLE_SYSTEM_ADMIN) {
-        deny(res, "Access denied: SYSTEM_ADMIN role required to view the user directory");
-        return;
-    }
-}
+        // Single-user lookups like /api/users/{id} are still allowed for authenticated users.
+        if ("GET".equals(method) && "/api/users".equals(path)) {
+            if (role != RoleType.ROLE_SYSTEM_ADMIN) {
+                deny(res, "Access denied: SYSTEM_ADMIN role required to view the user directory");
+                return;
+            }
+        }
 
         // ---- /api/admin/** : SYSTEM_ADMIN only ----
         if (path.startsWith("/api/admin/")) {
@@ -123,13 +121,8 @@ if ("GET".equals(method) && "/api/users".equals(path)) {
             }
         }
 
-        // ---- /api/channels/** mutations : DEPT_ADMIN or SYSTEM_ADMIN ----
-        else if (path.startsWith("/api/channels") && mutating) {
-            if (role != RoleType.ROLE_SYSTEM_ADMIN && role != RoleType.ROLE_DEPT_ADMIN) {
-                deny(res, "Access denied: DEPARTMENT_ADMIN or SYSTEM_ADMIN required");
-                return;
-            }
-        }
+        // /api/channels/**: ChannelController checks each conversation (members chat and run
+        // their own group chats; only admins create public channels).
 
         // ---- /api/kb/** (Knowledge Base) mutations : DEPT_ADMIN or SYSTEM_ADMIN ----
         else if (path.startsWith("/api/kb") && mutating) {
@@ -141,7 +134,7 @@ if ("GET".equals(method) && "/api/users".equals(path)) {
 
         // ---- /api/tasks/** : TEAM_LEADER+ for create/edit/delete ----
         else if (path.startsWith("/api/tasks") && mutating) {
-            boolean progressOrStatus = path.matches(".*/(status|progress|comments)$");
+            boolean progressOrStatus = path.matches(".*/(status|progress|comments|attachments)(/\\d+)?$");
             if (!progressOrStatus) {
                 if (role != RoleType.ROLE_SYSTEM_ADMIN
                         && role != RoleType.ROLE_DEPT_ADMIN

@@ -76,7 +76,7 @@ public class SearchService {
 
         // ---- Files ----
         fileRepository.findAll().stream()
-                .filter(f -> contains(f.getFileName(), query))
+                .filter(f -> !f.isDeleted() && contains(f.getFileName(), query))
                 .limit(5)
                 .forEach(f -> result.add(new SearchHit(
                         "FILE", f.getFileId(),

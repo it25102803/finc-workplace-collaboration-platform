@@ -13,18 +13,37 @@ import static org.mockito.Mockito.when;
 
 class UserDirectoryControllerTest {
 
+    private User user(Long id, String username, String email, String first, String last, boolean enabled) {
+        User u = new User(username, email, "secret", first, last);
+        u.setId(id);
+        u.setEnabled(enabled);
+        return u;
+    }
+
     @Test
-    void returnsSafeDisplayNamesForPersistedUsers() {
+    void returnsAllUsersForTheAdminDirectory() {
+        UserRepository userRepository = mock(UserRepository.class);
+        UserDirectoryController controller = new UserDirectoryController(userRepository);
+        List<User> users = List.of(
+                user(1L, "admin", "admin@fincacademy.com", "Admin", "User", true),
+                user(2L, "john", "john@fincacademy.com", null, null, true));
+        when(userRepository.findAll()).thenReturn(users);
+
+        assertEquals(users, controller.getUsers().getBody());
+    }
+
+    @Test
+    void basicListHasSafeDisplayNamesAndSkipsDisabledUsers() {
         UserRepository userRepository = mock(UserRepository.class);
         UserDirectoryController controller = new UserDirectoryController(userRepository);
         when(userRepository.findAll()).thenReturn(List.of(
-                new User("admin", "admin@fincacademy.com", "secret", "Admin", "User"),
-                new User("john", "john@fincacademy.com", "secret", null, null)
-        ));
+                user(1L, "admin", "admin@fincacademy.com", "Admin", "User", true),
+                user(2L, "john", "john@fincacademy.com", null, null, true),
+                user(3L, "gone", "gone@fincacademy.com", "Gone", "User", false)));
 
         assertEquals(List.of(
-                new UserSummary("admin@fincacademy.com", "Admin User"),
-                new UserSummary("john@fincacademy.com", "john")
-        ), controller.getUsers());
+                new UserSummary(1L, "admin", "admin@fincacademy.com", "Admin User"),
+                new UserSummary(2L, "john", "john@fincacademy.com", "john")
+        ), controller.getBasicUsers().getBody());
     }
 }

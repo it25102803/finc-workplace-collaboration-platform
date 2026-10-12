@@ -18,6 +18,8 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
+    // Never sent to the browser; login and admin endpoints take passwords through their own request classes.
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @Column(nullable = false)
     private String password;
 
