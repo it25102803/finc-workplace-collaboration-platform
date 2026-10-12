@@ -37,6 +37,14 @@ function initTaskEventListeners() {
     const modal = document.getElementById('taskModal');
     const detailModal = document.getElementById('taskDetailModal');
 
+    // Real-Time Search Handler
+    const searchInput = document.getElementById('taskSearchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            renderKanban();
+        });
+    }
+
     document.getElementById('btnOpenTaskModal').addEventListener('click', () => {
         document.getElementById('taskForm').reset();
         document.getElementById('taskId').value = '';
@@ -75,13 +83,31 @@ async function fetchTasks() {
 }
 
 function renderKanban() {
+    const searchQuery = (document.getElementById('taskSearchInput')?.value || '').trim().toLowerCase();
+
     ['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'COMPLETED'].forEach(status => {
         const container = document.getElementById(`cards-${status}`);
         const countBadge = document.getElementById(`count-${status}`);
         if (!container || !countBadge) return;
         container.innerHTML = '';
 
-        const statusTasks = allTasks.filter(t => t.status === status);
+        // Filter by Status and Search Query
+        const statusTasks = allTasks.filter(task => {
+            if (task.status !== status) return false;
+            if (!searchQuery) return true;
+
+            const titleMatch = task.title && task.title.toLowerCase().includes(searchQuery);
+            const descMatch = task.description && task.description.toLowerCase().includes(searchQuery);
+            const priorityMatch = task.priority && task.priority.toLowerCase().includes(searchQuery);
+
+            const assigneeName = task.assignee
+                ? `${task.assignee.firstName || ''} ${task.assignee.lastName || ''} ${task.assignee.username || ''}`.toLowerCase()
+                : 'all members';
+            const assigneeMatch = assigneeName.includes(searchQuery);
+
+            return titleMatch || descMatch || priorityMatch || assigneeMatch;
+        });
+
         countBadge.textContent = statusTasks.length;
 
         statusTasks.forEach(task => {
