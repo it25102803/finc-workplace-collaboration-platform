@@ -15,8 +15,6 @@ public interface CalendarEventRepository extends JpaRepository<CalendarEvent, Lo
 
     List<CalendarEvent> findByEventDate(LocalDate eventDate);
 
-    List<CalendarEvent> findByCreatedByUser_id(Long userId);
-
     List<CalendarEvent> findByEventType(EventType eventType);
 
     boolean existsByTitleAndEventDate(String title, LocalDate eventDate);

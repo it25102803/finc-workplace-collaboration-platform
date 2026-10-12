@@ -1,6 +1,35 @@
-let currentDate = new Date(2026, 0, 1);
+let currentDate = new Date(2026, 0, 1); // Defaults to January 2026 (matching Picture 1)
 let allEvents = [];
 let selectedEvent = null;
+
+// Sri Lankan 2026 holidays
+const defaultHolidays = [
+    { title: "Duruthu Full Moon Poya Day", eventDate: "2026-01-03", eventType: "HOLIDAY" },
+    { title: "Tamil Thai Pongal Day", eventDate: "2026-01-15", eventType: "HOLIDAY" },
+    { title: "Navam Full Moon Poya Day", eventDate: "2026-02-01", eventType: "HOLIDAY" },
+    { title: "National Independence Day", eventDate: "2026-02-04", eventType: "HOLIDAY" },
+    { title: "Mahasivarathri Day", eventDate: "2026-02-16", eventType: "HOLIDAY" },
+    { title: "Medin Full Moon Poya Day", eventDate: "2026-03-03", eventType: "HOLIDAY" },
+    { title: "Id Ul-Fitr (Ramazan)", eventDate: "2026-03-20", eventType: "HOLIDAY" },
+    { title: "Bak Full Moon Poya Day", eventDate: "2026-04-01", eventType: "HOLIDAY" },
+    { title: "Good Friday", eventDate: "2026-04-03", eventType: "HOLIDAY" },
+    { title: "Sinhala & Tamil New Year Eve", eventDate: "2026-04-13", eventType: "HOLIDAY" },
+    { title: "Sinhala & Tamil New Year Day", eventDate: "2026-04-14", eventType: "HOLIDAY" },
+    { title: "May Day", eventDate: "2026-05-01", eventType: "HOLIDAY" },
+    { title: "Id Ul-Alha (Hadji)", eventDate: "2026-05-27", eventType: "HOLIDAY" },
+    { title: "Vesak Full Moon Poya Day", eventDate: "2026-05-30", eventType: "HOLIDAY" },
+    { title: "Day after Vesak Poya", eventDate: "2026-05-31", eventType: "HOLIDAY" },
+    { title: "Poson Full Moon Poya Day", eventDate: "2026-06-29", eventType: "HOLIDAY" },
+    { title: "Esala Full Moon Poya Day", eventDate: "2026-07-28", eventType: "HOLIDAY" },
+    { title: "Milad-Un-Nabi", eventDate: "2026-08-26", eventType: "HOLIDAY" },
+    { title: "Nikini Full Moon Poya Day", eventDate: "2026-08-27", eventType: "HOLIDAY" },
+    { title: "Binara Full Moon Poya Day", eventDate: "2026-09-25", eventType: "HOLIDAY" },
+    { title: "Vap Full Moon Poya Day", eventDate: "2026-10-25", eventType: "HOLIDAY" },
+    { title: "Deepavali Festival Day", eventDate: "2026-11-08", eventType: "HOLIDAY" },
+    { title: "Il Full Moon Poya Day", eventDate: "2026-11-23", eventType: "HOLIDAY" },
+    { title: "Unduvap Full Moon Poya Day", eventDate: "2026-12-23", eventType: "HOLIDAY" },
+    { title: "Christmas Day", eventDate: "2026-12-25", eventType: "HOLIDAY" }
+];
 
 document.addEventListener('DOMContentLoaded', () => {
     initCalendarListeners();
@@ -46,12 +75,17 @@ async function fetchCalendarData() {
     try {
         const res = await fetch('/api/calendar/events');
         if (res.ok) {
-            allEvents = await res.json();
-            renderCalendar();
+            const serverEvents = await res.json();
+            const existingKeys = new Set(serverEvents.map(e => `${e.title}_${e.eventDate || (e.startTime ? e.startTime.split('T')[0] : '')}`));
+            const uniqueDefaults = defaultHolidays.filter(h => !existingKeys.has(`${h.title}_${h.eventDate}`));
+            allEvents = [...serverEvents, ...uniqueDefaults];
+        } else {
+            allEvents = [...defaultHolidays];
         }
     } catch (e) {
-        console.error('Error fetching calendar events:', e);
+        allEvents = [...defaultHolidays];
     }
+    renderCalendar();
 }
 
 function renderCalendar() {
@@ -70,27 +104,23 @@ function renderCalendar() {
     const firstDayIndex = new Date(year, month, 1).getDay();
     const totalDays = new Date(year, month + 1, 0).getDate();
     const prevMonthTotalDays = new Date(year, month, 0).getDate();
-
     const filter = document.getElementById('eventTypeFilter').value;
-    const now = new Date();
 
+    // Previous month filler days
     for (let i = firstDayIndex; i > 0; i--) {
         const dayDiv = document.createElement('div');
         dayDiv.className = 'calendar-day other-month';
-        dayDiv.innerHTML = `<div class="day-header"><span class="day-number">${prevMonthTotalDays - i + 1}</span></div>`;
+        dayDiv.innerHTML = `<div class="day-header">${prevMonthTotalDays - i + 1}</div>`;
         grid.appendChild(dayDiv);
     }
 
+    // Days in current month
     for (let day = 1; day <= totalDays; day++) {
         const dayDiv = document.createElement('div');
         dayDiv.className = 'calendar-day';
 
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        if (now.getFullYear() === year && now.getMonth() === month && now.getDate() === day) {
-            dayDiv.classList.add('today');
-        }
-
-        dayDiv.innerHTML = `<div class="day-header"><span class="day-number">${day}</span></div>`;
+        dayDiv.innerHTML = `<div class="day-header">${day}</div>`;
 
         const dayEvents = allEvents.filter(ev => {
             const evDate = ev.eventDate || (ev.startTime ? ev.startTime.split('T')[0] : '');
@@ -120,12 +150,13 @@ function renderCalendar() {
         grid.appendChild(dayDiv);
     }
 
+    // Next month filler days
     const totalSlots = firstDayIndex + totalDays;
     const remainingSlots = (totalSlots % 7 === 0) ? 0 : 7 - (totalSlots % 7);
     for (let j = 1; j <= remainingSlots; j++) {
         const dayDiv = document.createElement('div');
         dayDiv.className = 'calendar-day other-month';
-        dayDiv.innerHTML = `<div class="day-header"><span class="day-number">${j}</span></div>`;
+        dayDiv.innerHTML = `<div class="day-header">${j}</div>`;
         grid.appendChild(dayDiv);
     }
 }

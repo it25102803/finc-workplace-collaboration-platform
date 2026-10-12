@@ -10,8 +10,7 @@
 </head>
 <body>
 <div class="app-layout">
-    <!-- Sidebar Navigation -->
-    <!-- Sidebar Navigation -->
+    <!-- Dark Navy Sidebar (Matching Picture 2) -->
     <aside class="sidebar">
         <div class="brand">
             <div class="brand-logo-card">
@@ -23,57 +22,32 @@
             </div>
         </div>
         <nav class="nav-menu">
-            <a href="dashboard.html" class="nav-item"><i class="fa-solid fa-house"></i> Dashboard</a>
-            <a href="tasks.html" class="nav-item active"><i class="fa-solid fa-list-check"></i> Tasks</a>
-            <a href="calendar.html" class="nav-item"><i class="fa-solid fa-calendar-days"></i> Calendar</a>
-            <a href="files.html" class="nav-item"><i class="fa-solid fa-folder"></i> Files</a>
             <a href="dashboard.html" class="nav-item">
-                <i class="fa-solid fa-chart-pie"></i>
-                <span>Overview</span>
-            </a>
-            <a href="user-directory.html" id="userDirectoryLink" class="nav-link-custom" style="display: none;"><i class="fa-solid fa-users"></i> User Directory</a>
-            <a href="users.html" class="nav-item">
-                <i class="fa-solid fa-users"></i>
-                <span>User Directory</span>
-            </a>
-            <a href="channels.html" class="nav-item">
-                <i class="fa-solid fa-comments"></i>
-                <span>Channels & Chat</span>
+                <i class="fa-solid fa-house"></i>
+                <span>Dashboard</span>
             </a>
             <a href="tasks.html" class="nav-item active">
                 <i class="fa-solid fa-list-check"></i>
-                <span>Task Management</span>
+                <span>Tasks</span>
             </a>
             <a href="calendar.html" class="nav-item">
                 <i class="fa-solid fa-calendar-days"></i>
-                <span>Calendar & Meetings</span>
+                <span>Calendar</span>
             </a>
             <a href="files.html" class="nav-item">
                 <i class="fa-solid fa-folder"></i>
-                <span>File Manager</span>
-            </a>
-            <a href="knowledge-base.html" class="nav-item">
-                <i class="fa-solid fa-book"></i>
-                <span>Knowledge Base</span>
-            </a>
-            <a href="admin-settings.html" id="adminSettingsLink" class="nav-link-custom" style="display: none;">
-                <i class="fa-solid fa-gear"></i> Admin Settings
-            </a>
-            <a href="settings.html" class="nav-item">
-                <i class="fa-solid fa-gear"></i>
-                <span>Settings</span>
+                <span>Files</span>
             </a>
         </nav>
     </aside>
 
-    <!-- Main Task Board -->
+    <!-- Main Content Area -->
     <main class="main-content">
         <header class="top-header">
             <div>
                 <h1 class="page-title">Task Management</h1>
                 <p class="page-desc">Assign tasks to team members, update progress, and track deadlines.</p>
             </div>
-
             <div class="header-actions">
                 <button class="btn btn-primary" id="btnOpenTaskModal">
                     <i class="fa-solid fa-plus"></i> New Task
@@ -81,7 +55,7 @@
             </div>
         </header>
 
-        <!-- Kanban Columns -->
+        <!-- Kanban Board -->
         <div class="kanban-board">
             <div class="kanban-col" data-status="TODO">
                 <div class="col-header">
@@ -189,7 +163,7 @@
     </div>
 </div>
 
-<!-- Task Details & Comments Modal -->
+<!-- Task Details Modal -->
 <div class="modal-overlay" id="taskDetailModal">
     <div class="modal-box modal-large">
         <div class="modal-header">
@@ -221,19 +195,7 @@
         </div>
     </div>
 </div>
-<script src="js/api.js"></script>
+
 <script src="js/tasks.js"></script>
-<script src="js/presence.js"></script>
-<script>
-    // Show Admin Settings link only for SYSTEM_ADMIN users
-    (function () {
-        const role = (localStorage.getItem("role") || "").replace("ROLE_", "");
-        const link = document.getElementById("adminSettingsLink");
-        if (link && role === "SYSTEM_ADMIN") {
-            link.style.display = "";
-        }
-    })();
-</script>
-<script src="js/roleguard.js"></script>
 </body>
 </html>
