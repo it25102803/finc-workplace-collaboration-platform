@@ -7,10 +7,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/tasks.css">
+    <script src="js/api.js"></script>
 </head>
 <body>
 <div class="app-layout">
-    <!-- Dark Navy Sidebar (4 Core Navigation Links) -->
+    <!-- Dark Navy Sidebar (same links as the dashboard) -->
     <aside class="sidebar">
         <div class="brand">
             <div class="brand-logo-card">
@@ -23,20 +24,36 @@
         </div>
         <nav class="nav-menu">
             <a href="dashboard.html" class="nav-item">
-                <i class="fa-solid fa-house"></i>
-                <span>Dashboard</span>
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>Overview</span>
+            </a>
+            <a href="user-directory.html" id="userDirectoryLink" style="display: none;" class="nav-item">
+                <i class="fa-solid fa-users"></i>
+                <span>User Directory</span>
+            </a>
+            <a href="channels.html" class="nav-item">
+                <i class="fa-solid fa-comments"></i>
+                <span>Channels & Chat</span>
             </a>
             <a href="tasks.html" class="nav-item active">
                 <i class="fa-solid fa-list-check"></i>
-                <span>Tasks</span>
+                <span>Task Management</span>
             </a>
             <a href="calendar.html" class="nav-item">
                 <i class="fa-solid fa-calendar-days"></i>
-                <span>Calendar</span>
+                <span>Calendar & Meetings</span>
             </a>
             <a href="files.html" class="nav-item">
-                <i class="fa-solid fa-folder"></i>
-                <span>Files</span>
+                <i class="fa-solid fa-folder-open"></i>
+                <span>File Manager</span>
+            </a>
+            <a href="knowledge-base.html" class="nav-item">
+                <i class="fa-solid fa-book"></i>
+                <span>Knowledge Base</span>
+            </a>
+            <a href="admin-settings.html" id="adminSettingsLink" style="display: none;" class="nav-item">
+                <i class="fa-solid fa-gear"></i>
+                <span>Admin Settings</span>
             </a>
         </nav>
     </aside>
@@ -183,6 +200,27 @@
             </div>
             <p class="detail-desc" id="viewDescription"></p>
 
+            <div class="form-group" id="statusUpdateBox">
+                <label class="form-label" for="viewStatusSelect">Update status</label>
+                <select id="viewStatusSelect" class="form-select">
+                    <option value="TODO">To Do</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="IN_REVIEW">In Review</option>
+                    <option value="COMPLETED">Completed</option>
+                </select>
+            </div>
+
+            <div class="comments-section">
+                <h4>Attachments</h4>
+                <div class="comment-list" id="attachmentList"></div>
+                <form id="attachmentForm" class="comment-input-box">
+                    <select id="attachmentFileSelect" class="form-select" required>
+                        <option value="">Choose one of your files from the File Manager...</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary" title="Attach file"><i class="fa-solid fa-paperclip"></i></button>
+                </form>
+            </div>
+
             <div class="comments-section">
                 <h4>Comments & Discussions</h4>
                 <div class="comment-list" id="commentList"></div>
@@ -201,5 +239,7 @@
 </div>
 
 <script src="js/tasks.js"></script>
+<script src="js/presence.js"></script>
+<script src="js/roleguard.js"></script>
 </body>
 </html>
