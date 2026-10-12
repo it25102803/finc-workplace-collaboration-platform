@@ -4,10 +4,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const rawId = localStorage.getItem("badgeId") || localStorage.getItem("userId") || userSession.userId || "1";
     const status = localStorage.getItem("status") || "Online";
     const departmentName = localStorage.getItem("departmentName") || (userSession.department ? userSession.department.name : "Not Assigned");
-    const roleName = localStorage.getItem("role") || (userSession.role ? userSession.role.replace("ROLE_", "") : "EMPLOYEE");
+    const roleName = localStorage.getItem("role") || (userSession.role ? userSession.role : "ROLE_EMPLOYEE");
 
-    const cleanNumericId = String(rawId).replace(/[^0-9]/g, "");
-    const formattedId = cleanNumericId ? cleanNumericId.padStart(3, "0") : "001";
+    const cleanNumericId = String(rawId).replace(/[^0-9]/g, "") || "1";
 
     const displayNameElem = document.getElementById("displayName");
     const welcomeHeadingElem = document.getElementById("welcomeHeading");
@@ -17,15 +16,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (displayNameElem) displayNameElem.textContent = username;
     if (welcomeHeadingElem) welcomeHeadingElem.textContent = `Welcome back, ${username}!`;
     if (userDepartmentElem) userDepartmentElem.textContent = departmentName;
-    if (userRoleBadgeElem) userRoleBadgeElem.textContent = roleName.replace("ROLE_", "");
-
-    const userScopeEl = document.getElementById("metric-user-scope");
-    if (userScopeEl) userScopeEl.textContent = formattedId;
+    if (userRoleBadgeElem) userRoleBadgeElem.textContent = friendlyRoleName(roleName);
 
     const systemStatusEl = document.getElementById("metric-system-status");
     if (systemStatusEl) systemStatusEl.textContent = status;
 
-    loadDashboardSummaries(cleanNumericId || "1");
+    // Dashboard summaries — FR-UM-08 (tasks + files)
+    loadDashboardSummaries(cleanNumericId);
 
     const logoutBtn = document.getElementById("logoutBtn");
     if (logoutBtn) {
@@ -47,8 +44,31 @@ document.addEventListener("DOMContentLoaded", () => {
     initGlobalSearch();
 });
 
+/**
+ * Convert a raw role enum ("ROLE_SYSTEM_ADMIN", "SYSTEM_ADMIN", etc.)
+ * into a friendly label matching the report (Section 1.2).
+ */
+function friendlyRoleName(raw) {
+    if (!raw) return "Employee";
+    const cleaned = String(raw).replace(/^ROLE_/, "").toUpperCase();
+    const map = {
+        SYSTEM_ADMIN: "System Administrator",
+        DEPT_ADMIN: "Department Administrator",
+        TEAM_LEADER: "Team Leader",
+        EMPLOYEE: "Employee"
+    };
+    if (map[cleaned]) return map[cleaned];
+    // Fallback: "SOME_ROLE" → "Some Role"
+    return cleaned
+        .toLowerCase()
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, c => c.toUpperCase());
+}
+
 async function loadDashboardSummaries(userId) {
     const actorId = localStorage.getItem("userId") || userId;
+
+    // --- Active tasks (FR-UM-08) ---
     try {
         const tasksRes = await fetch(`/api/tasks/user/${userId}?actorId=${actorId}`);
         if (tasksRes.ok) {
@@ -59,6 +79,22 @@ async function loadDashboardSummaries(userId) {
         }
     } catch (err) {
         console.warn("Could not load tasks metric summary:", err);
+    }
+
+    // --- My files (FR-UM-08) ---
+    try {
+        const filesRes = await fetch(`/api/files/user/${userId}?actorId=${actorId}`);
+        if (filesRes.ok) {
+            const files = await filesRes.json();
+            const fileCount = Array.isArray(files) ? files.length
+                            : (files && typeof files.total === "number") ? files.total
+                            : 0;
+            const filesMetricEl = document.getElementById("metric-files");
+            if (filesMetricEl) filesMetricEl.textContent = fileCount;
+        }
+    } catch (err) {
+        console.warn("Could not load files metric summary:", err);
+        // Fail silently — the card simply stays at 0
     }
 }
 

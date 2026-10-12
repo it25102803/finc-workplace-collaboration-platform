@@ -1,1 +1,10 @@
-spring.datasource.password=123
+# Copy this file to application-local.properties and fill in your local values.
+# The real file is git-ignored and should NEVER be committed.
+
+# Local MySQL password (leave blank if your root has no password)
+spring.datasource.password=
+
+# Default System Administrator seed credentials
+app.admin.username=admin
+app.admin.password=Admin@12345
+app.admin.email=admin@finc.local
