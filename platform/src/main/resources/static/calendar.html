@@ -10,8 +10,7 @@
 </head>
 <body>
 <div class="app-layout">
-    <!-- Sidebar Navigation -->
-    <!-- Sidebar Navigation -->
+    <!-- Dark Navy Sidebar with 4 Main Navigation Links -->
     <aside class="sidebar">
         <div class="brand">
             <div class="brand-logo-card">
@@ -23,52 +22,26 @@
             </div>
         </div>
         <nav class="nav-menu">
-
-            <a href="dashboard.html" class="nav-item"><i class="fa-solid fa-house"></i> Dashboard</a>
-            <a href="tasks.html" class="nav-item"><i class="fa-solid fa-list-check"></i> Tasks</a>
-            <a href="calendar.html" class="nav-item active"><i class="fa-solid fa-calendar-days"></i> Calendar</a>
-            <a href="files.html" class="nav-item"><i class="fa-solid fa-folder"></i> Files</a>
             <a href="dashboard.html" class="nav-item">
-                <i class="fa-solid fa-chart-pie"></i>
-                <span>Overview</span>
-            </a>
-            <a href="user-directory.html" id="userDirectoryLink" class="nav-link-custom" style="display: none;"><i class="fa-solid fa-users"></i> User Directory</a>
-            <a href="users.html" class="nav-item">
-                <i class="fa-solid fa-users"></i>
-                <span>User Directory</span>
-            </a>
-            <a href="channels.html" class="nav-item">
-                <i class="fa-solid fa-comments"></i>
-                <span>Channels & Chat</span>
+                <i class="fa-solid fa-house"></i>
+                <span>Dashboard</span>
             </a>
             <a href="tasks.html" class="nav-item">
                 <i class="fa-solid fa-list-check"></i>
-                <span>Task Management</span>
+                <span>Tasks</span>
             </a>
             <a href="calendar.html" class="nav-item active">
                 <i class="fa-solid fa-calendar-days"></i>
-                <span>Calendar & Meetings</span>
+                <span>Calendar</span>
             </a>
             <a href="files.html" class="nav-item">
                 <i class="fa-solid fa-folder"></i>
-                <span>File Manager</span>
-            </a>
-            <a href="knowledge-base.html" class="nav-item">
-                <i class="fa-solid fa-book"></i>
-                <span>Knowledge Base</span>
-            </a>
-            <a href="admin-settings.html" id="adminSettingsLink" class="nav-link-custom" style="display: none;">
-                <i class="fa-solid fa-gear"></i> Admin Settings
-            </a>
-
-            <a href="settings.html" class="nav-item">
-                <i class="fa-solid fa-gear"></i>
-                <span>Settings</span>
+                <span>Files</span>
             </a>
         </nav>
     </aside>
 
-    <!-- Main Content Area -->
+    <!-- Main Calendar Area -->
     <main class="main-content">
         <header class="top-header">
             <div>
@@ -104,25 +77,17 @@
             </div>
         </section>
 
-        <!-- Calendar Grid -->
+        <!-- Calendar Card & Grid -->
         <div class="calendar-card">
             <div class="calendar-grid-header">
                 <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
             </div>
             <div class="calendar-grid" id="calendarGrid"></div>
         </div>
-
-        <!-- Legend -->
-        <div class="calendar-legend">
-            <span class="legend-item"><span class="dot dot-holiday"></span> 🌕 Holiday / Poya Day</span>
-            <span class="legend-item"><span class="dot dot-deadline"></span> 📌 Task Deadline</span>
-            <span class="legend-item"><span class="dot dot-meeting"></span> Meeting</span>
-            <span class="legend-item"><span class="dot dot-company"></span> Company Event</span>
-        </div>
     </main>
 </div>
 
-<!-- Event Add Modal -->
+<!-- Create Event Modal -->
 <div class="modal-overlay" id="eventModal">
     <div class="modal-box">
         <div class="modal-header">
@@ -194,19 +159,7 @@
         </div>
     </div>
 </div>
-<script src="js/api.js"></script>
+
 <script src="js/calendar.js"></script>
-<script src="js/presence.js"></script>
-<script>
-    // Show Admin Settings link only for SYSTEM_ADMIN users
-    (function () {
-        const role = (localStorage.getItem("role") || "").replace("ROLE_", "");
-        const link = document.getElementById("adminSettingsLink");
-        if (link && role === "SYSTEM_ADMIN") {
-            link.style.display = "";
-        }
-    })();
-</script>
-<script src="js/roleguard.js"></script>
 </body>
 </html>
