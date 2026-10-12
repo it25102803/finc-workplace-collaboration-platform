@@ -96,9 +96,7 @@ function requireEditor() {
 }
 
 function withActor(url) {
-    const actorId = getUserId();
-    if (!actorId) return url;
-    return url + (url.includes("?") ? "&" : "?") + "actorId=" + encodeURIComponent(actorId);
+    return window.withAuth ? window.withAuth(url) : url;
 }
 
 async function readError(response) {

@@ -8,4 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface FileRepository extends JpaRepository<File, Long> {
     List<File> findByFolder_FolderIdAndIsDeletedFalse(Long folderId);
     List<File> findByFileNameContainingIgnoreCaseAndIsDeletedFalse(String query);
+    List<File> findByUploadedBy_IdAndIsDeletedFalse(Long uploaderId);
 }

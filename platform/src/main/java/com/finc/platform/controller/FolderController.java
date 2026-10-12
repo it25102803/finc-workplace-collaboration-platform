@@ -41,9 +41,12 @@ public class FolderController {
                 .map(FolderResponse::from).toList());
     }
     @PostMapping
-    public ResponseEntity<FolderResponse> createRootFolder(@RequestBody CreateFolderRequest request) {
+    public ResponseEntity<FolderResponse> createRootFolder(@RequestBody CreateFolderRequest request,
+                                                           @RequestParam(required = false) Long actorId) {
+        // The owner is the logged-in user (actorId from the login token)
+        Long ownerId = actorId != null ? actorId : request.ownerId();
         return ResponseEntity.ok(FolderResponse.from(
-                folderService.createRootFolder(request.name(), request.ownerId(), request.departmentId())));
+                folderService.createRootFolder(request.name(), ownerId, request.departmentId())));
     }
 
     @GetMapping("/{folderId}")
@@ -53,11 +56,10 @@ public class FolderController {
 
     @PostMapping("/{folderId}/subfolders")
     public ResponseEntity<FolderResponse> createSubFolder(@PathVariable Long folderId,
-                                                          @RequestBody CreateSubFolderRequest request) {
-
-
+                                                          @RequestBody CreateSubFolderRequest request,
+                                                          @RequestParam(required = false) Long actorId) {
         User owner = new User();
-        owner.setId(request.ownerId());
+        owner.setId(actorId != null ? actorId : request.ownerId());
         return ResponseEntity.ok(FolderResponse.from(
                 folderService.createSubFolder(folderId, request.name(), owner)));
     }
