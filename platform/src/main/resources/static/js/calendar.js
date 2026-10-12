@@ -1,38 +1,14 @@
-let currentDate = new Date(2026, 0, 1); // Defaults to January 2026 (matching Picture 1)
+let currentDate = new Date(); // Opens on the current month
 let allEvents = [];
 let selectedEvent = null;
+// The logged-in user (saved by the login page); api.js sends it with every request.
+const currentUserId = Number(localStorage.getItem('userId')) || null;
+const isSystemAdmin = (localStorage.getItem('role') || '').replace('ROLE_', '') === 'SYSTEM_ADMIN';
 
-// Sri Lankan 2026 holidays
-const defaultHolidays = [
-    { title: "Duruthu Full Moon Poya Day", eventDate: "2026-01-03", eventType: "HOLIDAY" },
-    { title: "Tamil Thai Pongal Day", eventDate: "2026-01-15", eventType: "HOLIDAY" },
-    { title: "Navam Full Moon Poya Day", eventDate: "2026-02-01", eventType: "HOLIDAY" },
-    { title: "National Independence Day", eventDate: "2026-02-04", eventType: "HOLIDAY" },
-    { title: "Mahasivarathri Day", eventDate: "2026-02-16", eventType: "HOLIDAY" },
-    { title: "Medin Full Moon Poya Day", eventDate: "2026-03-03", eventType: "HOLIDAY" },
-    { title: "Id Ul-Fitr (Ramazan)", eventDate: "2026-03-20", eventType: "HOLIDAY" },
-    { title: "Bak Full Moon Poya Day", eventDate: "2026-04-01", eventType: "HOLIDAY" },
-    { title: "Good Friday", eventDate: "2026-04-03", eventType: "HOLIDAY" },
-    { title: "Sinhala & Tamil New Year Eve", eventDate: "2026-04-13", eventType: "HOLIDAY" },
-    { title: "Sinhala & Tamil New Year Day", eventDate: "2026-04-14", eventType: "HOLIDAY" },
-    { title: "May Day", eventDate: "2026-05-01", eventType: "HOLIDAY" },
-    { title: "Id Ul-Alha (Hadji)", eventDate: "2026-05-27", eventType: "HOLIDAY" },
-    { title: "Vesak Full Moon Poya Day", eventDate: "2026-05-30", eventType: "HOLIDAY" },
-    { title: "Day after Vesak Poya", eventDate: "2026-05-31", eventType: "HOLIDAY" },
-    { title: "Poson Full Moon Poya Day", eventDate: "2026-06-29", eventType: "HOLIDAY" },
-    { title: "Esala Full Moon Poya Day", eventDate: "2026-07-28", eventType: "HOLIDAY" },
-    { title: "Milad-Un-Nabi", eventDate: "2026-08-26", eventType: "HOLIDAY" },
-    { title: "Nikini Full Moon Poya Day", eventDate: "2026-08-27", eventType: "HOLIDAY" },
-    { title: "Binara Full Moon Poya Day", eventDate: "2026-09-25", eventType: "HOLIDAY" },
-    { title: "Vap Full Moon Poya Day", eventDate: "2026-10-25", eventType: "HOLIDAY" },
-    { title: "Deepavali Festival Day", eventDate: "2026-11-08", eventType: "HOLIDAY" },
-    { title: "Il Full Moon Poya Day", eventDate: "2026-11-23", eventType: "HOLIDAY" },
-    { title: "Unduvap Full Moon Poya Day", eventDate: "2026-12-23", eventType: "HOLIDAY" },
-    { title: "Christmas Day", eventDate: "2026-12-25", eventType: "HOLIDAY" }
-];
 
 document.addEventListener('DOMContentLoaded', () => {
     initCalendarListeners();
+    loadInvitees();
     fetchCalendarData();
 });
 
@@ -71,21 +47,35 @@ function initCalendarListeners() {
     document.getElementById('btnDeleteEvent').addEventListener('click', handleDeleteCalendarEvent);
 }
 
+// Holidays come from the server (added once at startup), so there is no second copy here.
 async function fetchCalendarData() {
     try {
         const res = await fetch('/api/calendar/events');
-        if (res.ok) {
-            const serverEvents = await res.json();
-            const existingKeys = new Set(serverEvents.map(e => `${e.title}_${e.eventDate || (e.startTime ? e.startTime.split('T')[0] : '')}`));
-            const uniqueDefaults = defaultHolidays.filter(h => !existingKeys.has(`${h.title}_${h.eventDate}`));
-            allEvents = [...serverEvents, ...uniqueDefaults];
-        } else {
-            allEvents = [...defaultHolidays];
-        }
+        allEvents = res.ok ? await res.json() : [];
     } catch (e) {
-        allEvents = [...defaultHolidays];
+        allEvents = [];
     }
     renderCalendar();
+}
+
+// People who can be invited to a meeting (names and emails only).
+async function loadInvitees() {
+    const select = document.getElementById('eventAttendees');
+    if (!select) return;
+    try {
+        const res = await fetch('/api/users/basic');
+        if (!res.ok) return;
+        const users = await res.json();
+        select.innerHTML = '';
+        users.filter(u => u.id !== currentUserId).forEach(u => {
+            const opt = document.createElement('option');
+            opt.value = u.id;
+            opt.textContent = u.name || u.username || u.email;
+            select.appendChild(opt);
+        });
+    } catch (e) {
+        console.warn('Could not load people to invite:', e);
+    }
 }
 
 function renderCalendar() {
@@ -179,6 +169,8 @@ async function handleCreateEvent(e) {
     const endTime = document.getElementById('eventEndTime').value;
     const location = document.getElementById('eventLocation').value;
     const description = document.getElementById('eventDesc').value;
+    const visibility = document.getElementById('eventVisibility')?.value || 'PUBLIC';
+    const attendeeIds = [...(document.getElementById('eventAttendees')?.selectedOptions || [])].map(o => o.value);
 
     const payload = {
         title,
@@ -189,11 +181,13 @@ async function handleCreateEvent(e) {
         location,
         description,
         isAllDay: false,
-        visibility: 'PUBLIC'
+        visibility
     };
 
+    const query = attendeeIds.length ? '?attendeeIds=' + attendeeIds.map(encodeURIComponent).join(',') : '';
+
     try {
-        const res = await fetch('/api/calendar/events?userId=1', {
+        const res = await fetch('/api/calendar/events' + query, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -201,6 +195,8 @@ async function handleCreateEvent(e) {
         if (res.ok) {
             document.getElementById('eventModal').classList.remove('active');
             fetchCalendarData();
+        } else {
+            alert('Could not save event: ' + await res.text());
         }
     } catch (err) {
         console.error('Error saving event:', err);
@@ -228,14 +224,21 @@ function openEventDetail(ev) {
     }
 
     document.getElementById('detailDesc').textContent = ev.description || 'No description provided.';
-    document.getElementById('btnDeleteEvent').style.display = (ev.eventId && ev.eventType !== 'HOLIDAY') ? 'inline-flex' : 'none';
+    // Creators can delete their own events; system admins can delete any (deadlines go with their task)
+    const isCreator = ev.createdByUser && ev.createdByUser.id === currentUserId;
+    const canDelete = ev.eventId && ev.eventType !== 'DEADLINE'
+        && (isSystemAdmin || (isCreator && ev.eventType !== 'HOLIDAY'));
+    document.getElementById('btnDeleteEvent').style.display = canDelete ? 'inline-flex' : 'none';
     document.getElementById('detailModal').classList.add('active');
 }
-
 async function handleDeleteCalendarEvent() {
     if (!selectedEvent || !selectedEvent.eventId || !confirm('Delete event?')) return;
     try {
-        await fetch(`/api/calendar/events/${selectedEvent.eventId}`, { method: 'DELETE' });
+        const res = await fetch(`/api/calendar/events/${selectedEvent.eventId}`, { method: 'DELETE' });
+        if (!res.ok) {
+            alert('Could not delete event: ' + await res.text());
+            return;
+        }
         document.getElementById('detailModal').classList.remove('active');
         fetchCalendarData();
     } catch (e) {
