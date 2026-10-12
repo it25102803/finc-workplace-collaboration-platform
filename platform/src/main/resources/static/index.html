@@ -1,172 +1,654 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enterprise Portal - Login & Registration</title>
+    <title>Enterprise Portal — Sign In</title>
+
+    <!-- Apply theme before paint to avoid flash -->
+    <script>
+        (function () {
+            try {
+                const saved = localStorage.getItem("theme") || "light";
+                document.documentElement.setAttribute("data-theme", saved);
+            } catch (e) {}
+        })();
+    </script>
+
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <style>
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --surface-2: #f1f5f9;
+            --border: #e2e8f0;
+            --text: #0f172a;
+            --text-2: #475569;
+            --text-3: #94a3b8;
+            --accent: #4f46e5;
+            --accent-2: #4338ca;
+            --accent-soft: #eef2ff;
+            --accent-contrast: #ffffff;
+            --success: #10b981;
+            --success-2: #059669;
+            --danger-bg: #fef2f2;
+            --danger-text: #b91c1c;
+            --danger-border: #fecaca;
+            --success-bg: #ecfdf5;
+            --success-text: #047857;
+            --success-border: #a7f3d0;
+            --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+            --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
+            --shadow-lg: 0 24px 48px rgba(15, 23, 42, 0.12);
+            --focus-ring: 0 0 0 4px rgba(79, 70, 229, 0.15);
+        }
+
+        [data-theme="dark"] {
+            --bg: #0b1120;
+            --surface: #131c31;
+            --surface-2: #1e293b;
+            --border: #2d3b52;
+            --text: #f1f5f9;
+            --text-2: #cbd5e1;
+            --text-3: #94a3b8;
+            --accent: #818cf8;
+            --accent-2: #a5b4fc;
+            --accent-soft: #1e1b4b;
+            --accent-contrast: #0b1120;
+            --danger-bg: #450a0a;
+            --danger-text: #fca5a5;
+            --danger-border: #7f1d1d;
+            --success-bg: #052e2b;
+            --success-text: #6ee7b7;
+            --success-border: #065f46;
+            --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.5);
+            --focus-ring: 0 0 0 4px rgba(129, 140, 248, 0.2);
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* ============ LAYOUT ============ */
+        .auth-page {
+            display: grid;
+            grid-template-columns: 1.05fr 1fr;
             min-height: 100vh;
+        }
+
+        @media (max-width: 991px) {
+            .auth-page { grid-template-columns: 1fr; }
+            .hero-panel { display: none; }
+        }
+
+        /* ============ HERO PANEL ============ */
+        .hero-panel {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(145deg, #1e1b4b 0%, #312e81 55%, #4f46e5 100%);
+            color: #ffffff;
+            padding: 48px 64px;
+            display: flex;
+            flex-direction: column;
+        }
+        .hero-panel::before {
+            content: "";
+            position: absolute;
+            top: -30%; right: -30%;
+            width: 80%; height: 80%;
+            background: radial-gradient(circle, rgba(255,255,255,0.10) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .hero-panel::after {
+            content: "";
+            position: absolute;
+            bottom: -20%; left: -20%;
+            width: 70%; height: 70%;
+            background: radial-gradient(circle, rgba(129,140,248,0.18) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            position: relative;
+            z-index: 1;
+        }
+        .hero-brand-logo {
+            width: 52px; height: 52px;
+            object-fit: contain;
+            background: rgba(255,255,255,0.95);
+            padding: 6px;
+            border-radius: 12px;
+        }
+        .hero-brand-text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+        .hero-brand-text strong {
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+        .hero-brand-text span {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* Content block — vertically centered in the remaining space */
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 520px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 24px 0;
+        }
+        .hero-title {
+            font-size: 2.6rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            margin: 0 0 16px 0;
+        }
+        .hero-subtitle {
+            font-size: 1rem;
+            color: rgba(226, 232, 240, 0.85);
+            line-height: 1.55;
+            margin: 0 0 28px 0;
+            max-width: 440px;
+        }
+        .hero-features {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .hero-features li {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 0.92rem;
+            color: rgba(241, 245, 249, 0.92);
+        }
+        .hero-feature-icon {
+            flex-shrink: 0;
+            width: 36px; height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 10px;
+            color: #c7d2fe;
+            font-size: 0.95rem;
         }
-        .auth-container { width: 100%; max-width: 480px; }
+
+        /* Footer — naturally below content, separated with padding */
+        .hero-footer {
+            position: relative;
+            z-index: 1;
+            padding-top: 28px;
+            font-size: 0.78rem;
+            color: rgba(226, 232, 240, 0.7);
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+        .hero-footer span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .hero-footer i { color: #6ee7b7; }
+
+        /* ============ FORM PANEL ============ */
+        .form-panel {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 32px;
+            position: relative;
+        }
+
         .auth-card {
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 40px 30px;
+            width: 100%;
+            max-width: 440px;
         }
-        .brand-header { text-align: center; margin-bottom: 25px; }
-        .brand-logo { max-width: 140px; height: auto; object-fit: contain; margin-bottom: 12px; }
-        .brand-title { font-size: 1.4rem; font-weight: 700; color: #0f172a; margin-bottom: 2px; }
-        .brand-subtitle { font-size: 0.85rem; color: #64748b; }
-        .nav-pills { background: #f1f5f9; padding: 5px; border-radius: 12px; margin-bottom: 25px; }
-        .nav-pills .nav-link { border-radius: 8px; font-weight: 600; font-size: 0.9rem; color: #64748b; transition: all 0.2s ease; }
-        .nav-pills .nav-link.active { background-color: #2563eb; color: #ffffff; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
-        .form-label { font-size: 0.825rem; font-weight: 600; color: #334155; margin-bottom: 6px; }
-        .input-group-text { background: #f8fafc; border-right: none; color: #94a3b8; border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
-        .form-control, .form-select { background: #f8fafc; border-radius: 10px; font-size: 0.9rem; padding: 10px 12px; }
-        .form-control:focus, .form-select:focus { box-shadow: none; background: #ffffff; border-color: #cbd5e1; }
-        .input-group:focus-within .input-group-text { background: #ffffff; border-color: #cbd5e1; color: #2563eb; }
-        .btn-custom {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            color: #ffffff; font-weight: 600; border-radius: 10px; padding: 12px; border: none;
-            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35); transition: transform 0.2s ease;
+
+        .mobile-brand {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 28px;
         }
-        .btn-custom:hover { transform: translateY(-1px); color: #ffffff; }
-        /* NEW: Forgot password link */
+        .mobile-brand-logo {
+            width: 44px; height: 44px;
+            object-fit: contain;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 6px;
+            border-radius: 10px;
+        }
+        .mobile-brand strong {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+        @media (max-width: 991px) {
+            .mobile-brand { display: flex; }
+        }
+
+        .auth-heading {
+            margin-bottom: 24px;
+        }
+        .auth-heading h1 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--text);
+            margin: 0 0 6px 0;
+        }
+        .auth-heading p {
+            font-size: 0.9rem;
+            color: var(--text-2);
+            margin: 0;
+        }
+
+        /* ============ TABS ============ */
+        .auth-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 24px;
+            gap: 4px;
+        }
+        .auth-tabs .nav-item { display: block; margin: 0; }
+        .auth-tabs .nav-link {
+            width: 100%;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-2);
+            padding: 10px 12px;
+            transition: all 0.2s ease;
+        }
+        .auth-tabs .nav-link:hover { color: var(--text); }
+        .auth-tabs .nav-link.active {
+            background: var(--surface);
+            color: var(--accent);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* ============ FIELDS ============ */
+        .form-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-2);
+            margin-bottom: 6px;
+        }
+
+        .input-group { position: relative; }
+
+        .input-group-text {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-right: none;
+            color: var(--text-3);
+            border-top-left-radius: 10px;
+            border-bottom-left-radius: 10px;
+            padding: 0 14px;
+            transition: all 0.2s ease;
+        }
+
+        .form-control, .form-select {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 0 10px 10px 0;
+            font-size: 0.9rem;
+            padding: 11px 14px;
+            transition: all 0.2s ease;
+        }
+        .form-control.standalone, .form-select.standalone {
+            border-radius: 10px;
+        }
+        .form-control::placeholder { color: var(--text-3); }
+        .form-control:focus, .form-select:focus {
+            background: var(--surface);
+            border-color: var(--accent);
+            box-shadow: var(--focus-ring);
+            color: var(--text);
+        }
+        .input-group:focus-within .input-group-text {
+            background: var(--surface);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
         .forgot-link {
             font-size: 0.8rem;
-            color: #2563eb;
+            color: var(--accent);
             text-decoration: none;
             font-weight: 600;
         }
-        .forgot-link:hover { text-decoration: underline; color: #1d4ed8; }
+        .forgot-link:hover {
+            color: var(--accent-2);
+            text-decoration: underline;
+        }
+
+        .toggle-password {
+            color: var(--text-3) !important;
+            transition: color 0.2s ease;
+        }
+        .toggle-password:hover { color: var(--accent) !important; }
+
+        /* ============ BUTTONS ============ */
+        .btn-primary-custom {
+            background: var(--accent);
+            color: var(--accent-contrast);
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-primary-custom:hover {
+            background: var(--accent-2);
+            color: var(--accent-contrast);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.35);
+        }
+        .btn-primary-custom:active { transform: translateY(0); }
+
+        .btn-success-custom {
+            background: var(--success);
+            color: #ffffff;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-success-custom:hover {
+            background: var(--success-2);
+            color: #ffffff;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+        }
+
+        /* ============ ALERTS ============ */
+        .alert-custom {
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border: 1px solid;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .alert-custom.alert-success {
+            background: var(--success-bg);
+            color: var(--success-text);
+            border-color: var(--success-border);
+        }
+        .alert-custom.alert-danger {
+            background: var(--danger-bg);
+            color: var(--danger-text);
+            border-color: var(--danger-border);
+        }
+
+        /* ============ THEME TOGGLE ============ */
+        .theme-toggle {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 100;
+            width: 42px; height: 42px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-md);
+        }
+        .theme-toggle:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+            transform: translateY(-1px);
+        }
+        @media (max-width: 991px) {
+            .theme-toggle {
+                top: 16px;
+                right: 16px;
+                width: 38px; height: 38px;
+            }
+        }
+
+        /* ============ TAB CONTENT ANIMATION ============ */
+        .tab-content > .tab-pane { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
     <link rel="icon" type="image/png" href="images/favicon.png">
 </head>
 <body>
 
-<div class="auth-container">
-    <div class="auth-card">
-        <!-- Logo & Branding Header -->
-        <div class="brand-header">
-            <img src="images/finc-logo.png" alt="Finc Academy Logo" class="brand-logo" onerror="this.src='https://via.placeholder.com/75?text=FINC'">
-            <div class="brand-title">Enterprise Portal</div>
-            <div class="brand-subtitle">Finc Academy & Consultants</div>
-        </div>
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+    <i class="fa-solid fa-moon" id="themeIcon"></i>
+</button>
 
-        <!-- Navigation Tabs -->
-        <ul class="nav nav-pills nav-justified" id="authTab" role="tablist">
-            <li class="nav-item">
-                <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button">Sign In</button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button">Register</button>
-            </li>
-        </ul>
+<div class="auth-page">
 
-        <!-- Alert Notification Box -->
-        <div id="alertBox" class="alert d-none mt-2 text-center" role="alert"></div>
-
-        <div class="tab-content">
-            <!-- LOGIN FORM -->
-            <div class="tab-pane fade show active" id="login">
-                <form id="loginForm">
-                    <div class="mb-3">
-                        <label class="form-label">Username</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
-                            <input type="text" id="loginUsername" class="form-control" placeholder="Enter your username" required>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="loginPassword" class="form-label">Password</label>
-                        <div class="input-group" style="position: relative;">
-                            <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
-                            <input type="password" id="loginPassword" class="form-control" placeholder="Enter your password" style="padding-right: 45px;" required>
-                            <i class="fa-solid fa-eye toggle-password"
-                               data-target="#loginPassword"
-                               style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); z-index: 100; cursor: pointer; color: #6c757d;"></i>
-                        </div>
-                    </div>
-
-                    <!-- NEW: Forgot password link (FR-UM-10) -->
-                    <div class="d-flex justify-content-end mb-2">
-                        <a href="forgot-password.html" class="forgot-link">Forgot password?</a>
-                    </div>
-
-                    <button type="submit" class="btn btn-custom w-100 mt-2">Log In to Workspace</button>
-                </form>
-            </div>
-
-            <!-- REGISTER FORM -->
-            <div class="tab-pane fade" id="register">
-                <form id="registerForm">
-                    <div class="mb-3">
-                        <label class="form-label">Username</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fa-solid fa-at"></i></span>
-                            <input type="text" id="regUsername" class="form-control" placeholder="johndoe" required>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fa-solid fa-envelope"></i></span>
-                            <input type="email" id="regEmail" class="form-control" placeholder="name@finc.com" required>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-6 mb-3">
-                            <label class="form-label">First Name</label>
-                            <input type="text" id="regFirstName" class="form-control" placeholder="John" style="border-radius: 10px;" required>
-                        </div>
-                        <div class="col-6 mb-3">
-                            <label class="form-label">Last Name</label>
-                            <input type="text" id="regLastName" class="form-control" placeholder="Doe" style="border-radius: 10px;" required>
-                        </div>
-                    </div>
-
-                    <!-- FR-UM-04: Department Allocation Dropdown Field -->
-                    <div class="mb-3">
-                        <label class="form-label">Department Scope</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fa-solid fa-sitemap"></i></span>
-                            <select id="regDepartment" class="form-select">
-                                <option value="" selected disabled>Select Department...</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <div class="input-group" style="position: relative;">
-                            <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
-                            <input type="password" id="password" class="form-control" placeholder="Enter your password" style="padding-right: 40px;" required>
-                            <i class="fa-solid fa-eye toggle-password"
-                               data-target="#password"
-                               style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); z-index: 100; cursor: pointer; color: #6c757d;"></i>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-custom w-100 mt-2" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">Create Account</button>
-                </form>
+    <!-- ============ HERO PANEL ============ -->
+    <aside class="hero-panel">
+        <div class="hero-brand">
+            <img src="images/finc-logo.png" alt="Finc Academy" class="hero-brand-logo" onerror="this.src='https://via.placeholder.com/52?text=FINC'">
+            <div class="hero-brand-text">
+                <strong>Finc Enterprise</strong>
+                <span>Workspace Collaboration Platform</span>
             </div>
         </div>
-    </div>
+
+        <div class="hero-content">
+            <h1 class="hero-title">One workspace.<br>Your whole team.</h1>
+            <p class="hero-subtitle">
+                Chat, tasks, files and calendar — unified for Finc Academy &amp; Consultants.
+            </p>
+
+            <ul class="hero-features">
+                <li>
+                    <span class="hero-feature-icon"><i class="fa-solid fa-comments"></i></span>
+                    Real-time team channels and messaging
+                </li>
+                <li>
+                    <span class="hero-feature-icon"><i class="fa-solid fa-list-check"></i></span>
+                    Task boards, deadlines and shared calendar
+                </li>
+                <li>
+                    <span class="hero-feature-icon"><i class="fa-solid fa-folder-open"></i></span>
+                    Version-controlled file sharing with quotas
+                </li>
+            </ul>
+        </div>
+
+        <div class="hero-footer">
+            <span><i class="fa-solid fa-shield-halved"></i> Role-based access</span>
+            <span><i class="fa-solid fa-lock"></i> Encrypted at rest</span>
+            <span><i class="fa-solid fa-database"></i> Daily backups</span>
+        </div>
+    </aside>
+
+    <!-- ============ FORM PANEL ============ -->
+    <main class="form-panel">
+        <div class="auth-card">
+
+            <div class="mobile-brand">
+                <img src="images/finc-logo.png" alt="Finc Academy" class="mobile-brand-logo" onerror="this.src='https://via.placeholder.com/44?text=FINC'">
+                <strong>Finc Enterprise</strong>
+            </div>
+
+            <div class="auth-heading">
+                <h1 id="authHeading">Welcome back</h1>
+                <p id="authSubheading">Sign in to access your workspace.</p>
+            </div>
+
+            <!-- Tabs -->
+            <ul class="nav auth-tabs" id="authTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button" role="tab">Sign In</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button" role="tab">Register</button>
+                </li>
+            </ul>
+
+            <!-- Alert Notification Box -->
+            <div id="alertBox" class="alert-custom d-none mb-3" role="alert"></div>
+
+            <div class="tab-content">
+
+                <!-- LOGIN FORM -->
+                <div class="tab-pane fade show active" id="login" role="tabpanel">
+                    <form id="loginForm" novalidate>
+                        <div class="mb-3">
+                            <label class="form-label" for="loginUsername">Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                                <input type="text" id="loginUsername" class="form-control" placeholder="Enter your username" autocomplete="username" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label" for="loginPassword">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                                <input type="password" id="loginPassword" class="form-control" placeholder="Enter your password" autocomplete="current-password" style="padding-right: 45px;" required>
+                                <i class="fa-solid fa-eye toggle-password"
+                                   data-target="#loginPassword"
+                                   style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); z-index: 100; cursor: pointer;"></i>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end mb-3">
+                            <a href="forgot-password.html" class="forgot-link">Forgot password?</a>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary-custom w-100">
+                            <i class="fa-solid fa-right-to-bracket"></i>
+                            Sign in to workspace
+                        </button>
+                    </form>
+                </div>
+
+                <!-- REGISTER FORM -->
+                <div class="tab-pane fade" id="register" role="tabpanel">
+                    <form id="registerForm" novalidate>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label" for="regFirstName">First name</label>
+                                <input type="text" id="regFirstName" class="form-control standalone" placeholder="John" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label" for="regLastName">Last name</label>
+                                <input type="text" id="regLastName" class="form-control standalone" placeholder="Doe" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="regUsername">Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-at"></i></span>
+                                <input type="text" id="regUsername" class="form-control" placeholder="johndoe" autocomplete="username" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="regEmail">Corporate email</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-envelope"></i></span>
+                                <input type="email" id="regEmail" class="form-control" placeholder="name@finc.com" autocomplete="email" required>
+                            </div>
+                        </div>
+
+                        <!-- FR-UM-04: Department Allocation Dropdown -->
+                        <div class="mb-3">
+                            <label class="form-label" for="regDepartment">Department</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-sitemap"></i></span>
+                                <select id="regDepartment" class="form-select">
+                                    <option value="" selected disabled>Select department...</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="password">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                                <input type="password" id="password" class="form-control" placeholder="Create a strong password" autocomplete="new-password" style="padding-right: 45px;" required>
+                                <i class="fa-solid fa-eye toggle-password"
+                                   data-target="#password"
+                                   style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); z-index: 100; cursor: pointer;"></i>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-success-custom w-100">
+                            <i class="fa-solid fa-user-plus"></i>
+                            Create account
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </main>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -175,16 +657,65 @@
 
     document.addEventListener("DOMContentLoaded", function () {
         loadDepartments();
+        initTheme();
+        initHeadings();
     });
 
-    // Fetch dynamic department list for signup dropdown (FR-UM-04)
+    /* =================== Theme (NFR-14) =================== */
+    function initTheme() {
+        const toggle = document.getElementById("themeToggle");
+        const icon = document.getElementById("themeIcon");
+        updateIcon();
+        if (toggle) {
+            toggle.addEventListener("click", () => {
+                const current = document.documentElement.getAttribute("data-theme") || "light";
+                const next = current === "dark" ? "light" : "dark";
+                document.documentElement.setAttribute("data-theme", next);
+                try { localStorage.setItem("theme", next); } catch (e) {}
+                updateIcon();
+            });
+        }
+        function updateIcon() {
+            if (!icon) return;
+            const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+            icon.classList.toggle("fa-moon", !isDark);
+            icon.classList.toggle("fa-sun", isDark);
+        }
+    }
+
+    /* =================== Dynamic heading on tab switch =================== */
+    function initHeadings() {
+        const loginTab = document.getElementById("login-tab");
+        const registerTab = document.getElementById("register-tab");
+        const heading = document.getElementById("authHeading");
+        const subheading = document.getElementById("authSubheading");
+
+        if (loginTab && heading) {
+            const setLogin = () => {
+                heading.textContent = "Welcome back";
+                subheading.textContent = "Sign in to access your workspace.";
+            };
+            loginTab.addEventListener("shown.bs.tab", setLogin);
+            loginTab.addEventListener("click", setLogin);
+        }
+        if (registerTab && heading) {
+            const setReg = () => {
+                heading.textContent = "Create your account";
+                subheading.textContent = "Join the Finc workspace in a few seconds.";
+            };
+            registerTab.addEventListener("shown.bs.tab", setReg);
+            registerTab.addEventListener("click", setReg);
+        }
+    }
+
+    /* =================== Departments (FR-UM-04) =================== */
     function loadDepartments() {
         fetch('/api/departments')
             .then(res => res.json())
             .then(departments => {
                 const select = document.getElementById("regDepartment");
                 if (select) {
-                    select.innerHTML = '<option value="" selected disabled>Select Department...</option>';
+                    select.innerHTML = '<option value="" selected disabled>Select department...</option>';
                     departments.forEach(dept => {
                         const deptId = dept.departmentId || dept.id;
                         select.innerHTML += `<option value="${deptId}">${dept.name}</option>`;
@@ -194,14 +725,15 @@
             .catch(err => console.error("Error loading departments:", err));
     }
 
+    /* =================== Alerts =================== */
     function showAlert(message, isSuccess) {
         const alertBox = document.getElementById("alertBox");
-        alertBox.className = `alert ${isSuccess ? 'alert-success' : 'alert-danger'} mt-2`;
-        alertBox.textContent = message;
+        alertBox.className = `alert-custom ${isSuccess ? 'alert-success' : 'alert-danger'} mb-3`;
+        alertBox.innerHTML = `<i class="fa-solid ${isSuccess ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i><span>${message}</span>`;
         alertBox.classList.remove("d-none");
     }
 
-    // Login Submission
+    /* =================== Login =================== */
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
         e.preventDefault();
         const usernameInput = document.getElementById("loginUsername").value;
@@ -219,9 +751,12 @@
 
             if (res.ok) {
                 const data = await res.json();
-                showAlert("Login Successful! Redirecting...", true);
+                showAlert("Login successful. Redirecting...", true);
+
+                const savedTheme = localStorage.getItem("theme") || "light";
 
                 localStorage.clear();
+                localStorage.setItem("theme", savedTheme);
                 localStorage.setItem("user", JSON.stringify(data));
                 localStorage.setItem("userId", data.userId || "");
                 localStorage.setItem("badgeId", String(data.userId || 1).padStart(3, '0'));
@@ -249,7 +784,7 @@
         }
     });
 
-    // Register Submission (FR-UM-01, FR-UM-04)
+    /* =================== Register =================== */
     document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
         e.preventDefault();
 
@@ -276,7 +811,7 @@
             });
 
             if (res.ok) {
-                showAlert("Account registered successfully! Please log in.", true);
+                showAlert("Account created. Please sign in.", true);
                 const loginTabEl = document.getElementById("login-tab");
                 if (loginTabEl && typeof bootstrap !== "undefined") {
                     const loginTab = new bootstrap.Tab(loginTabEl);
@@ -287,18 +822,18 @@
                 const contentType = res.headers.get("content-type");
                 if (contentType && contentType.includes("application/json")) {
                     const data = await res.json();
-                    responseMsg = data.message || "Registration failed. Username or Email already exists.";
+                    responseMsg = data.message || "Registration failed.";
                 } else {
                     responseMsg = await res.text();
                 }
-                showAlert(responseMsg || "Username or Email already in use.", false);
+                showAlert(responseMsg || "Username or email already in use.", false);
             }
         } catch (err) {
             showAlert("Server unreachable. Ensure Spring Boot application is running.", false);
         }
     });
 
-    // Password Toggle
+    /* =================== Password toggle =================== */
     document.addEventListener('click', function (e) {
         const toggleBtn = e.target.closest('.toggle-password');
         if (!toggleBtn) return;
