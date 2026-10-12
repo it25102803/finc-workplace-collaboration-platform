@@ -1,18 +1,20 @@
 const API_URL = "/api/users";
-const API_USERS = API_URL;
+// Names and emails of active users (open to every logged-in user; the full /api/users list is admin-only)
+const API_USERS = "/api/users/basic";
 const API_CHANNELS = "/api/channels";
 const API_NOTIFICATIONS = "/api/notifications";
 const CURRENT_USER = (() => {
     try {
         const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+        // The server records the logged-in username as the sender, so compare against that
         return {
-            name: storedUser?.name || storedUser?.username || localStorage.getItem("username") || "Admin User",
-            email: storedUser?.email || localStorage.getItem("email") || "admin@fincacademy.com"
+            name: localStorage.getItem("username") || storedUser?.username || "",
+            email: localStorage.getItem("email") || storedUser?.email || ""
         };
     } catch {
         return {
-            name: localStorage.getItem("username") || "Admin User",
-            email: localStorage.getItem("email") || "admin@fincacademy.com"
+            name: localStorage.getItem("username") || "",
+            email: localStorage.getItem("email") || ""
         };
     }
 })();
@@ -1030,6 +1032,7 @@ function bindEvents() {
     document.getElementById("cancelChannelModalBtn").addEventListener("click", closeChannelModal);
     document.getElementById("channelForm").addEventListener("submit", createChannelFromForm);
     document.getElementById("addMemberBtn").addEventListener("click", addMemberToSelectedChannel);
+    document.getElementById("renameChannelBtn")?.addEventListener("click", renameSelectedChannel);
 }
 function connectLiveUpdates() {
     if (!window.StompJs) {
@@ -1585,6 +1588,12 @@ function renderMemberSelector() {
 function renderMemberList() {
     const memberList = document.getElementById("memberList");
     const currentChannel = getSelectedChannel();
+    // Only people who can manage this conversation see the add/remove controls
+    const canManage = canRenameChannel(currentChannel);
+    const toolbar = document.querySelector(".member-toolbar");
+    if (toolbar) {
+        toolbar.style.display = canManage ? "" : "none";
+    }
 
     if (!currentChannel || !currentChannel.memberEmails?.length) {
         memberList.innerHTML = '<li>No team members yet.</li>';
@@ -1600,7 +1609,7 @@ function renderMemberList() {
                     <strong>${escapeHtml(label)}</strong>
                     <span>
                         ${currentChannel.type}
-                        <button type="button" class="remove-member-button" data-email="${escapeHtml(email)}" title="Remove member">Remove</button>
+                        ${canManage ? `<button type="button" class="remove-member-button" data-email="${escapeHtml(email)}" title="Remove member">Remove</button>` : ""}
                     </span>
                 </li>
             `;
@@ -1648,6 +1657,7 @@ function getDirectMessageContactName(channel) {
 
 function updateSelectedChannelHeader(channel) {
     const isDirectMessage = channel.type === "DIRECT";
+    updateRenameButton(channel);
     const title = isDirectMessage ? getDirectMessageContactName(channel) : channel.name;
     document.getElementById("chatTitle").textContent = title;
     document.getElementById("channelMeta").textContent = isDirectMessage
@@ -1832,12 +1842,17 @@ async function startDirectMessage(userEmail, userName) {
     selectChannel(createdChannel.id);
 }
 
+// The stylesheet only shows .modal when it also has the "show" class
 function openChannelModal() {
-    document.getElementById("channelModal").classList.remove("hidden");
+    const modal = document.getElementById("channelModal");
+    modal.classList.remove("hidden");
+    modal.classList.add("show");
 }
 
 function closeChannelModal() {
-    document.getElementById("channelModal").classList.add("hidden");
+    const modal = document.getElementById("channelModal");
+    modal.classList.remove("show");
+    modal.classList.add("hidden");
     document.getElementById("channelForm").reset();
 }
 
@@ -1874,6 +1889,48 @@ async function createChannelFromForm(event) {
     }
 
     closeChannelModal();
+    await loadChannels();
+}
+
+// Group chats can be renamed by their members; public channels only by administrators.
+function canRenameChannel(channel) {
+    if (!channel || channel.type === "DIRECT") {
+        return false;
+    }
+    const role = (localStorage.getItem("role") || "").replace("ROLE_", "");
+    const isAdmin = role === "SYSTEM_ADMIN" || role === "DEPT_ADMIN";
+    if (channel.type === "PUBLIC") {
+        return isAdmin;
+    }
+    const me = CURRENT_USER.email.trim().toLowerCase();
+    return isAdmin || (channel.memberEmails || []).some(email => (email || "").trim().toLowerCase() === me);
+}
+
+function updateRenameButton(channel) {
+    const button = document.getElementById("renameChannelBtn");
+    if (button) {
+        button.classList.toggle("hidden", !canRenameChannel(channel));
+    }
+}
+
+async function renameSelectedChannel() {
+    const currentChannel = getSelectedChannel();
+    if (!canRenameChannel(currentChannel)) {
+        return;
+    }
+    const name = prompt("New name for this conversation:", currentChannel.name || "");
+    if (name === null || !name.trim()) {
+        return;
+    }
+    const response = await fetch(`${API_CHANNELS}/${currentChannel.id}/name`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim() })
+    });
+    if (!response.ok) {
+        alert("Unable to rename: " + (await response.text() || response.status));
+        return;
+    }
     await loadChannels();
 }
 
