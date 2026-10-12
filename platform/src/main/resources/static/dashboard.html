@@ -1,54 +1,247 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Enterprise Workspace - Dashboard</title>
+
+    <!-- Apply theme before paint (no flash) -->
+    <script>
+        (function () {
+            try {
+                const saved = localStorage.getItem("theme") || "light";
+                document.documentElement.setAttribute("data-theme", saved);
+            } catch (e) {}
+        })();
+    </script>
+
+    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Shared theme -->
+    <link href="css/theme.css" rel="stylesheet">
+
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #334155; }
-        .sidebar { width: 280px; height: 100vh; position: fixed; background: #0f172a; color: #ffffff; padding: 24px 16px; }
-        .sidebar-brand { display: flex; align-items: center; gap: 10px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 24px; }
-        .sidebar-brand-logo { max-width: 100px; height: auto; object-fit: contain; background: #ffffff; padding: 4px 8px; border-radius: 6px; flex-shrink: 0; }
-        .sidebar-brand span { font-size: 0.95rem; font-weight: 700; color: #f8fafc; white-space: nowrap; line-height: 1.1; }
-        .nav-link-custom { display: flex; align-items: center; gap: 12px; padding: 12px 16px; color: #94a3b8; border-radius: 10px; font-weight: 500; text-decoration: none; margin-bottom: 6px; transition: all 0.2s; }
-        .nav-link-custom:hover, .nav-link-custom.active { background: #1e293b; color: #38bdf8; }
-        .main-content { margin-left: 280px; padding: 24px 32px 32px; }
-        .top-navbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-        .user-profile-badge { display: flex; align-items: center; gap: 12px; background: #ffffff; padding: 8px 16px; border-radius: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); text-decoration: none; color: inherit; transition: box-shadow 0.2s, transform 0.2s; }
-        .user-profile-badge:hover { box-shadow: 0 4px 14px rgba(37,99,235,0.15); transform: translateY(-1px); color: inherit; }
-        .status-dot { width: 10px; height: 10px; background-color: #10b981; border-radius: 50%; }
-        .metric-card { background: #ffffff; border-radius: 16px; padding: 18px 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #f1f5f9; transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
-        .metric-card:hover { transform: translateY(-2px); }
-        .metric-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; margin-bottom: 10px; }
-        .metric-val { font-size: 1.6rem; font-weight: 700; color: #0f172a; line-height: 1.1; }
-        .metric-lbl { font-size: 0.78rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
-        .role-badge { background: #e0f2fe; color: #0284c7; font-size: 0.75rem; font-weight: 700; padding: 2px 10px; border-radius: 12px; white-space: nowrap; }
-        .metric-link { text-decoration: none; color: inherit; display: block; height: 100%; }
+        /* ============================================================
+           Dashboard-specific styles (uses theme.css variables)
+           ============================================================ */
+        .top-navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .page-heading {
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+        .page-subheading {
+            color: var(--text-2);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .user-profile-badge {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--surface);
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            text-decoration: none;
+            color: var(--text);
+            transition: box-shadow 0.2s, transform 0.2s, background-color 0.3s, border-color 0.3s;
+        }
+        .user-profile-badge:hover {
+            box-shadow: 0 4px 14px rgba(30, 136, 229, 0.15);
+            transform: translateY(-1px);
+            color: var(--text);
+        }
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background-color: #10b981;
+            border-radius: 50%;
+        }
+
+        .metric-card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 18px 20px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease,
+                        background-color 0.3s ease, color 0.3s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        .metric-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            margin-bottom: 10px;
+        }
+        .metric-val {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.1;
+        }
+        .metric-lbl {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            height: 100%;
+        }
         .metric-link .metric-card { cursor: pointer; }
-        .metric-link:hover .metric-card { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(37,99,235,0.12); border-color: #bfdbfe; }
+        .metric-link:hover .metric-card {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(30, 136, 229, 0.15);
+            border-color: var(--accent);
+        }
         .metric-link:active .metric-card { transform: translateY(-2px); }
-        .global-search-wrap { position: relative; width: 100%; max-width: 760px; }
-        .global-search-wrap input { width: 100%; padding: 12px 16px 12px 42px; border-radius: 10px; border: 1px solid #e2e8f0; background: #ffffff; font-size: 0.9rem; }
-        .global-search-wrap input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
-        .global-search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; }
-        .search-results-panel { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: #ffffff; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.12); max-height: 420px; overflow-y: auto; z-index: 1050; display: none; border: 1px solid #e2e8f0; }
-        .search-results-panel .result-item { padding: 10px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; text-decoration: none; color: inherit; }
+
+        /* Global search */
+        .global-search-wrap {
+            position: relative;
+            width: 100%;
+            max-width: 760px;
+        }
+        .global-search-wrap input {
+            width: 100%;
+            padding: 12px 16px 12px 42px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+        .global-search-wrap input::placeholder { color: var(--text-3); }
+        .global-search-wrap input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: var(--focus-ring);
+        }
+        .global-search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-3);
+            pointer-events: none;
+        }
+
+        .search-results-panel {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            border-radius: 10px;
+            box-shadow: var(--shadow-lg);
+            max-height: 420px;
+            overflow-y: auto;
+            z-index: 1050;
+            display: none;
+            border: 1px solid var(--border);
+        }
+        .search-results-panel .result-item {
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            text-decoration: none;
+            color: inherit;
+        }
         .search-results-panel .result-item:last-child { border-bottom: none; }
-        .search-results-panel .result-item:hover { background: #f8fafc; }
-        .result-icon { width: 34px; height: 34px; border-radius: 8px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .result-title { font-weight: 600; font-size: 0.88rem; color: #0f172a; }
-        .result-sub { font-size: 0.76rem; color: #64748b; }
-        .result-type { font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; background: #f1f5f9; color: #475569; text-transform: uppercase; margin-left: auto; flex-shrink: 0; }
-        .search-empty { padding: 16px; text-align: center; font-size: 0.85rem; color: #94a3b8; }
+        .search-results-panel .result-item:hover { background: var(--surface-2); }
+
+        .result-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: var(--accent-soft);
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .result-title {
+            font-weight: 600;
+            font-size: 0.88rem;
+            color: var(--text);
+        }
+        .result-sub {
+            font-size: 0.76rem;
+            color: var(--text-3);
+        }
+        .result-type {
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: var(--surface-2);
+            color: var(--text-2);
+            text-transform: uppercase;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+        .search-empty {
+            padding: 16px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-3);
+        }
+
+        /* Welcome banner — brand gradient (identical in both themes) */
+        .welcome-banner {
+            background: linear-gradient(135deg, #1565C0 0%, #29ABE2 100%);
+            color: #ffffff;
+            border-radius: 16px;
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .welcome-banner h4 {
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .welcome-banner p {
+            margin: 0;
+            font-size: 0.9rem;
+            opacity: 0.85;
+        }
     </style>
     <link rel="icon" type="image/png" href="images/favicon.png">
 </head>
 <body>
 
-<div class="sidebar">
+<div class="app-sidebar">
     <div class="sidebar-brand">
         <img src="images/finc-logo.png" alt="Finc Logo" class="sidebar-brand-logo" onerror="this.src='https://via.placeholder.com/40?text=FINC'">
         <span>Enterprise Portal</span>
@@ -65,19 +258,26 @@
     </nav>
 </div>
 
-<div class="main-content">
+<div class="app-main">
     <div class="top-navbar">
         <div>
-            <h3 class="fw-bold mb-1" style="color: #0f172a;">Dashboard Overview</h3>
-            <p class="text-muted mb-0" style="font-size: 0.9rem;">Finc Academy & Consultants Collaboration Workspace</p>
+            <h3 class="fw-bold page-heading">Dashboard Overview</h3>
+            <p class="page-subheading">Finc Academy &amp; Consultants Collaboration Workspace</p>
         </div>
         <div class="d-flex align-items-center gap-3">
+            <!-- Theme toggle (NFR-14) -->
+            <button type="button" class="theme-toggle-inline" data-theme-toggle aria-label="Toggle theme">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+
             <a href="profile.html" class="user-profile-badge">
                 <span class="status-dot"></span>
                 <span class="fw-semibold" id="displayName" style="font-size: 0.9rem;">User Session</span>
-                <span class="role-badge" id="userRoleBadge">Employee</span>
+                <span class="app-badge app-badge-accent" id="userRoleBadge">Employee</span>
             </a>
-            <button id="logoutBtn" class="btn btn-outline-danger btn-sm px-3 rounded-pill fw-semibold"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+            <button id="logoutBtn" class="btn btn-outline-danger btn-sm px-3 rounded-pill fw-semibold">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </button>
         </div>
     </div>
 
@@ -87,16 +287,12 @@
         <div id="searchResults" class="search-results-panel"></div>
     </div>
 
-    <div class="card border-0 mb-2 rounded-4" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff;">
-        <div class="card-body p-3 d-flex justify-content-between align-items-center">
-            <div>
-                <h4 class="fw-bold mb-1" id="welcomeHeading">Welcome back!</h4>
-                <p class="mb-0 opacity-75" style="max-width: 500px; font-size: 0.9rem;">
-                    Department: <span id="userDepartment" class="fw-semibold">Not Assigned</span>
-                </p>
-            </div>
-            <i class="fa-solid fa-shield-halved fa-3x opacity-25 d-none d-md-block"></i>
+    <div class="welcome-banner">
+        <div>
+            <h4 id="welcomeHeading">Welcome back!</h4>
+            <p>Department: <span id="userDepartment" class="fw-semibold">Not Assigned</span></p>
         </div>
+        <i class="fa-solid fa-shield-halved fa-3x opacity-25 d-none d-md-block"></i>
     </div>
 
     <div class="row g-3">
@@ -114,7 +310,7 @@
         <div class="col-md-3">
             <a href="knowledge-base.html" class="metric-link">
                 <div class="metric-card">
-                    <div class="metric-icon" style="background: #eff6ff; color: #2563eb;">
+                    <div class="metric-icon" style="background: #eff6ff; color: #1E88E5;">
                         <i class="fa-solid fa-file-lines"></i>
                     </div>
                     <div class="metric-val" id="metric-articles">0</div>
@@ -145,6 +341,7 @@
     </div>
 </div>
 
+<script src="js/theme.js" defer></script>
 <script src="js/dashboard.js"></script>
 <script src="js/presence.js"></script>
 <script src="js/roleguard.js"></script>
