@@ -1,89 +1,440 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Settings — Finc Workplace</title>
+
+    <!-- Apply theme before paint -->
+    <script>
+        (function () {
+            try {
+                const saved = localStorage.getItem("theme") || "light";
+                document.documentElement.setAttribute("data-theme", saved);
+            } catch (e) {}
+        })();
+    </script>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="css/theme.css" rel="stylesheet">
+
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f1f5f9; min-height: 100vh; }
-        .topbar { background: #0f172a; color: #fff; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; }
-        .topbar h1 { font-size: 1.1rem; margin: 0; }
-        .topbar a { color: #cbd5e1; text-decoration: none; font-size: 0.9rem; }
-        .topbar a:hover { color: #fff; }
-        .wrap { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
-        .card { background: #fff; border-radius: 14px; padding: 26px; box-shadow: 0 4px 16px rgba(0,0,0,0.05); margin-bottom: 22px; }
-        .card h2 { font-size: 1.1rem; margin-bottom: 18px; color: #0f172a; }
-        .setting-row { display: grid; grid-template-columns: 220px 1fr auto; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid #e2e8f0; }
+        /* ============================================================
+           Admin Console — page-specific styles
+           ============================================================ */
+        body {
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        /* Topbar — theme-aware */
+        .topbar {
+            background: var(--surface);
+            color: var(--text);
+            padding: 14px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border);
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+        [data-theme="dark"] .topbar {
+            background: #020617;
+            border-bottom: 1px solid var(--border);
+        }
+        .topbar h1 {
+            font-size: 1.1rem;
+            margin: 0;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+        }
+        [data-theme="dark"] .topbar h1 {
+            color: #f1f5f9;
+        }
+        .topbar a {
+            color: var(--text-2);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+        .topbar a:hover { color: var(--accent); }
+        [data-theme="dark"] .topbar a { color: #cbd5e1; }
+        [data-theme="dark"] .topbar a:hover { color: #fff; }
+
+        .topbar .theme-toggle-inline {
+            border-color: var(--border);
+            background: var(--surface-2);
+            color: var(--text-2);
+        }
+        .topbar .theme-toggle-inline:hover {
+            background: var(--surface);
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+        [data-theme="dark"] .topbar .theme-toggle-inline {
+            border-color: rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.06);
+            color: #cbd5e1;
+        }
+        [data-theme="dark"] .topbar .theme-toggle-inline:hover {
+            background: rgba(255,255,255,0.12);
+            color: #fff;
+            border-color: rgba(255,255,255,0.3);
+        }
+
+        /* Wrap */
+        .wrap {
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--surface);
+            border-radius: 14px;
+            padding: 26px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            margin-bottom: 22px;
+            color: var(--text);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        .card h2 {
+            font-size: 1.1rem;
+            margin-bottom: 18px;
+            color: var(--text);
+        }
+
+        /* Settings rows */
+        .setting-row {
+            display: grid;
+            grid-template-columns: 220px 1fr auto;
+            gap: 12px;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
         .setting-row:last-child { border-bottom: none; }
-        .setting-key { font-weight: 600; color: #1e293b; font-size: 0.9rem; }
-        .setting-desc { font-size: 0.78rem; color: #64748b; margin-top: 2px; }
-        input.form-control { border-radius: 8px; }
-        .btn-save { background: #2563eb; color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 0.85rem; font-weight: 600; }
-        .btn-save:hover { background: #1d4ed8; color: #fff; }
-        .alert-box { margin-bottom: 16px; }
-        .quota-bar { height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin-top: 6px; }
-        .quota-fill { height: 100%; background: linear-gradient(90deg, #10b981, #059669); }
+        .setting-key { font-weight: 600; color: var(--text); font-size: 0.9rem; }
+        .setting-desc { font-size: 0.78rem; color: var(--text-3); margin-top: 2px; }
+
+        /* Buttons */
+        .btn-save {
+            background: var(--accent);
+            color: var(--accent-contrast);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .btn-save:hover {
+            background: var(--accent-2);
+            color: var(--accent-contrast);
+        }
+
+        /* Quota bar */
+        .quota-bar {
+            height: 8px;
+            background: var(--surface-2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+        .quota-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #059669);
+        }
         .quota-fill.warn { background: linear-gradient(90deg, #f59e0b, #d97706); }
         .quota-fill.danger { background: linear-gradient(90deg, #ef4444, #dc2626); }
-        .dept-card { border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 12px; }
 
-        .tabs { display: flex; gap: 8px; margin-bottom: 22px; border-bottom: 2px solid #e2e8f0; flex-wrap: wrap; }
-        .tab-btn { background: none; border: none; padding: 12px 20px; font-size: 0.9rem; font-weight: 600; color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; display: flex; align-items: center; gap: 8px; }
-        .tab-btn:hover { color: #1e293b; }
-        .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; }
+        /* Dept card */
+        .dept-card {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+            background: var(--surface);
+            color: var(--text);
+        }
 
-        .user-table { width: 100%; }
-        .user-table th { text-align: left; font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 12px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; }
-        .user-table td { padding: 14px 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.88rem; vertical-align: middle; }
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 22px;
+            border-bottom: 2px solid var(--border);
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-3);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.15s;
+        }
+        .tab-btn:hover { color: var(--text); }
+        .tab-btn.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        /* User table */
+        .user-table { width: 100%; color: var(--text); }
+        .user-table th {
+            text-align: left;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 12px 12px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface-2);
+        }
+        .user-table td {
+            padding: 14px 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.88rem;
+            vertical-align: middle;
+            color: var(--text);
+        }
         .user-table tr:last-child td { border-bottom: none; }
-        .badge-role { background: #e0f2fe; color: #0284c7; padding: 3px 10px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; }
-        .badge-admin { background: #f3e8ff; color: #a855f7; padding: 3px 10px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; }
-        .badge-online { background: #ecfdf5; color: #059669; padding: 3px 10px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; }
-        .badge-offline { background: #f3f4f6; color: #6b7280; padding: 3px 10px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; }
-        .badge-disabled { background: #fee2e2; color: #dc2626; padding: 3px 10px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; }
-        .btn-action { background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; border-radius: 6px; padding: 5px 10px; font-size: 0.75rem; font-weight: 600; margin-right: 4px; }
-        .btn-action:hover { background: #e2e8f0; color: #0f172a; }
-        .btn-action.danger { color: #dc2626; }
-        .btn-action.danger:hover { background: #fee2e2; }
-        .btn-action.primary { background: #2563eb; color: #fff; border-color: #2563eb; }
-        .btn-action.primary:hover { background: #1d4ed8; }
+        .user-table tbody tr:hover td { background: var(--surface-2); }
 
+        /* Badges */
+        .badge-role {
+            display: inline-block;
+            background: var(--accent-soft);
+            color: var(--accent);
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .badge-admin {
+            display: inline-block;
+            background: #f3e8ff;
+            color: #a855f7;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        [data-theme="dark"] .badge-admin {
+            background: rgba(168, 85, 247, 0.15);
+            color: #c084fc;
+        }
+        .badge-online {
+            display: inline-block;
+            background: var(--success-bg);
+            color: var(--success-text);
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .badge-offline {
+            display: inline-block;
+            background: var(--surface-2);
+            color: var(--text-3);
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .badge-disabled {
+            display: inline-block;
+            background: var(--danger-bg);
+            color: var(--danger-text);
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        /* Action buttons */
+        .btn-action {
+            background: var(--surface-2);
+            color: var(--text-2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 4px;
+            transition: all 0.15s;
+        }
+        .btn-action:hover {
+            background: var(--border);
+            color: var(--text);
+        }
+        .btn-action.danger { color: var(--danger-text); }
+        .btn-action.danger:hover { background: var(--danger-bg); }
+        .btn-action.primary {
+            background: var(--accent);
+            color: var(--accent-contrast);
+            border-color: var(--accent);
+        }
+        .btn-action.primary:hover {
+            background: var(--accent-2);
+            color: var(--accent-contrast);
+        }
+
+        /* Tab panes */
         .tab-pane { display: none; }
         .tab-pane.active { display: block; }
 
         /* Roles */
         .role-card {
-            border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 16px;
-            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            background: var(--surface);
+            color: var(--text);
         }
         .role-card h3 {
-            font-size: 1rem; font-weight: 700; margin-bottom: 4px;
-            display: flex; align-items: center; gap: 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text);
         }
-        .role-desc { font-size: 0.8rem; color: #64748b; margin-bottom: 16px; }
+        .role-desc { font-size: 0.8rem; color: var(--text-3); margin-bottom: 16px; }
         .perm-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 8px;
             margin-bottom: 14px;
         }
         .perm-item {
-            display: flex; align-items: center; gap: 8px; padding: 8px 12px;
-            border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer;
-            font-size: 0.82rem; font-weight: 500; color: #334155;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--text-2);
             transition: all 0.15s;
         }
-        .perm-item:hover { background: #f8fafc; border-color: #cbd5e1; }
-        .perm-item input { cursor: pointer; }
-        .perm-item.checked { background: #eff6ff; border-color: #93c5fd; color: #1e40af; }
+        .perm-item:hover {
+            background: var(--surface-2);
+            border-color: var(--accent);
+        }
+        .perm-item input { cursor: pointer; accent-color: var(--accent); }
+        .perm-item.checked {
+            background: var(--accent-soft);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Bootstrap overrides — theme-aware form controls */
+        .form-control, .form-select {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .form-control::placeholder { color: var(--text-3); }
+        .form-control:focus, .form-select:focus {
+            background: var(--surface);
+            color: var(--text);
+            border-color: var(--accent);
+            box-shadow: var(--focus-ring);
+        }
+        .form-control:disabled {
+            background: var(--surface-2);
+            color: var(--text-3);
+            opacity: 0.7;
+        }
+        .form-label { color: var(--text-2); font-size: 0.85rem; font-weight: 500; }
+        .form-check-input:checked {
+            background-color: var(--accent);
+            border-color: var(--accent);
+        }
+        .form-check-label { color: var(--text-2); font-size: 0.85rem; }
+
+        /* Bootstrap modals — theme-aware */
+        .modal-content {
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+        }
+        .modal-header {
+            border-bottom: 1px solid var(--border);
+        }
+        .modal-footer {
+            border-top: 1px solid var(--border);
+        }
+        .modal-title { color: var(--text); font-size: 1rem; }
+        .btn-secondary {
+            background: var(--surface-2);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover {
+            background: var(--border);
+            color: var(--text);
+            border-color: var(--border);
+        }
+        .btn-close { filter: var(--btn-close-filter, none); }
+        [data-theme="dark"] .btn-close { filter: invert(1) brightness(1.5); }
+
+        /* Alerts */
+        .alert-box { margin-bottom: 16px; border-radius: 10px; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .setting-row {
+                grid-template-columns: 1fr;
+                gap: 6px;
+            }
+        }
     </style>
+    <script src="js/api.js"></script>
 </head>
 <body>
 
 <div class="topbar">
     <h1><i class="fa-solid fa-gear"></i> Admin Console</h1>
-    <a href="dashboard.html"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+    <div class="d-flex align-items-center gap-3">
+        <button type="button" class="theme-toggle-inline" data-theme-toggle aria-label="Toggle theme">
+            <i class="fa-solid fa-moon"></i>
+        </button>
+        <a href="dashboard.html"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+    </div>
 </div>
 
 <div class="wrap">
@@ -110,7 +461,7 @@
                         <tr><th>ID</th><th>USERNAME</th><th>NAME</th><th>EMAIL</th><th>ROLE</th><th>STATUS</th><th>ACTIONS</th></tr>
                     </thead>
                     <tbody id="usersTbody">
-                        <tr><td colspan="7" class="text-center text-muted py-4">Loading...</td></tr>
+                        <tr><td colspan="7" class="text-center py-4" style="color: var(--text-3);">Loading...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -130,7 +481,7 @@
                         <tr><th>ID</th><th>NAME</th><th>DESCRIPTION</th><th>USERS</th><th>STORAGE LIMIT</th><th>ACTIONS</th></tr>
                     </thead>
                     <tbody id="deptTbody">
-                        <tr><td colspan="6" class="text-center text-muted py-4">Loading...</td></tr>
+                        <tr><td colspan="6" class="text-center py-4" style="color: var(--text-3);">Loading...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -141,11 +492,11 @@
     <div class="tab-pane" id="tab-roles">
         <div class="card">
             <h2><i class="fa-solid fa-shield-halved"></i> Roles & Permissions</h2>
-            <p class="text-muted" style="font-size:0.85rem;">
+            <p style="font-size:0.85rem; color: var(--text-3);">
                 Tick the permissions granted to each role. Changes are saved immediately and logged to the audit trail.
             </p>
             <div id="rolesContainer">
-                <div class="text-center text-muted py-4">Loading roles...</div>
+                <div class="text-center py-4" style="color: var(--text-3);">Loading roles...</div>
             </div>
         </div>
     </div>
@@ -221,7 +572,7 @@
                         </div>
                     </div>
                 </div>
-                <hr>
+                <hr style="border-color: var(--border);">
                 <div>
                     <label class="form-label">Reset Password</label>
                     <div class="d-flex gap-2">
@@ -261,12 +612,27 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/theme.js" defer></script>
 <script src="js/roleguard.js"></script>
 <script>
 const actorId = localStorage.getItem("userId") || "1";
 let rolesCache = [];
 let departmentsCache = [];
 let permissionCatalogue = [];
+
+/* Friendly role labels — matches report Section 1.2 */
+function friendlyRole(raw) {
+    if (!raw) return "Employee";
+    const cleaned = String(raw).replace(/^ROLE_/, "").toUpperCase();
+    const map = {
+        SYSTEM_ADMIN: "System Administrator",
+        DEPT_ADMIN: "Department Administrator",
+        TEAM_LEADER: "Team Leader",
+        EMPLOYEE: "Employee"
+    };
+    if (map[cleaned]) return map[cleaned];
+    return cleaned.toLowerCase().replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+}
 
 function showAlert(msg, ok) {
     const a = document.getElementById("alertBox");
@@ -305,7 +671,7 @@ async function loadRolesAndDepts() {
     } catch (e) { console.warn(e); }
 
     const roleOpts = rolesCache.map(r =>
-        `<option value="${r.roleType}">${r.roleType.replace("ROLE_","")}</option>`).join("");
+        `<option value="${r.roleType}">${friendlyRole(r.roleType)}</option>`).join("");
     document.getElementById("cuRole").innerHTML = roleOpts;
     document.getElementById("euRole").innerHTML  = roleOpts;
 
@@ -320,9 +686,8 @@ async function loadRolesAndDepts() {
 // ====================================================
 async function loadRoles() {
     const container = document.getElementById("rolesContainer");
-    container.innerHTML = '<div class="text-center text-muted py-4">Loading roles...</div>';
+    container.innerHTML = '<div class="text-center py-4" style="color: var(--text-3);">Loading roles...</div>';
     try {
-        // Fetch roles + catalogue in parallel
         const [rRes, cRes] = await Promise.all([
             fetch(`/api/admin/roles?actorId=${actorId}`),
             fetch(`/api/admin/roles/catalogue?actorId=${actorId}`)
@@ -332,18 +697,16 @@ async function loadRoles() {
         permissionCatalogue = cRes.ok ? await cRes.json() : [];
 
         if (!rolesCache.length) {
-            container.innerHTML = '<div class="text-center text-muted py-4">No roles found.</div>';
+            container.innerHTML = '<div class="text-center py-4" style="color: var(--text-3);">No roles found.</div>';
             return;
         }
 
         container.innerHTML = rolesCache.map(role => renderRoleCard(role)).join("");
 
-        // Attach save handlers
         container.querySelectorAll("[data-save-role]").forEach(btn => {
             btn.addEventListener("click", () => saveRolePermissions(parseInt(btn.dataset.saveRole, 10)));
         });
 
-        // Attach checkbox visual toggle
         container.querySelectorAll(".perm-item").forEach(item => {
             const cb = item.querySelector("input[type=checkbox]");
             item.classList.toggle("checked", cb.checked);
@@ -351,12 +714,12 @@ async function loadRoles() {
         });
     } catch (e) {
         console.error(e);
-        container.innerHTML = '<div class="text-center text-danger py-4">Failed to load roles.</div>';
+        container.innerHTML = '<div class="text-center py-4" style="color: var(--danger-text);">Failed to load roles.</div>';
     }
 }
 
 function renderRoleCard(role) {
-    const shortName = role.roleType.replace("ROLE_", "");
+    const shortName = friendlyRole(role.roleType);
     const current = new Set(role.permissions || []);
 
     const permHtml = permissionCatalogue.map(p => `
@@ -371,7 +734,7 @@ function renderRoleCard(role) {
             <h3>
                 <i class="fa-solid fa-shield"></i>
                 ${shortName}
-                <span class="badge-role" style="font-size:0.7rem;">${role.roleId}</span>
+                <span class="badge-role">${role.roleId}</span>
             </h3>
             <div class="role-desc">
                 <strong>${current.size}</strong> permission(s) granted
@@ -411,14 +774,14 @@ async function saveRolePermissions(roleId) {
 // ====================================================
 async function loadUsers() {
     const tbody = document.getElementById("usersTbody");
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4" style="color: var(--text-3);">Loading...</td></tr>';
     try {
         const res = await fetch(`/api/users?actorId=${actorId}`);
         if (!res.ok) throw new Error("HTTP " + res.status);
         const users = await res.json();
 
         if (!users.length) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No users found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4" style="color: var(--text-3);">No users found.</td></tr>';
             return;
         }
 
@@ -427,21 +790,22 @@ async function loadUsers() {
             const badge = String(id).padStart(3, "0");
             const fullName = `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.username;
             const roleType = u.role ? u.role.roleType : "ROLE_EMPLOYEE";
-            const roleShort = roleType.replace("ROLE_", "");
-            const roleClass = roleShort.includes("ADMIN") ? "badge-admin" : "badge-role";
+            const roleLabel = friendlyRole(roleType);
+            const isAdminRole = /ADMIN/.test(roleType.toUpperCase());
+            const roleClass = isAdminRole ? "badge-admin" : "badge-role";
 
             let statusBadge;
-            if (u.enabled === false) statusBadge = '<span class="badge-disabled">DISABLED</span>';
-            else if (u.status === "ONLINE") statusBadge = '<span class="badge-online">ONLINE</span>';
-            else statusBadge = '<span class="badge-offline">OFFLINE</span>';
+            if (u.enabled === false) statusBadge = '<span class="badge-disabled">Disabled</span>';
+            else if (u.status === "ONLINE") statusBadge = '<span class="badge-online">Online</span>';
+            else statusBadge = '<span class="badge-offline">Offline</span>';
 
             return `
                 <tr>
-                    <td class="fw-bold" style="color:#2563eb;">${badge}</td>
+                    <td class="fw-bold" style="color: var(--accent);">${badge}</td>
                     <td>${u.username}</td>
                     <td>${fullName}</td>
-                    <td style="color:#64748b;">${u.email}</td>
-                    <td><span class="${roleClass}">${roleShort}</span></td>
+                    <td style="color: var(--text-3);">${u.email}</td>
+                    <td><span class="${roleClass}">${roleLabel}</span></td>
                     <td>${statusBadge}</td>
                     <td><button class="btn-action" data-edit="${id}"><i class="fa-solid fa-pen"></i> Edit</button></td>
                 </tr>`;
@@ -452,7 +816,7 @@ async function loadUsers() {
         });
     } catch (e) {
         console.error(e);
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4">Failed to load users.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4" style="color: var(--danger-text);">Failed to load users.</td></tr>';
     }
 }
 
@@ -559,7 +923,7 @@ document.getElementById("btnSaveCreateUser").addEventListener("click", async () 
 // ====================================================
 async function loadDepartments() {
     const tbody = document.getElementById("deptTbody");
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4" style="color: var(--text-3);">Loading...</td></tr>';
     try {
         const [deptRes, usersRes] = await Promise.all([
             fetch(`/api/departments?actorId=${actorId}`),
@@ -576,7 +940,7 @@ async function loadDepartments() {
         });
 
         if (!depts.length) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No departments.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4" style="color: var(--text-3);">No departments.</td></tr>';
             return;
         }
 
@@ -586,9 +950,9 @@ async function loadDepartments() {
             const storage = d.storageLimitMb != null ? d.storageLimitMb + " MB" : "—";
             return `
                 <tr>
-                    <td class="fw-bold" style="color:#2563eb;">${String(id).padStart(3,"0")}</td>
+                    <td class="fw-bold" style="color: var(--accent);">${String(id).padStart(3,"0")}</td>
                     <td class="fw-semibold">${d.name}</td>
-                    <td style="color:#64748b;">${d.description || "—"}</td>
+                    <td style="color: var(--text-3);">${d.description || "—"}</td>
                     <td>${userCount}</td>
                     <td>${storage}</td>
                     <td>
@@ -612,7 +976,7 @@ async function loadDepartments() {
         });
     } catch (e) {
         console.error(e);
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">Failed to load departments.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4" style="color: var(--danger-text);">Failed to load departments.</td></tr>';
     }
 }
 
@@ -746,8 +1110,8 @@ async function loadQuotas() {
             card.innerHTML = `
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <div style="font-weight:600; color:#1e293b;">${d.name}</div>
-                        <div style="font-size:0.8rem; color:#64748b;">${used} MB used of ${limit} MB (${pct}%)</div>
+                        <div style="font-weight:600; color: var(--text);">${d.name}</div>
+                        <div style="font-size:0.8rem; color: var(--text-3);">${used} MB used of ${limit} MB (${pct}%)</div>
                     </div>
                     <div class="d-flex" style="gap: 8px;">
                         <input type="number" min="0" class="form-control" style="width: 130px;" id="quota-${d.departmentId}" value="${limit}">

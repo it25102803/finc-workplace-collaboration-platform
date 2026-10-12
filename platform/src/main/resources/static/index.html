@@ -28,13 +28,15 @@
             --surface: #ffffff;
             --surface-2: #f1f5f9;
             --border: #e2e8f0;
-            --text: #0f172a;
-            --text-2: #475569;
+            --text: #2d2d2d;
+            --text-2: #4b5563;
             --text-3: #94a3b8;
-            --accent: #4f46e5;
-            --accent-2: #4338ca;
-            --accent-soft: #eef2ff;
+
+            --accent: #1E88E5;
+            --accent-2: #1565C0;
+            --accent-soft: #e3f2fd;
             --accent-contrast: #ffffff;
+
             --success: #10b981;
             --success-2: #059669;
             --danger-bg: #fef2f2;
@@ -46,7 +48,12 @@
             --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
             --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
             --shadow-lg: 0 24px 48px rgba(15, 23, 42, 0.12);
-            --focus-ring: 0 0 0 4px rgba(79, 70, 229, 0.15);
+            --focus-ring: 0 0 0 4px rgba(30, 136, 229, 0.15);
+
+            --hero-1: #0A1F44;
+            --hero-2: #1565C0;
+            --hero-3: #29ABE2;
+            --hero-glow: rgba(41, 171, 226, 0.18);
         }
 
         [data-theme="dark"] {
@@ -57,10 +64,12 @@
             --text: #f1f5f9;
             --text-2: #cbd5e1;
             --text-3: #94a3b8;
-            --accent: #818cf8;
-            --accent-2: #a5b4fc;
-            --accent-soft: #1e1b4b;
+
+            --accent: #64B5F6;
+            --accent-2: #90CAF9;
+            --accent-soft: #0d2847;
             --accent-contrast: #0b1120;
+
             --danger-bg: #450a0a;
             --danger-text: #fca5a5;
             --danger-border: #7f1d1d;
@@ -69,7 +78,7 @@
             --success-border: #065f46;
             --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
             --shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.5);
-            --focus-ring: 0 0 0 4px rgba(129, 140, 248, 0.2);
+            --focus-ring: 0 0 0 4px rgba(100, 181, 246, 0.2);
         }
 
         * { box-sizing: border-box; }
@@ -84,7 +93,6 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        /* ============ LAYOUT ============ */
         .auth-page {
             display: grid;
             grid-template-columns: 1.05fr 1fr;
@@ -96,11 +104,10 @@
             .hero-panel { display: none; }
         }
 
-        /* ============ HERO PANEL ============ */
         .hero-panel {
             position: relative;
             overflow: hidden;
-            background: linear-gradient(145deg, #1e1b4b 0%, #312e81 55%, #4f46e5 100%);
+            background: linear-gradient(145deg, var(--hero-1) 0%, var(--hero-2) 55%, var(--hero-3) 100%);
             color: #ffffff;
             padding: 48px 64px;
             display: flex;
@@ -119,7 +126,7 @@
             position: absolute;
             bottom: -20%; left: -20%;
             width: 70%; height: 70%;
-            background: radial-gradient(circle, rgba(129,140,248,0.18) 0%, transparent 70%);
+            background: radial-gradient(circle, var(--hero-glow) 0%, transparent 70%);
             pointer-events: none;
         }
 
@@ -152,7 +159,6 @@
             color: rgba(255,255,255,0.7);
         }
 
-        /* Content block — vertically centered in the remaining space */
         .hero-content {
             position: relative;
             z-index: 1;
@@ -172,7 +178,7 @@
         }
         .hero-subtitle {
             font-size: 1rem;
-            color: rgba(226, 232, 240, 0.85);
+            color: rgba(226, 232, 240, 0.9);
             line-height: 1.55;
             margin: 0 0 28px 0;
             max-width: 440px;
@@ -190,7 +196,7 @@
             align-items: center;
             gap: 14px;
             font-size: 0.92rem;
-            color: rgba(241, 245, 249, 0.92);
+            color: rgba(241, 245, 249, 0.95);
         }
         .hero-feature-icon {
             flex-shrink: 0;
@@ -198,22 +204,23 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.18);
             border-radius: 10px;
-            color: #c7d2fe;
+            color: #B3E5FC;
             font-size: 0.95rem;
         }
 
-        /* Footer — naturally below content, separated with padding */
         .hero-footer {
             position: relative;
             z-index: 1;
             padding-top: 28px;
-            font-size: 0.78rem;
-            color: rgba(226, 232, 240, 0.7);
+            padding-bottom: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: rgba(241, 245, 249, 0.92);
             display: flex;
-            gap: 24px;
+            gap: 28px;
             flex-wrap: wrap;
         }
         .hero-footer span {
@@ -221,9 +228,11 @@
             align-items: center;
             gap: 6px;
         }
-        .hero-footer i { color: #6ee7b7; }
+        .hero-footer i {
+            color: #6ee7b7;
+            font-size: 0.85rem;
+        }
 
-        /* ============ FORM PANEL ============ */
         .form-panel {
             display: flex;
             align-items: center;
@@ -276,7 +285,6 @@
             margin: 0;
         }
 
-        /* ============ TABS ============ */
         .auth-tabs {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -306,7 +314,6 @@
             box-shadow: var(--shadow-sm);
         }
 
-        /* ============ FIELDS ============ */
         .form-label {
             font-size: 0.8rem;
             font-weight: 600;
@@ -369,7 +376,6 @@
         }
         .toggle-password:hover { color: var(--accent) !important; }
 
-        /* ============ BUTTONS ============ */
         .btn-primary-custom {
             background: var(--accent);
             color: var(--accent-contrast);
@@ -378,7 +384,7 @@
             border-radius: 10px;
             padding: 12px;
             font-size: 0.95rem;
-            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25);
+            box-shadow: 0 4px 14px rgba(30, 136, 229, 0.3);
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
@@ -389,7 +395,7 @@
             background: var(--accent-2);
             color: var(--accent-contrast);
             transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.35);
+            box-shadow: 0 6px 20px rgba(30, 136, 229, 0.4);
         }
         .btn-primary-custom:active { transform: translateY(0); }
 
@@ -415,7 +421,6 @@
             box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
         }
 
-        /* ============ ALERTS ============ */
         .alert-custom {
             border-radius: 10px;
             padding: 12px 16px;
@@ -437,7 +442,6 @@
             border-color: var(--danger-border);
         }
 
-        /* ============ THEME TOGGLE ============ */
         .theme-toggle {
             position: fixed;
             top: 24px;
@@ -468,7 +472,6 @@
             }
         }
 
-        /* ============ TAB CONTENT ANIMATION ============ */
         .tab-content > .tab-pane { animation: fadeIn 0.3s ease; }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(4px); }
@@ -485,7 +488,6 @@
 
 <div class="auth-page">
 
-    <!-- ============ HERO PANEL ============ -->
     <aside class="hero-panel">
         <div class="hero-brand">
             <img src="images/finc-logo.png" alt="Finc Academy" class="hero-brand-logo" onerror="this.src='https://via.placeholder.com/52?text=FINC'">
@@ -524,7 +526,6 @@
         </div>
     </aside>
 
-    <!-- ============ FORM PANEL ============ -->
     <main class="form-panel">
         <div class="auth-card">
 
@@ -538,7 +539,6 @@
                 <p id="authSubheading">Sign in to access your workspace.</p>
             </div>
 
-            <!-- Tabs -->
             <ul class="nav auth-tabs" id="authTab" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button" role="tab">Sign In</button>
@@ -548,12 +548,10 @@
                 </li>
             </ul>
 
-            <!-- Alert Notification Box -->
             <div id="alertBox" class="alert-custom d-none mb-3" role="alert"></div>
 
             <div class="tab-content">
 
-                <!-- LOGIN FORM -->
                 <div class="tab-pane fade show active" id="login" role="tabpanel">
                     <form id="loginForm" novalidate>
                         <div class="mb-3">
@@ -586,7 +584,6 @@
                     </form>
                 </div>
 
-                <!-- REGISTER FORM -->
                 <div class="tab-pane fade" id="register" role="tabpanel">
                     <form id="registerForm" novalidate>
 
@@ -617,7 +614,6 @@
                             </div>
                         </div>
 
-                        <!-- FR-UM-04: Department Allocation Dropdown -->
                         <div class="mb-3">
                             <label class="form-label" for="regDepartment">Department</label>
                             <div class="input-group">
@@ -661,7 +657,6 @@
         initHeadings();
     });
 
-    /* =================== Theme (NFR-14) =================== */
     function initTheme() {
         const toggle = document.getElementById("themeToggle");
         const icon = document.getElementById("themeIcon");
@@ -683,7 +678,6 @@
         }
     }
 
-    /* =================== Dynamic heading on tab switch =================== */
     function initHeadings() {
         const loginTab = document.getElementById("login-tab");
         const registerTab = document.getElementById("register-tab");
@@ -708,7 +702,6 @@
         }
     }
 
-    /* =================== Departments (FR-UM-04) =================== */
     function loadDepartments() {
         fetch('/api/departments')
             .then(res => res.json())
@@ -725,7 +718,6 @@
             .catch(err => console.error("Error loading departments:", err));
     }
 
-    /* =================== Alerts =================== */
     function showAlert(message, isSuccess) {
         const alertBox = document.getElementById("alertBox");
         alertBox.className = `alert-custom ${isSuccess ? 'alert-success' : 'alert-danger'} mb-3`;
@@ -733,7 +725,6 @@
         alertBox.classList.remove("d-none");
     }
 
-    /* =================== Login =================== */
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
         e.preventDefault();
         const usernameInput = document.getElementById("loginUsername").value;
@@ -759,6 +750,7 @@
                 localStorage.setItem("theme", savedTheme);
                 localStorage.setItem("user", JSON.stringify(data));
                 localStorage.setItem("userId", data.userId || "");
+                localStorage.setItem("email", data.email || "");
                 localStorage.setItem("badgeId", String(data.userId || 1).padStart(3, '0'));
                 localStorage.setItem("username", data.username || usernameInput);
                 localStorage.setItem("departmentName", data.departmentName || "Not Assigned");
@@ -784,7 +776,6 @@
         }
     });
 
-    /* =================== Register =================== */
     document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
         e.preventDefault();
 
@@ -833,7 +824,6 @@
         }
     });
 
-    /* =================== Password toggle =================== */
     document.addEventListener('click', function (e) {
         const toggleBtn = e.target.closest('.toggle-password');
         if (!toggleBtn) return;

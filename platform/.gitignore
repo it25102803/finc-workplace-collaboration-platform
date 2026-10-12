@@ -5,6 +5,10 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+### Uploaded user data (profile pictures and files) ###
+uploads/
+platform/uploads/
+
 ### STS ###
 .apt_generated
 .classpath

@@ -58,7 +58,6 @@ function friendlyRoleName(raw) {
         EMPLOYEE: "Employee"
     };
     if (map[cleaned]) return map[cleaned];
-    // Fallback: "SOME_ROLE" → "Some Role"
     return cleaned
         .toLowerCase()
         .replace(/_/g, " ")
@@ -66,14 +65,18 @@ function friendlyRoleName(raw) {
 }
 
 async function loadDashboardSummaries(userId) {
+    // Always the logged-in user's numeric id (not the padded badge number shown on screen)
     const actorId = localStorage.getItem("userId") || userId;
+    userId = actorId;
 
     // --- Active tasks (FR-UM-08) ---
     try {
         const tasksRes = await fetch(`/api/tasks/user/${userId}?actorId=${actorId}`);
         if (tasksRes.ok) {
             const tasks = await tasksRes.json();
-            const activeTasksCount = Array.isArray(tasks) ? tasks.length : 0;
+            const activeTasksCount = Array.isArray(tasks)
+                ? tasks.filter(t => t.status !== "COMPLETED").length
+                : 0;
             const taskMetricEl = document.getElementById("metric-tasks");
             if (taskMetricEl) taskMetricEl.textContent = activeTasksCount;
         }
@@ -95,6 +98,18 @@ async function loadDashboardSummaries(userId) {
     } catch (err) {
         console.warn("Could not load files metric summary:", err);
         // Fail silently — the card simply stays at 0
+    }
+
+    // --- Published Knowledge Base articles ---
+    try {
+        const kbRes = await fetch(`/api/kb/articles?actorId=${actorId}`);
+        if (kbRes.ok) {
+            const articles = await kbRes.json();
+            const articlesEl = document.getElementById("metric-articles");
+            if (articlesEl) articlesEl.textContent = Array.isArray(articles) ? articles.length : 0;
+        }
+    } catch (err) {
+        console.warn("Could not load articles metric summary:", err);
     }
 }
 
@@ -164,7 +179,6 @@ function initGlobalSearch() {
         }, 280);
     });
 
-    // Enter → open top result
     input.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
             e.preventDefault();
@@ -176,7 +190,6 @@ function initGlobalSearch() {
         }
     });
 
-    // Click outside closes panel
     document.addEventListener("click", (e) => {
         if (!e.target.closest(".global-search-wrap")) {
             panel.style.display = "none";
