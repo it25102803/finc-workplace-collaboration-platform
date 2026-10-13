@@ -29,6 +29,15 @@ public class AuthService {
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
+        // Empty fields must never create an account (an empty username would let people log in with only a password)
+        if (isBlank(request.getUsername()) || isBlank(request.getEmail())
+                || isBlank(request.getPassword()) || isBlank(request.getFirstName())
+                || isBlank(request.getLastName())) {
+            throw new IllegalArgumentException("Please fill in all required fields");
+        }
+        request.setUsername(request.getUsername().trim());
+        request.setEmail(request.getEmail().trim());
+
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new IllegalArgumentException("Username '" + request.getUsername() + "' is already taken");
         }
@@ -69,6 +78,9 @@ public class AuthService {
 
     @Transactional
     public AuthResponse login(LoginRequest request) {
+        if (isBlank(request.getUsername()) || isBlank(request.getPassword())) {
+            throw new IllegalArgumentException("Invalid username or password");
+        }
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid username or password"));
 
@@ -218,5 +230,9 @@ public class AuthService {
         }
 
         return response;
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 }

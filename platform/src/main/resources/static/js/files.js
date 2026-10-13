@@ -45,9 +45,7 @@ function getUserId() {
 }
 
 function withActor(url) {
-    const actorId = localStorage.getItem("userId");
-    if (!actorId) return url;
-    return url + (url.includes("?") ? "&" : "?") + "actorId=" + encodeURIComponent(actorId);
+    return window.withAuth ? window.withAuth(url) : url;
 }
 
 async function readError(response, fallback) {
@@ -234,6 +232,7 @@ function renderFiles() {
             <td>${formatDate(file.uploadedAt)}</td>
             <td>
                 <div class="file-actions">
+                    <button type="button" class="preview">Preview</button>
                     <button type="button" class="download">Download</button>
                     <button type="button" class="new-version">New version</button>
                     <button type="button" class="versions">Versions</button>
@@ -243,6 +242,7 @@ function renderFiles() {
             </td>
         `;
 
+        row.querySelector(".preview").addEventListener("click", () => previewFile(file));
         row.querySelector(".download").addEventListener("click", () => downloadFile(file));
         row.querySelector(".new-version").addEventListener("click", () => openUploadModal(file.fileId));
         row.querySelector(".versions").addEventListener("click", () => openVersionsModal(file));
@@ -494,6 +494,10 @@ async function submitUpload() {
 /* =========================
    FILE ACTIONS
 ========================= */
+
+function previewFile(file) {
+    window.open(withActor("/api/files/" + file.fileId + "/preview"), "_blank");
+}
 
 function downloadFile(file) {
     window.open(withActor("/api/files/" + file.fileId + "/download"), "_blank");

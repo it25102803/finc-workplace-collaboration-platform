@@ -64,9 +64,18 @@ public class FileService {
         return storageService.read(file.getStoragePath());
     }
 
-    public String preview(Long fileId) {
-        File file = getOrThrow(fileId);
-        return "Preview unavailable for " + file.getMimeType() + " — download to view: " + file.getFileName();
+    public boolean isPreviewable(File file) {
+        String type = file.getMimeType() == null ? "" : file.getMimeType().toLowerCase();
+        if (type.contains("svg")) {
+            return false;
+        }
+        return type.startsWith("image/") || type.startsWith("video/") || type.startsWith("text/")
+                || type.equals("application/pdf");
+    }
+
+    @Transactional(readOnly = true)
+    public List<File> listUploadedBy(Long userId) {
+        return fileRepository.findByUploadedBy_IdAndIsDeletedFalse(userId);
     }
 
     @Transactional
