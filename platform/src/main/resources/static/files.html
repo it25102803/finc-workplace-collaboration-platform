@@ -1,10 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>File Manager | Finc Workplace</title>
+
+    <!-- Apply the saved light/dark choice before the page paints (no flash) -->
+    <script>
+        (function () {
+            try {
+                document.documentElement.setAttribute("data-theme", localStorage.getItem("theme") || "light");
+            } catch (e) {}
+        })();
+    </script>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -58,6 +67,10 @@
             </div>
 
             <div class="top-actions">
+
+                <button type="button" class="theme-toggle-btn" data-theme-toggle aria-label="Toggle dark mode" title="Light / dark mode">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
 
                 <button class="secondary-btn" onclick="openFolderModal()">
                     + New Folder
@@ -137,9 +150,12 @@
 
 
         <!-- BREADCRUMB -->
-        <section class="breadcrumb" id="breadcrumb">
-            <span class="crumb active" onclick="goToRoot()">Home</span>
-        </section>
+        <div class="crumb-row">
+            <button type="button" id="backBtn" class="back-btn" onclick="goBack()" hidden>&larr; Back</button>
+            <section class="breadcrumb" id="breadcrumb">
+                <span class="crumb active" onclick="goToRoot()">Home</span>
+            </section>
+        </div>
 
 
         <!-- FOLDER GRID -->
@@ -303,6 +319,7 @@
 </div>
 
 <script src="/js/files.js"></script>
+<script src="/js/theme.js"></script>
 <script src="js/presence.js"></script>
 <script>
     // Show Admin Settings link only for SYSTEM_ADMIN users

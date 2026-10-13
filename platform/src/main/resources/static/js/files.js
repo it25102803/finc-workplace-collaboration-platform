@@ -149,6 +149,9 @@ function renderBreadcrumb() {
         container.appendChild(item);
     });
 
+    const backBtn = document.getElementById("backBtn");
+    if (backBtn) backBtn.hidden = breadcrumbStack.length === 0;
+
     document.getElementById("currentLocation").textContent =
         breadcrumbStack.length ? breadcrumbStack[breadcrumbStack.length - 1].name : "Home";
 }
@@ -277,6 +280,16 @@ function openFolder(folder) {
 function goToRoot() {
     breadcrumbStack = [];
     currentFolderId = null;
+    loadCurrentLevel();
+}
+
+// One step up: back to the parent folder, or to Home from a top-level folder
+function goBack() {
+    if (!breadcrumbStack.length) return;
+    breadcrumbStack.pop();
+    currentFolderId = breadcrumbStack.length
+        ? breadcrumbStack[breadcrumbStack.length - 1].id
+        : null;
     loadCurrentLevel();
 }
 
