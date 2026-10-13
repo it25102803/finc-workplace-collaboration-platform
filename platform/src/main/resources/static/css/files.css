@@ -674,3 +674,213 @@ a {
         overflow-x: auto;
     }
 }
+
+
+/* =========================
+   BACK BUTTON + THEME TOGGLE
+========================= */
+
+.crumb-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 22px;
+}
+
+.crumb-row .breadcrumb {
+    margin-bottom: 0;
+}
+
+.back-btn {
+    border: 1px solid #d0d5dd;
+    background: white;
+    color: #344054;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.back-btn[hidden] {
+    display: none;
+}
+
+.back-btn:hover {
+    background: #eef4ff;
+    color: #2563eb;
+}
+
+.theme-toggle-btn {
+    width: 40px;
+    height: 40px;
+    border: 1px solid #d0d5dd;
+    background: white;
+    color: #475467;
+    border-radius: 9px;
+    font-size: 15px;
+}
+
+.theme-toggle-btn:hover {
+    background: #eef4ff;
+    color: #2563eb;
+}
+
+
+/* =========================
+   DARK MODE (same palette as the other pages)
+========================= */
+
+[data-theme="dark"] body {
+    background: #0b1120;
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .eyebrow,
+[data-theme="dark"] .subtitle,
+[data-theme="dark"] .stat-card span,
+[data-theme="dark"] .crumb,
+[data-theme="dark"] .file-table th,
+[data-theme="dark"] .version-info div,
+[data-theme="dark"] .user-id-bar small {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .topbar h1,
+[data-theme="dark"] .panel-header h3,
+[data-theme="dark"] .stat-card strong,
+[data-theme="dark"] .crumb.active,
+[data-theme="dark"] .folder-card-name,
+[data-theme="dark"] .file-name,
+[data-theme="dark"] .modal-header h2,
+[data-theme="dark"] .version-info strong {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .crumb-sep,
+[data-theme="dark"] .empty-state {
+    color: #64748b;
+}
+
+[data-theme="dark"] .panel,
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .folder-card,
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .version-row {
+    background: #131c31;
+    border-color: #2d3b52;
+}
+
+[data-theme="dark"] .user-id-bar {
+    background: #0d2847;
+    border-color: #2d3b52;
+}
+
+[data-theme="dark"] .user-id-bar label {
+    color: #cbd5e1;
+}
+
+[data-theme="dark"] .user-id-bar input,
+[data-theme="dark"] .form-group select,
+[data-theme="dark"] .modal-content input,
+[data-theme="dark"] .modal-content textarea {
+    background: #1e293b;
+    border-color: #2d3b52;
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .form-group label {
+    color: #cbd5e1;
+}
+
+[data-theme="dark"] .secondary-btn,
+[data-theme="dark"] .back-btn,
+[data-theme="dark"] .theme-toggle-btn,
+[data-theme="dark"] .folder-card-actions button,
+[data-theme="dark"] .file-actions button,
+[data-theme="dark"] .version-row button {
+    background: #1e293b;
+    border-color: #2d3b52;
+    color: #cbd5e1;
+}
+
+[data-theme="dark"] .secondary-btn:hover,
+[data-theme="dark"] .back-btn:hover,
+[data-theme="dark"] .theme-toggle-btn:hover,
+[data-theme="dark"] .folder-card-actions button:hover,
+[data-theme="dark"] .file-actions button:hover,
+[data-theme="dark"] .version-row button:hover,
+[data-theme="dark"] .crumb:hover {
+    background: #0d2847;
+    color: #64b5f6;
+}
+
+[data-theme="dark"] .folder-card:hover {
+    border-color: #64b5f6;
+}
+
+[data-theme="dark"] .crumb.active {
+    background: transparent;
+}
+
+[data-theme="dark"] .file-table th {
+    border-bottom-color: #2d3b52;
+}
+
+[data-theme="dark"] .file-table td {
+    border-bottom-color: #1e293b;
+}
+
+[data-theme="dark"] .version-row.current {
+    background: #0d2847;
+    border-color: #64b5f6;
+}
+
+[data-theme="dark"] .empty-state {
+    border-color: #2d3b52;
+}
+
+[data-theme="dark"] .close-btn {
+    background: #1e293b;
+    color: #cbd5e1;
+}
+
+[data-theme="dark"] .stat-icon.folders { background: #0d2847; }
+[data-theme="dark"] .stat-icon.files { background: #1e293b; }
+[data-theme="dark"] .stat-icon.size { background: #3a2a0a; }
+[data-theme="dark"] .stat-icon.location { background: #052e2b; }
+
+[data-theme="dark"] .file-actions button.delete:hover,
+[data-theme="dark"] .folder-card-actions button.delete:hover {
+    background: #450a0a;
+    color: #fca5a5;
+}
+
+
+/* =========================
+   SMOOTH LIGHT / DARK SWITCH
+   (same 0.3s fade as the other pages)
+========================= */
+
+body,
+.panel,
+.stat-card,
+.stat-icon,
+.folder-card,
+.user-id-bar,
+.user-id-bar input,
+.secondary-btn,
+.back-btn,
+.theme-toggle-btn,
+.crumb,
+.file-table th,
+.file-table td,
+.version-row,
+.modal-content,
+.form-group select,
+.modal-content input,
+.close-btn,
+.empty-state,
+.folder-card-actions button,
+.file-actions button {
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}

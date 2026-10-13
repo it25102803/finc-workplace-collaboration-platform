@@ -586,3 +586,133 @@ textarea.form-input {
     .brand-logo-img { height: 28px; max-width: 44px; }
     .main-content { padding: 20px 16px; }
 }
+
+
+/* =========================
+   THEME TOGGLE BUTTON
+========================= */
+
+.theme-toggle-btn {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-muted);
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.theme-toggle-btn:hover {
+    background: var(--bg-page);
+    color: var(--primary);
+}
+
+
+/* =========================
+   SMOOTH LIGHT / DARK SWITCH
+   (same 0.3s fade as the other pages)
+========================= */
+
+body,
+.toolbar,
+.stat-card,
+.search-box,
+.chip,
+.btn-outline,
+.theme-toggle-btn,
+.notice,
+.modal-box,
+.form-input,
+.form-select,
+.badge,
+.tag,
+.empty-state,
+.attachments li {
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.article-card {
+    transition: transform 0.1s, box-shadow 0.1s, background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+
+/* =========================
+   DARK MODE (same palette as the other pages)
+========================= */
+
+[data-theme="dark"] {
+    --primary: #6366f1;
+    --primary-hover: #818cf8;
+    --primary-light: #1e2347;
+    --bg-page: #0b1120;
+    --bg-card: #131c31;
+    --border: #2d3b52;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+}
+
+[data-theme="dark"] .btn-outline,
+[data-theme="dark"] .chip,
+[data-theme="dark"] .modal-box {
+    background: var(--bg-card);
+}
+
+[data-theme="dark"] .btn-outline:hover {
+    background: var(--bg-page);
+}
+
+[data-theme="dark"] .chip.active {
+    color: #a5b4fc;
+}
+
+[data-theme="dark"] .form-input,
+[data-theme="dark"] .form-select {
+    background: #1e293b;
+    color: var(--text-main);
+}
+
+[data-theme="dark"] .article-card:hover {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="dark"] .empty-state {
+    border-color: #2d3b52;
+}
+
+[data-theme="dark"] .notice {
+    background: #3a2a0a;
+    border-color: #6b4e12;
+    color: #fcd34d;
+}
+
+[data-theme="dark"] .notice-info {
+    background: #0d2847;
+    border-color: #1e4a7a;
+    color: #90caf9;
+}
+
+[data-theme="dark"] .icon-articles { background: #052e2b; }
+[data-theme="dark"] .icon-views { background: #3a2a0a; }
+
+[data-theme="dark"] .type-POLICY { background: #1e2347; color: #a5b4fc; }
+[data-theme="dark"] .type-SOP { background: #0c2d48; color: #7dd3fc; }
+[data-theme="dark"] .type-TEMPLATE { background: #3a2a0a; color: #fcd34d; }
+[data-theme="dark"] .type-TRAINING { background: #052e1c; color: #6ee7b7; }
+[data-theme="dark"] .type-FAQ { background: #3b0f2b; color: #f9a8d4; }
+
+[data-theme="dark"] .badge-category,
+[data-theme="dark"] .tag {
+    background: #1e293b;
+    color: #cbd5e1;
+}
+
+[data-theme="dark"] .form-message {
+    background: #450a0a;
+    color: #fca5a5;
+}
+
+[data-theme="dark"] .form-message.success {
+    background: #052e2b;
+    color: #6ee7b7;
+}
