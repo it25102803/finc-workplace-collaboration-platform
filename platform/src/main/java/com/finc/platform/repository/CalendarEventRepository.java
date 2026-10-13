@@ -21,6 +21,8 @@ public interface CalendarEventRepository extends JpaRepository<CalendarEvent, Lo
 
     List<CalendarEvent> findByEventDateBetween(LocalDate startDate, LocalDate endDate);
 
+    List<CalendarEvent> findByRelatedTask_TaskId(Long taskId);
+
     @Query("SELECT e FROM CalendarEvent e LEFT JOIN e.createdByUser u WHERE u.id = :userId OR e.visibility = com.finc.platform.entity.EventVisibility.PUBLIC OR e.eventType = com.finc.platform.entity.EventType.HOLIDAY")
     List<CalendarEvent> findAllVisibleToUser(@Param("userId") Long userId);
 }

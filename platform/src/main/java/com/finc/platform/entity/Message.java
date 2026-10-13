@@ -1,6 +1,6 @@
 package com.finc.platform.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
@@ -21,7 +21,8 @@ public class Message {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "channel_id", nullable = false)
-    @JsonBackReference
+    // Accepted in requests ({"channel":{"id":1}}) but never written back out
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private Channel channel;
 
     @Column(nullable = false)

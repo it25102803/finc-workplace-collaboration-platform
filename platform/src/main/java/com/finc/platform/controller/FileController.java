@@ -42,10 +42,12 @@ public class FileController {
     @PostMapping("/upload")
     public ResponseEntity<FileResponse> upload(@RequestParam MultipartFile data,
                                                @RequestParam Long folderId,
-                                               @RequestParam Long uploaderId,
-                                               @RequestParam FileType fileType) {
+                                               @RequestParam(required = false) Long uploaderId,
+                                               @RequestParam FileType fileType,
+                                               @RequestParam(required = false) Long actorId) {
+        // The uploader is the logged-in user (actorId from the login token), not whatever the page sends
         User uploader = new User();
-        uploader.setId(uploaderId);
+        uploader.setId(actorId != null ? actorId : uploaderId);
         return ResponseEntity.ok(FileResponse.from(fileService.upload(data, folderId, uploader, fileType)));
     }
 
@@ -66,8 +68,33 @@ public class FileController {
     }
 
     @GetMapping("/{fileId}/preview")
-    public ResponseEntity<String> preview(@PathVariable Long fileId) {
-        return ResponseEntity.ok(fileService.preview(fileId));
+    public ResponseEntity<byte[]> preview(@PathVariable Long fileId) {
+        File file = fileService.getOrThrow(fileId);
+        if (!fileService.isPreviewable(file)) {
+            return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .body("Preview is not available for this file type. Download it to open it.".getBytes(StandardCharsets.UTF_8));
+        }
+        String mimeType = file.getMimeType().toLowerCase();
+        // Text is sent as plain text so an uploaded .html file can never run as a web page.
+        MediaType type = mimeType.startsWith("text/")
+                ? new MediaType("text", "plain", StandardCharsets.UTF_8)
+                : MediaType.parseMediaType(mimeType);
+        return ResponseEntity.ok()
+                .contentType(type)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.inline().filename(file.getFileName(), StandardCharsets.UTF_8).build().toString())
+                .header("X-Content-Type-Options", "nosniff")
+                .body(fileService.download(fileId));
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<FileResponse>> listUploadedBy(@PathVariable Long userId,
+                                                             @RequestParam(required = false) Long actorId) {
+        if (actorId == null || !actorId.equals(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        return ResponseEntity.ok(fileService.listUploadedBy(userId).stream().map(FileResponse::from).toList());
     }
 
     @PutMapping("/{fileId}/rename")
@@ -83,10 +110,11 @@ public class FileController {
     @PostMapping("/{fileId}/versions")
     public ResponseEntity<FileVersionResponse> createVersion(@PathVariable Long fileId,
                                                              @RequestParam MultipartFile data,
-                                                             @RequestParam Long createdById,
-                                                             @RequestParam(required = false) String changeNote) {
+                                                             @RequestParam(required = false) Long createdById,
+                                                             @RequestParam(required = false) String changeNote,
+                                                             @RequestParam(required = false) Long actorId) {
         User createdBy = new User();
-        createdBy.setId(createdById);
+        createdBy.setId(actorId != null ? actorId : createdById);
         return ResponseEntity.ok(FileVersionResponse.from(
                 fileService.createVersion(fileId, data, createdBy, changeNote)));
     }

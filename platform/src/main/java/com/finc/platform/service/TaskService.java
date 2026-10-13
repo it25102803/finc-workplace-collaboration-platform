@@ -17,25 +17,51 @@ public class TaskService {
     private final UserRepository userRepository;
     private final CalendarEventRepository calendarEventRepository;
     private final TaskCommentRepository taskCommentRepository;
+    private final TaskAttachmentRepository taskAttachmentRepository;
+    private final FileRepository fileRepository;
 
     public TaskService(
             TaskRepository taskRepository,
             UserRepository userRepository,
             CalendarEventRepository calendarEventRepository,
-            TaskCommentRepository taskCommentRepository
+            TaskCommentRepository taskCommentRepository,
+            TaskAttachmentRepository taskAttachmentRepository,
+            FileRepository fileRepository
     ) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
         this.calendarEventRepository = calendarEventRepository;
         this.taskCommentRepository = taskCommentRepository;
+        this.taskAttachmentRepository = taskAttachmentRepository;
+        this.fileRepository = fileRepository;
     }
 
+    // Team leaders and administrators manage tasks, so they see every task.
+    public boolean isManager(User user) {
+        RoleType role = user == null || user.getRole() == null ? null : user.getRole().getRoleType();
+        return role == RoleType.ROLE_SYSTEM_ADMIN
+                || role == RoleType.ROLE_DEPT_ADMIN
+                || role == RoleType.ROLE_TEAM_LEADER;
+    }
+
+    // Status, progress, comments and attachments: the assignee, the creator, or a manager.
+    public boolean canWorkOn(Task task, User user) {
+        if (user == null) return false;
+        if (isManager(user)) return true;
+        boolean assignee = task.getAssignee() != null && user.getId().equals(task.getAssignee().getId());
+        boolean creator = task.getCreator() != null && user.getId().equals(task.getCreator().getId());
+        return assignee || creator;
+    }
     public List<Task> getAllTasks() {
         return taskRepository.findAll();
     }
 
     public List<Task> getTasksForUserView(Long userId) {
-        if (userId == null || userId == 1L) {
+        if (userId == null) {
+            return List.of();
+        }
+        User user = userRepository.findById(userId).orElse(null);
+        if (isManager(user)) {
             return taskRepository.findAll();
         }
         return taskRepository.findVisibleToUser(userId);
@@ -55,9 +81,6 @@ public class TaskService {
         User creator = null;
         if (createdByUserId != null) {
             creator = userRepository.findById(createdByUserId).orElse(null);
-        }
-        if (creator == null) {
-            creator = userRepository.findAll().stream().findFirst().orElse(null);
         }
         task.setCreatedBy(creator);
 
@@ -121,8 +144,58 @@ public class TaskService {
         return saved;
     }
 
+    // Employees move their own tasks along the board (To Do -> In Progress -> Review -> Done).
+    @Transactional
+    public Task updateStatus(Long taskId, TaskStatus status) {
+        if (status == null) {
+            throw new IllegalArgumentException("Status is required");
+        }
+        Task task = getTaskById(taskId);
+        task.setStatus(status);
+        if (status == TaskStatus.COMPLETED) {
+            task.setProgress(100);
+            if (task.getCompletedAt() == null) {
+                task.setCompletedAt(LocalDateTime.now());
+            }
+        } else {
+            task.setCompletedAt(null);
+            if (status == TaskStatus.TODO) {
+                task.setProgress(0);
+            } else if (task.getProgress() == 100) {
+                task.setProgress(90);
+            }
+        }
+        return taskRepository.save(task);
+    }
+
+    // Links a file from the File Manager to the task.
+    @Transactional
+    public TaskAttachment addAttachment(Long taskId, Long fileId) {
+        Task task = getTaskById(taskId);
+        File file = fileRepository.findById(fileId)
+                .filter(f -> !f.isDeleted())
+                .orElseThrow(() -> new IllegalArgumentException("File not found: " + fileId));
+        TaskAttachment attachment = new TaskAttachment(file.getFileName(), file.getStoragePath(),
+                file.getFileSizeBytes() == null ? 0L : file.getFileSizeBytes(), task);
+        attachment.setFile(file);
+        return taskAttachmentRepository.save(attachment);
+    }
+
+    public List<TaskAttachment> getAttachments(Long taskId) {
+        return taskAttachmentRepository.findByTaskTaskId(taskId);
+    }
+
+    @Transactional
+    public void removeAttachment(Long taskId, Long attachmentId) {
+        TaskAttachment attachment = taskAttachmentRepository.findById(attachmentId)
+                .filter(a -> a.getTask().getTaskId().equals(taskId))
+                .orElseThrow(() -> new IllegalArgumentException("Attachment not found"));
+        taskAttachmentRepository.delete(attachment);
+    }
+
     private void syncTaskDeadlineEvent(Task task) {
         if (task.getDueDate() == null) return;
+
         String deadlineTitle = "📌 Deadline: " + task.getTitle();
 
         CalendarEvent event = task.getRelatedEvent();
@@ -163,8 +236,14 @@ public class TaskService {
         return taskRepository.save(task);
     }
 
+    // The task and its calendar deadline point at each other, so unlink them before deleting both.
+    @Transactional
     public void deleteTask(Long taskId) {
-        taskRepository.deleteById(taskId);
+        Task task = getTaskById(taskId);
+        task.setRelatedEvent(null);
+        taskRepository.saveAndFlush(task);
+        calendarEventRepository.deleteAll(calendarEventRepository.findByRelatedTask_TaskId(taskId));
+        taskRepository.delete(task);
     }
 
     public TaskComment addComment(Long taskId, String content, Long userId) {

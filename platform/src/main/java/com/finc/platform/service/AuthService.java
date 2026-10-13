@@ -30,6 +30,10 @@ public class AuthService {
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
+
+
+        // Empty fields must never create an account (an empty username would let people log in with only a password)
+
         if (isBlank(request.getUsername()) || isBlank(request.getEmail())
                 || isBlank(request.getPassword()) || isBlank(request.getFirstName())
                 || isBlank(request.getLastName())) {

@@ -1,6 +1,6 @@
 package com.finc.platform.entity;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -31,7 +31,8 @@ public class Channel {
     private List<String> memberEmails = new ArrayList<>();
 
     @OneToMany(mappedBy = "channel", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
+    // Not sent with the channel list: messages are loaded per channel from /api/channels/{id}/messages
+    @JsonIgnore
     private List<Message> messages = new ArrayList<>();
 
     public Channel() {
