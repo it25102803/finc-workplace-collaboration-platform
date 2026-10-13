@@ -20,7 +20,6 @@ public class RoleGuardFilter extends OncePerRequestFilter {
     @Autowired
     private UserRepository userRepository;
 
-    // Endpoints that do NOT require actorId
     private static final Set<String> PUBLIC_PATHS = Set.of(
             "/api/auth/login",
             "/api/auth/register",
@@ -32,7 +31,8 @@ public class RoleGuardFilter extends OncePerRequestFilter {
 
     private static final Set<String> PUBLIC_READ_PREFIXES = Set.of(
             "/api/departments",
-            "/api/presence"
+            "/api/presence",
+            "/api/public"
     );
 
     @Override
@@ -43,13 +43,11 @@ public class RoleGuardFilter extends OncePerRequestFilter {
         String path = req.getRequestURI();
         String method = req.getMethod();
 
-        // Not an API call → pass through (static files, HTML, etc.)
         if (!path.startsWith("/api/")) {
             chain.doFilter(req, res);
             return;
         }
 
-        // Public auth endpoints
         if (PUBLIC_PATHS.contains(path)) {
             chain.doFilter(req, res);
             return;
@@ -58,7 +56,6 @@ public class RoleGuardFilter extends OncePerRequestFilter {
         boolean mutating = "POST".equals(method) || "PUT".equals(method)
                 || "PATCH".equals(method) || "DELETE".equals(method);
 
-        // Public reads (dropdowns, heartbeat)
         if ("GET".equals(method)) {
             for (String p : PUBLIC_READ_PREFIXES) {
                 if (path.startsWith(p)) {
@@ -68,7 +65,6 @@ public class RoleGuardFilter extends OncePerRequestFilter {
             }
         }
 
-        // ---- Everything else needs an actorId (or userId) ----
         Long actorId = resolveActorId(req);
         if (actorId == null) {
             deny(res, "actorId is required (login required)");
@@ -79,13 +75,18 @@ public class RoleGuardFilter extends OncePerRequestFilter {
             deny(res, "Unknown user: " + actorId);
             return;
         }
+
+        if (Boolean.FALSE.equals(actor.getEnabled())) {
+            deny(res, "Your account has been disabled. Contact the administrator.");
+            return;
+        }
+
         RoleType role = actor.getRole() != null ? actor.getRole().getRoleType() : null;
         if (role == null) {
             deny(res, "Your account has no role assigned");
             return;
         }
 
-        // ---- Self-owned endpoints: actorId must match path id ----
         if (path.matches("^/api/users/\\d+/(profile|change-password|profile-picture)$")) {
             Long pathId = extractIdFromPath(path);
             if (pathId != null && !pathId.equals(actorId)) {
@@ -96,8 +97,6 @@ public class RoleGuardFilter extends OncePerRequestFilter {
             return;
         }
 
-        // ---- GET /api/users (list) : SYSTEM_ADMIN only ----
-        // Single-user lookups like /api/users/{id} are still allowed for authenticated users.
         if ("GET".equals(method) && "/api/users".equals(path)) {
             if (role != RoleType.ROLE_SYSTEM_ADMIN) {
                 deny(res, "Access denied: SYSTEM_ADMIN role required to view the user directory");
@@ -105,34 +104,24 @@ public class RoleGuardFilter extends OncePerRequestFilter {
             }
         }
 
-        // ---- /api/admin/** : SYSTEM_ADMIN only ----
         if (path.startsWith("/api/admin/")) {
             if (role != RoleType.ROLE_SYSTEM_ADMIN) {
                 deny(res, "Access denied: SYSTEM_ADMIN role required");
                 return;
             }
         }
-
-        // ---- /api/departments/** mutations : SYSTEM_ADMIN ----
         else if (path.startsWith("/api/departments") && mutating) {
             if (role != RoleType.ROLE_SYSTEM_ADMIN) {
                 deny(res, "Access denied: SYSTEM_ADMIN role required to modify departments");
                 return;
             }
         }
-
-        // /api/channels/**: ChannelController checks each conversation (members chat and run
-        // their own group chats; only admins create public channels).
-
-        // ---- /api/kb/** (Knowledge Base) mutations : DEPT_ADMIN or SYSTEM_ADMIN ----
         else if (path.startsWith("/api/kb") && mutating) {
             if (role != RoleType.ROLE_SYSTEM_ADMIN && role != RoleType.ROLE_DEPT_ADMIN) {
                 deny(res, "Access denied: DEPARTMENT_ADMIN or SYSTEM_ADMIN required");
                 return;
             }
         }
-
-        // ---- /api/tasks/** : TEAM_LEADER+ for create/edit/delete ----
         else if (path.startsWith("/api/tasks") && mutating) {
             boolean progressOrStatus = path.matches(".*/(status|progress|comments|attachments)(/\\d+)?$");
             if (!progressOrStatus) {
@@ -145,22 +134,18 @@ public class RoleGuardFilter extends OncePerRequestFilter {
             }
         }
 
-        // Everything else: any authenticated user passes through
         chain.doFilter(req, res);
     }
 
     private Long resolveActorId(HttpServletRequest req) {
-        // 1) Try actorId
         String param = req.getParameter("actorId");
         if (param != null && !param.isBlank()) {
             try { return Long.parseLong(param); } catch (NumberFormatException ignored) {}
         }
-        // 2) Try userId (used by presence, tasks, etc.)
         param = req.getParameter("userId");
         if (param != null && !param.isBlank()) {
             try { return Long.parseLong(param); } catch (NumberFormatException ignored) {}
         }
-        // 3) Try header
         String header = req.getHeader("X-User-Id");
         if (header != null && !header.isBlank()) {
             try { return Long.parseLong(header); } catch (NumberFormatException ignored) {}

@@ -16,7 +16,6 @@ public class SystemSettingService {
     @Autowired private SystemSettingRepository repo;
     @Autowired private AuditLogService auditLogService;
 
-    // Default settings seeded on first startup (FR-UM-22)
     private static final Map<String, String[]> DEFAULTS = Map.of(
             "organization.name",       new String[]{"Finc Academy and Consultants (Pvt) Ltd", "Organisation display name"},
             "upload.maxSizeMb",        new String[]{"10", "Maximum upload size per file (MB)"},
@@ -55,7 +54,6 @@ public class SystemSettingService {
         if (value == null) {
             throw new IllegalArgumentException("Setting value required");
         }
-        // Basic validation for numeric settings
         if (key.equals("upload.maxSizeMb") || key.equals("password.minLength")
                 || key.equals("session.timeoutMinutes")) {
             try { Integer.parseInt(value); }
@@ -79,5 +77,21 @@ public class SystemSettingService {
     @Transactional
     public void bulkUpdate(Map<String, String> updates, Long actorId) {
         updates.forEach((k, v) -> update(k, v, actorId));
+    }
+
+    /**
+     * Enforces the admin-configured minimum password length.
+     * Called from every password entry point (register, admin create/reset,
+     * self-service change, forgot-password reset).
+     */
+    public void validatePasswordPolicy(String rawPassword) {
+        if (rawPassword == null || rawPassword.isBlank()) {
+            throw new IllegalArgumentException("Password is required.");
+        }
+        int minLength = getInt("password.minLength", 6);
+        if (rawPassword.length() < minLength) {
+            throw new IllegalArgumentException(
+                    "Password must be at least " + minLength + " characters long.");
+        }
     }
 }

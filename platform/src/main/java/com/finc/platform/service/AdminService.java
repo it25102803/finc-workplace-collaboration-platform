@@ -28,6 +28,50 @@ public class AdminService {
     @Autowired private DepartmentRepository departmentRepository;
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired private AuditLogService auditLogService;
+    @Autowired private SystemSettingService systemSettingService;
+
+    private void ensureNotSelf(Long targetUserId, Long actorId, String action) {
+        if (targetUserId != null && actorId != null && targetUserId.equals(actorId)) {
+            throw new IllegalArgumentException("You cannot " + action + " your own account.");
+        }
+    }
+
+    private void ensureNotLastEnabledAdmin(Long targetUserId) {
+        User target = userRepository.findById(targetUserId).orElse(null);
+        if (target == null || target.getRole() == null) return;
+        if (target.getRole().getRoleType() != RoleType.ROLE_SYSTEM_ADMIN) return;
+
+        long enabledAdmins = userRepository.findAll().stream()
+                .filter(u -> u.getRole() != null)
+                .filter(u -> u.getRole().getRoleType() == RoleType.ROLE_SYSTEM_ADMIN)
+                .filter(u -> Boolean.TRUE.equals(u.getEnabled()))
+                .count();
+
+        if (enabledAdmins <= 1) {
+            throw new IllegalArgumentException(
+                    "Cannot disable the last enabled System Administrator. " +
+                    "Promote another user to admin first.");
+        }
+    }
+
+    private void ensureNotLastEnabledAdminOnRoleChange(Long targetUserId, RoleType newRole) {
+        if (newRole == RoleType.ROLE_SYSTEM_ADMIN) return;
+        User target = userRepository.findById(targetUserId).orElse(null);
+        if (target == null || target.getRole() == null) return;
+        if (target.getRole().getRoleType() != RoleType.ROLE_SYSTEM_ADMIN) return;
+
+        long enabledAdmins = userRepository.findAll().stream()
+                .filter(u -> u.getRole() != null)
+                .filter(u -> u.getRole().getRoleType() == RoleType.ROLE_SYSTEM_ADMIN)
+                .filter(u -> Boolean.TRUE.equals(u.getEnabled()))
+                .count();
+
+        if (enabledAdmins <= 1) {
+            throw new IllegalArgumentException(
+                    "Cannot change the role of the last System Administrator. " +
+                    "Promote another user to admin first.");
+        }
+    }
 
     @Transactional
     public User createUser(AdminCreateUserRequest req, Long actorId) {
@@ -37,6 +81,8 @@ public class AdminService {
         if (userRepository.existsByEmail(req.getEmail())) {
             throw new IllegalArgumentException("Email already in use");
         }
+
+        systemSettingService.validatePasswordPolicy(req.getPassword());
 
         User user = new User();
         user.setUsername(req.getUsername());
@@ -69,6 +115,11 @@ public class AdminService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
+        if (req.getEnabled() != null && !req.getEnabled()) {
+            ensureNotSelf(userId, actorId, "disable");
+            ensureNotLastEnabledAdmin(userId);
+        }
+
         if (req.getEmail() != null && !req.getEmail().equals(user.getEmail())) {
             if (userRepository.existsByEmail(req.getEmail())) {
                 throw new IllegalArgumentException("Email already in use");
@@ -97,6 +148,11 @@ public class AdminService {
 
     @Transactional
     public User setEnabled(Long userId, boolean enabled, Long actorId) {
+        if (!enabled) {
+            ensureNotSelf(userId, actorId, "disable");
+            ensureNotLastEnabledAdmin(userId);
+        }
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         user.setEnabled(enabled);
@@ -109,11 +165,13 @@ public class AdminService {
 
     @Transactional
     public void resetPassword(Long userId, String newPassword, Long actorId) {
-        if (newPassword == null || newPassword.length() < 6) {
-            throw new IllegalArgumentException("Password must be at least 6 characters");
-        }
+        ensureNotSelf(userId, actorId, "reset the password for");
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        systemSettingService.validatePasswordPolicy(newPassword);
+
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
         auditLogService.log("ADMIN_RESET_PASSWORD", actorId, user.getId(),
@@ -122,9 +180,14 @@ public class AdminService {
 
     @Transactional
     public User assignRole(Long userId, String roleName, Long actorId) {
+        ensureNotSelf(userId, actorId, "change the role of");
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
         Role role = resolveRole(roleName, RoleType.ROLE_EMPLOYEE);
+        ensureNotLastEnabledAdminOnRoleChange(userId, role.getRoleType());
+
         user.setRole(role);
         User saved = userRepository.save(user);
         auditLogService.log("ADMIN_ASSIGN_ROLE", actorId, user.getId(),

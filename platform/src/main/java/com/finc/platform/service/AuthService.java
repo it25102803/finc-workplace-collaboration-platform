@@ -26,10 +26,14 @@ public class AuthService {
     @Autowired private DepartmentRepository departmentRepository;
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired private AuditLogService auditLogService;
+    @Autowired private SystemSettingService systemSettingService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
+
+
         // Empty fields must never create an account (an empty username would let people log in with only a password)
+
         if (isBlank(request.getUsername()) || isBlank(request.getEmail())
                 || isBlank(request.getPassword()) || isBlank(request.getFirstName())
                 || isBlank(request.getLastName())) {
@@ -44,6 +48,8 @@ public class AuthService {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email '" + request.getEmail() + "' is already in use");
         }
+
+        systemSettingService.validatePasswordPolicy(request.getPassword());
 
         User user = new User();
         user.setUsername(request.getUsername());
@@ -195,9 +201,7 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        if (newPassword == null || newPassword.length() < 6) {
-            throw new IllegalArgumentException("Password must be at least 6 characters");
-        }
+        systemSettingService.validatePasswordPolicy(newPassword);
 
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);

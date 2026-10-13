@@ -8,6 +8,7 @@ import com.finc.platform.entity.UserStatus;
 import com.finc.platform.repository.DepartmentRepository;
 import com.finc.platform.repository.RoleRepository;
 import com.finc.platform.repository.UserRepository;
+import com.finc.platform.service.RoleService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,7 +17,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -50,13 +53,29 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
 
-        // 1. Seed Roles (FR-UM-03)
+        // 1. Seed Roles
         Role adminRole = ensureRole(RoleType.ROLE_SYSTEM_ADMIN);
-        ensureRole(RoleType.ROLE_DEPT_ADMIN);
-        ensureRole(RoleType.ROLE_TEAM_LEADER);
-        ensureRole(RoleType.ROLE_EMPLOYEE);
+        Role deptAdminRole = ensureRole(RoleType.ROLE_DEPT_ADMIN);
+        Role teamLeaderRole = ensureRole(RoleType.ROLE_TEAM_LEADER);
+        Role employeeRole = ensureRole(RoleType.ROLE_EMPLOYEE);
 
-        // 2. Seed Departments (FR-UM-04)
+        // 2. Seed default permissions (FR-UM-19) — only if empty
+        seedPermissions(adminRole, new HashSet<>(RoleService.ALL_PERMISSIONS));
+
+        seedPermissions(deptAdminRole, new HashSet<>(Set.of(
+                "MANAGE_DEPARTMENT",
+                "MANAGE_CHANNEL",
+                "MANAGE_KNOWLEDGE",
+                "MANAGE_STORAGE_QUOTA"
+        )));
+
+        seedPermissions(teamLeaderRole, new HashSet<>(Set.of(
+                "MANAGE_CHANNEL"
+        )));
+
+        // Employee: no elevated permissions by default
+
+        // 3. Seed Departments
         if (departmentRepository.count() == 0) {
             departmentRepository.saveAll(List.of(
                     new Department("Software Engineering"),
@@ -67,7 +86,7 @@ public class DataInitializer implements CommandLineRunner {
             log.info("Seeded default departments.");
         }
 
-        // 3. Seed default System Administrator (only if none exists)
+        // 4. Seed default admin (only if none exists)
         boolean adminExists = userRepository.findByUsername(adminUsername).isPresent();
 
         if (adminExists) {
@@ -88,7 +107,6 @@ public class DataInitializer implements CommandLineRunner {
         userRepository.save(admin);
 
         log.info("Default System Administrator seeded. Username: {}", adminUsername);
-        log.info("Change the password after first login (My Profile or Forgot Password).");
         if ("Admin@12345".equals(adminPassword)) {
             log.warn("Using default seed password. Override app.admin.password in application-local.properties.");
         }
@@ -100,5 +118,13 @@ public class DataInitializer implements CommandLineRunner {
             r.setRoleType(type);
             return roleRepository.save(r);
         });
+    }
+
+    private void seedPermissions(Role role, Set<String> permissions) {
+        if (role.getPermissions() == null || role.getPermissions().isEmpty()) {
+            role.setPermissions(permissions);
+            roleRepository.save(role);
+            log.info("Seeded {} default permission(s) for role {}.", permissions.size(), role.getRoleType());
+        }
     }
 }
