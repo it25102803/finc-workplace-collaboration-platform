@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Profile — Finc Workplace</title>
 
-    <!-- Apply theme before paint -->
     <script>
         (function () {
             try {
@@ -21,9 +20,6 @@
     <link href="css/theme.css" rel="stylesheet">
 
     <style>
-        /* ============================================================
-           Profile page — specific styles
-           ============================================================ */
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background: var(--bg);
@@ -78,7 +74,6 @@
             gap: 10px;
         }
 
-        /* Avatar */
         .avatar-wrap {
             display: flex;
             align-items: center;
@@ -102,7 +97,6 @@
         }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Buttons */
         .btn-primary-custom {
             background: var(--accent);
             color: var(--accent-contrast);
@@ -123,7 +117,6 @@
         }
         .btn-primary-custom:active { transform: translateY(0); }
 
-        /* Forms */
         .form-label {
             font-size: 0.8rem;
             font-weight: 600;
@@ -152,6 +145,12 @@
         }
 
         .alert-box { margin-bottom: 20px; border-radius: 10px; }
+
+        .field-hint {
+            font-size: 0.75rem;
+            color: var(--text-3);
+            margin-top: 4px;
+        }
 
         @media (max-width: 991px) {
             .app-main { margin-left: 0; padding: 20px; }
@@ -271,6 +270,7 @@
                 <div class="col-md-4 mb-3">
                     <label class="form-label">New Password</label>
                     <input type="password" id="newPassword" class="form-control" minlength="6" required>
+                    <div class="field-hint" id="newPasswordHint">Minimum 6 characters</div>
                 </div>
                 <div class="col-md-4 mb-3">
                     <label class="form-label">Confirm New Password</label>
@@ -291,7 +291,26 @@
 const userId = localStorage.getItem("userId");
 const actorId = userId;
 
-/* Friendly role labels — matches report Section 1.2 */
+let minPasswordLength = 6;
+
+async function loadPasswordPolicy() {
+    try {
+        const res = await fetch("/api/public/settings/password.minLength");
+        if (res.ok) {
+            const data = await res.json();
+            const parsed = parseInt(data.value, 10);
+            if (!isNaN(parsed) && parsed > 0) minPasswordLength = parsed;
+        }
+    } catch (e) { /* keep fallback */ }
+
+    const hint = document.getElementById("newPasswordHint");
+    const newInput = document.getElementById("newPassword");
+    const confirmInput = document.getElementById("confirmPassword");
+    if (hint) hint.textContent = `Minimum ${minPasswordLength} characters`;
+    if (newInput) newInput.setAttribute("minlength", String(minPasswordLength));
+    if (confirmInput) confirmInput.setAttribute("minlength", String(minPasswordLength));
+}
+
 function friendlyRole(raw) {
     if (!raw) return "Employee";
     const cleaned = String(raw).replace(/^ROLE_/, "").toUpperCase();
@@ -344,7 +363,6 @@ async function loadProfile() {
             topRole.textContent = friendlyRole(u.role.roleType);
         }
 
-        // Avatar
         const avatar = document.getElementById("avatarPreview");
         if (u.profilePictureUrl) {
             avatar.innerHTML = `<img src="${u.profilePictureUrl}" alt="avatar">`;
@@ -370,7 +388,6 @@ async function loadDepartments() {
     } catch (err) { console.warn("Could not load departments", err); }
 }
 
-// Save profile
 document.getElementById("profileForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const payload = {
@@ -389,7 +406,6 @@ document.getElementById("profileForm").addEventListener("submit", async (e) => {
         });
         if (res.ok) {
             showAlert("Profile updated successfully.", true);
-            localStorage.setItem("username", payload.firstName || localStorage.getItem("username"));
             loadProfile();
         } else {
             const txt = await res.text();
@@ -398,14 +414,20 @@ document.getElementById("profileForm").addEventListener("submit", async (e) => {
     } catch (err) { showAlert("Network error", false); }
 });
 
-// Change password
 document.getElementById("passwordForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const cur = document.getElementById("currentPassword").value;
     const nw  = document.getElementById("newPassword").value;
     const cf  = document.getElementById("confirmPassword").value;
-    if (nw !== cf) { showAlert("New passwords do not match.", false); return; }
-    if (nw.length < 6) { showAlert("Password must be at least 6 characters.", false); return; }
+
+    if (nw.length < minPasswordLength) {
+        showAlert(`Password must be at least ${minPasswordLength} characters.`, false);
+        return;
+    }
+    if (nw !== cf) {
+        showAlert("New passwords do not match.", false);
+        return;
+    }
 
     try {
         const res = await fetch(`/api/users/${userId}/change-password?actorId=${actorId}`, {
@@ -423,7 +445,6 @@ document.getElementById("passwordForm").addEventListener("submit", async (e) => 
     } catch (err) { showAlert("Network error", false); }
 });
 
-// Upload picture
 document.getElementById("pictureInput").addEventListener("change", async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -445,7 +466,8 @@ document.getElementById("pictureInput").addEventListener("change", async (e) => 
     } catch (err) { showAlert("Network error", false); }
 });
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+    await loadPasswordPolicy();
     loadProfile();
     loadDepartments();
 });

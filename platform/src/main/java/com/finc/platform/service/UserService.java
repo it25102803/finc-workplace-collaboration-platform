@@ -19,6 +19,7 @@ public class UserService {
     @Autowired private DepartmentRepository departmentRepository;
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired private AuditLogService auditLogService;
+    @Autowired private SystemSettingService systemSettingService;
 
     public List<User> getAllUsers() {
         return userRepository.findAllByOrderByUsernameAsc();
@@ -71,9 +72,9 @@ public class UserService {
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
             throw new IllegalArgumentException("Current password is incorrect");
         }
-        if (newPassword == null || newPassword.length() < 6) {
-            throw new IllegalArgumentException("New password must be at least 6 characters");
-        }
+
+        systemSettingService.validatePasswordPolicy(newPassword);
+
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
         auditLogService.log("CHANGE_PASSWORD", userId, userId, "Password changed");

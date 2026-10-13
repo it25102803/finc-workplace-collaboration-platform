@@ -26,15 +26,26 @@ public class AuthService {
     @Autowired private DepartmentRepository departmentRepository;
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired private AuditLogService auditLogService;
+    @Autowired private SystemSettingService systemSettingService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
+        if (isBlank(request.getUsername()) || isBlank(request.getEmail())
+                || isBlank(request.getPassword()) || isBlank(request.getFirstName())
+                || isBlank(request.getLastName())) {
+            throw new IllegalArgumentException("Please fill in all required fields");
+        }
+        request.setUsername(request.getUsername().trim());
+        request.setEmail(request.getEmail().trim());
+
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new IllegalArgumentException("Username '" + request.getUsername() + "' is already taken");
         }
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email '" + request.getEmail() + "' is already in use");
         }
+
+        systemSettingService.validatePasswordPolicy(request.getPassword());
 
         User user = new User();
         user.setUsername(request.getUsername());
@@ -69,6 +80,9 @@ public class AuthService {
 
     @Transactional
     public AuthResponse login(LoginRequest request) {
+        if (isBlank(request.getUsername()) || isBlank(request.getPassword())) {
+            throw new IllegalArgumentException("Invalid username or password");
+        }
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid username or password"));
 
@@ -183,9 +197,7 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        if (newPassword == null || newPassword.length() < 6) {
-            throw new IllegalArgumentException("Password must be at least 6 characters");
-        }
+        systemSettingService.validatePasswordPolicy(newPassword);
 
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
@@ -218,5 +230,9 @@ public class AuthService {
         }
 
         return response;
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 }
