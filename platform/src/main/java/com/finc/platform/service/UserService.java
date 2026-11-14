@@ -55,11 +55,8 @@ public class UserService {
             }
             user.setEmail(email);
         }
-        if (departmentId != null) {
-            Department dept = departmentRepository.findById(departmentId)
-                    .orElseThrow(() -> new IllegalArgumentException("Department not found"));
-            user.setDepartment(dept);
-        }
+        // The department is not changed here: administrators allocate departments
+        // (Admin Settings), so a user can't move themselves into another department.
 
         User saved = userRepository.save(user);
         auditLogService.log("UPDATE_PROFILE", userId, userId, "User updated own profile");

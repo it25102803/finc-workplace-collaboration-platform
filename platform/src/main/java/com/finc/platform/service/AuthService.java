@@ -41,6 +41,10 @@ public class AuthService {
         }
         request.setUsername(request.getUsername().trim());
         request.setEmail(request.getEmail().trim());
+        // Storage quotas are per department, so every new user needs one
+        if (request.getDepartmentId() == null) {
+            throw new IllegalArgumentException("Please choose your department");
+        }
 
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new IllegalArgumentException("Username '" + request.getUsername() + "' is already taken");

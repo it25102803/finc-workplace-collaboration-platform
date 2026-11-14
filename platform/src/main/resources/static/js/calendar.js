@@ -207,7 +207,7 @@ function openEventDetail(ev) {
     selectedEvent = ev;
     document.getElementById('detailTitle').textContent = ev.title;
     const badge = document.getElementById('detailBadge');
-    badge.textContent = ev.eventType.replace('_', ' ');
+    badge.textContent = prettyLabel(ev.eventType);
     badge.className = `detail-badge ${getChipClass(ev)}`;
 
     document.getElementById('detailDate').textContent = ev.eventDate || (ev.startTime ? ev.startTime.split('T')[0] : '');

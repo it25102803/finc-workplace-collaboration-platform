@@ -360,3 +360,133 @@ body {
 .detail-badge { align-self: flex-start; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; }
 .detail-row { display: flex; align-items: center; gap: 8px; font-size: 0.92rem; }
 .detail-desc { background: var(--bg-page); padding: 10px; border-radius: 6px; font-size: 0.88rem; color: var(--text-muted); }
+
+/* =========================
+   THEME TOGGLE BUTTON
+========================= */
+
+.theme-toggle-btn {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-muted);
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.theme-toggle-btn:hover {
+    background: var(--bg-page);
+    color: var(--primary);
+}
+
+
+/* =========================
+   SMOOTH LIGHT / DARK SWITCH (same 0.3s fade as the other pages)
+========================= */
+
+body,
+.btn-outline,
+.btn-icon,
+.theme-toggle-btn,
+.search-input,
+.kanban-col,
+.count-badge,
+.task-card,
+.calendar-toolbar,
+.calendar-card,
+.calendar-grid-header,
+.calendar-day,
+.modal-box,
+.form-input,
+.form-select,
+.comment-bubble,
+.progress-bar-bg {
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+
+/* =========================
+   DARK MODE (same palette as the other pages)
+========================= */
+
+[data-theme="dark"] {
+    --bg-page: #0b1120;
+    --bg-card: #131c31;
+    --border: #2d3b52;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+}
+
+[data-theme="dark"] .page-title,
+[data-theme="dark"] .current-month-label,
+[data-theme="dark"] .day-header,
+[data-theme="dark"] .col-header {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .btn-outline,
+[data-theme="dark"] .btn-icon,
+[data-theme="dark"] .search-input,
+[data-theme="dark"] .task-card,
+[data-theme="dark"] .calendar-toolbar,
+[data-theme="dark"] .calendar-card,
+[data-theme="dark"] .calendar-grid-header,
+[data-theme="dark"] .calendar-day,
+[data-theme="dark"] .modal-box {
+    background: #131c31;
+    border-color: #2d3b52;
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .btn-outline:hover,
+[data-theme="dark"] .btn-icon:hover,
+[data-theme="dark"] .calendar-day:hover {
+    background: #1e293b;
+}
+
+[data-theme="dark"] .calendar-day.other-month {
+    background: #0f172a;
+}
+
+[data-theme="dark"] .calendar-day.other-month .day-header {
+    color: #475569;
+}
+
+[data-theme="dark"] .kanban-col {
+    background: #0f172a;
+    border-color: #2d3b52;
+}
+
+[data-theme="dark"] .count-badge,
+[data-theme="dark"] .progress-bar-bg,
+[data-theme="dark"] .badge-all {
+    background: #1e293b;
+    color: #cbd5e1;
+}
+
+[data-theme="dark"] .form-input,
+[data-theme="dark"] .form-select,
+[data-theme="dark"] .comment-bubble {
+    background: #1e293b;
+    border-color: #2d3b52;
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .search-input::placeholder,
+[data-theme="dark"] .form-input::placeholder {
+    color: #64748b;
+}
+
+[data-theme="dark"] .badge-low { background: #0c2d48; color: #7dd3fc; }
+[data-theme="dark"] .badge-medium { background: #3a2a0a; color: #fcd34d; }
+[data-theme="dark"] .badge-high { background: #450a0a; color: #fca5a5; }
+[data-theme="dark"] .badge-assignee { background: #0d2847; color: #93c5fd; }
+
+[data-theme="dark"] .chip-poya { background: #3a2a0a; color: #fcd34d; }
+[data-theme="dark"] .chip-holiday { background: #450a0a; color: #fca5a5; }
+[data-theme="dark"] .chip-deadline { background: #431407; color: #fdba74; }
+[data-theme="dark"] .chip-meeting { background: #0c2d48; color: #7dd3fc; }
+[data-theme="dark"] .chip-company { background: #2e1065; color: #d8b4fe; }

@@ -16,10 +16,15 @@ public class SearchService {
     @Autowired private TaskRepository taskRepository;
     @Autowired private FileRepository fileRepository;
     @Autowired private KnowledgeArticleRepository knowledgeArticleRepository;
+    @Autowired private TaskService taskService;
+    @Autowired private FileAccess fileAccess;
+    @Autowired private ChatAccess chatAccess;
 
-    public SearchResult search(String q) {
+    public SearchResult search(String q, Long actorId) {
         SearchResult result = new SearchResult(q);
         if (q == null || q.isBlank() || q.length() < 2) return result;
+        User actor = actorId == null ? null : userRepository.findById(actorId).orElse(null);
+        if (actor == null) return result;
 
         String query = q.toLowerCase();
 
@@ -52,6 +57,7 @@ public class SearchService {
 
         // ---- Channels ----
         channelRepository.findAll().stream()
+                .filter(c -> chatAccess.canView(c, actor))
                 .filter(c -> contains(c.getName(), query)
                         || contains(c.getDescription(), query))
                 .limit(5)
@@ -64,6 +70,7 @@ public class SearchService {
 
         // ---- Tasks ----
         taskRepository.findAll().stream()
+                .filter(t -> taskService.canView(t, actor))
                 .filter(t -> contains(t.getTitle(), query)
                         || contains(t.getDescription(), query))
                 .limit(5)
@@ -77,6 +84,7 @@ public class SearchService {
         // ---- Files ----
         fileRepository.findAll().stream()
                 .filter(f -> !f.isDeleted() && contains(f.getFileName(), query))
+                .filter(f -> fileAccess.canManageFile(f, actor))
                 .limit(5)
                 .forEach(f -> result.add(new SearchHit(
                         "FILE", f.getFileId(),

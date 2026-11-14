@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enterprise Workspace - Dashboard</title>
+    <title>Overview | Finc Workplace</title>
 
     <!-- Apply theme before paint (no flash) -->
     <script>
@@ -239,6 +239,7 @@
     </style>
     <link rel="icon" type="image/png" href="images/favicon.png">
     <script src="js/api.js"></script>
+    <link rel="stylesheet" href="css/brand.css">
 </head>
 <body>
 
@@ -262,8 +263,8 @@
 <div class="app-main">
     <div class="top-navbar">
         <div>
-            <h3 class="fw-bold page-heading">Dashboard Overview</h3>
-            <p class="page-subheading">Finc Academy &amp; Consultants Collaboration Workspace</p>
+            <h3 class="fw-bold page-heading">Overview</h3>
+            <p class="page-subheading" id="orgSubheading">Finc Academy &amp; Consultants Collaboration Workspace</p>
         </div>
         <div class="d-flex align-items-center gap-3">
             <!-- Theme toggle (NFR-14) -->
@@ -304,7 +305,7 @@
                         <i class="fa-solid fa-folder-open"></i>
                     </div>
                     <div class="metric-val" id="metric-files">0</div>
-                    <div class="metric-lbl">My Files</div>
+                    <div class="metric-lbl">My files</div>
                 </div>
             </a>
         </div>
@@ -326,7 +327,7 @@
                         <i class="fa-solid fa-tasks"></i>
                     </div>
                     <div class="metric-val" id="metric-tasks">0</div>
-                    <div class="metric-lbl">Active Tasks</div>
+                    <div class="metric-lbl">Active tasks</div>
                 </div>
             </a>
         </div>
@@ -336,7 +337,7 @@
                     <i class="fa-solid fa-server"></i>
                 </div>
                 <div class="metric-val" id="metric-system-status">Online</div>
-                <div class="metric-lbl">System Status</div>
+                <div class="metric-lbl">System status</div>
             </div>
         </div>
     </div>
@@ -346,5 +347,16 @@
 <script src="js/dashboard.js"></script>
 <script src="js/presence.js"></script>
 <script src="js/roleguard.js"></script>
+<script>
+    // Organisation name from Admin Settings
+    fetch("/api/public/settings/organization.name")
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+            if (data && data.value) {
+                document.getElementById("orgSubheading").textContent = data.value + " - collaboration workspace";
+            }
+        })
+        .catch(() => {});
+</script>
 </body>
 </html>

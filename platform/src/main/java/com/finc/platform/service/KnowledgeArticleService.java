@@ -23,15 +23,18 @@ public class KnowledgeArticleService {
     private final KnowledgeCategoryService categoryService;
     private final FileRepository fileRepository;
     private final KnowledgePermissions permissions;
+    private final FileAccess fileAccess;
 
     public KnowledgeArticleService(KnowledgeArticleRepository articleRepository,
                                    KnowledgeCategoryService categoryService,
                                    FileRepository fileRepository,
-                                   KnowledgePermissions permissions) {
+                                   KnowledgePermissions permissions,
+                                   FileAccess fileAccess) {
         this.articleRepository = articleRepository;
         this.categoryService = categoryService;
         this.fileRepository = fileRepository;
         this.permissions = permissions;
+        this.fileAccess = fileAccess;
     }
 
     @Transactional
@@ -79,6 +82,8 @@ public class KnowledgeArticleService {
         File file = fileRepository.findById(fileId)
                 .filter(f -> !f.isDeleted())
                 .orElseThrow(() -> new NoSuchElementException("File not found: " + fileId));
+        // Attaching publishes the file to every reader, so it must be a file you can open yourself
+        fileAccess.requireReadFile(file, fileAccess.actor(actorId));
         boolean alreadyAttached = article.getAttachedFiles().stream()
                 .anyMatch(f -> f.getFileId().equals(fileId));
         if (!alreadyAttached) {
@@ -88,8 +93,12 @@ public class KnowledgeArticleService {
     }
 
     @Transactional
-    public KnowledgeArticle view(Long articleId) {
+    // Published articles are open to everyone; drafts and archived articles only to KB editors
+    public KnowledgeArticle view(Long articleId, Long actorId) {
         KnowledgeArticle article = getOrThrow(articleId);
+        if (article.getStatus() != ArticleStatus.PUBLISHED) {
+            permissions.requireEditor(actorId);
+        }
         article.incrementViewCount();
         return article;
     }

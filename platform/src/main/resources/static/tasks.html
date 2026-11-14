@@ -1,13 +1,22 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Management | FINC Workspace</title>
+    <title>Task Management | Finc Workplace</title>
+    <!-- Apply the saved light/dark choice before the page paints (no flash) -->
+    <script>
+        (function () {
+            try {
+                document.documentElement.setAttribute("data-theme", localStorage.getItem("theme") || "light");
+            } catch (e) {}
+        })();
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/tasks.css">
     <script src="js/api.js"></script>
+    <link rel="stylesheet" href="css/brand.css">
 </head>
 <body>
 <div class="app-layout">
@@ -70,6 +79,9 @@
                     <i class="fa-solid fa-magnifying-glass search-icon"></i>
                     <input type="text" id="taskSearchInput" class="search-input" placeholder="Search tasks by title, member, priority...">
                 </div>
+                <button type="button" class="theme-toggle-btn" data-theme-toggle aria-label="Toggle dark mode" title="Light / dark mode">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
                 <button class="btn btn-primary" id="btnOpenTaskModal">
                     <i class="fa-solid fa-plus"></i> New Task
                 </button>
@@ -241,5 +253,6 @@
 <script src="js/tasks.js"></script>
 <script src="js/presence.js"></script>
 <script src="js/roleguard.js"></script>
+<script src="js/theme.js"></script>
 </body>
 </html>

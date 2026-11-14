@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Profile — Finc Workplace</title>
+    <title>My Profile | Finc Workplace</title>
 
     <script>
         (function () {
@@ -158,6 +158,7 @@
     </style>
     <link rel="icon" type="image/png" href="images/favicon.png">
     <script src="js/api.js"></script>
+    <link rel="stylesheet" href="css/brand.css">
 </head>
 <body>
 
@@ -243,9 +244,10 @@
                 </div>
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Department</label>
-                    <select id="departmentId" class="form-select">
+                    <select id="departmentId" class="form-select" disabled title="Your department is set by an administrator">
                         <option value="">Not Assigned</option>
                     </select>
+                    <small class="text-muted">Set by your administrator</small>
                 </div>
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Username (read-only)</label>
@@ -468,8 +470,9 @@ document.getElementById("pictureInput").addEventListener("change", async (e) => 
 
 document.addEventListener("DOMContentLoaded", async () => {
     await loadPasswordPolicy();
+    // Load the department list first, so the profile's department can be selected in it
+    await loadDepartments();
     loadProfile();
-    loadDepartments();
 });
 </script>
 </body>

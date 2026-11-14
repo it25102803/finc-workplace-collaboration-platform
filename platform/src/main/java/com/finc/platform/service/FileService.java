@@ -25,22 +25,35 @@ public class FileService {
     private final FolderService folderService;
     private final StorageService storageService;
     private final FileStorageQuota storageQuota;
+    private final SystemSettingService systemSettingService;
 
     public FileService(FileRepository fileRepository,
                        FileVersionRepository fileVersionRepository,
                        FolderService folderService,
                        StorageService storageService,
-                       FileStorageQuota storageQuota) {
+                       FileStorageQuota storageQuota,
+                       SystemSettingService systemSettingService) {
         this.fileRepository = fileRepository;
         this.fileVersionRepository = fileVersionRepository;
         this.folderService = folderService;
         this.storageService = storageService;
         this.storageQuota = storageQuota;
+        this.systemSettingService = systemSettingService;
+    }
+
+    // The "Maximum upload size" set in Admin Settings
+    private void checkUploadSize(MultipartFile data) {
+        int maxMb = systemSettingService.getInt("upload.maxSizeMb", 10);
+        if (data.getSize() > (long) maxMb * 1024 * 1024) {
+            throw new IllegalArgumentException("This file is larger than the " + maxMb
+                    + " MB upload limit set by the administrator.");
+        }
     }
 
     @Transactional
     public File upload(MultipartFile data, Long folderId, User uploadedBy, FileType fileType) {
         Folder folder = folderService.getOrThrow(folderId);
+        checkUploadSize(data);
         storageQuota.charge(folder, uploadedBy.getId(), data.getSize());
 
         File file = new File(data.getOriginalFilename(), data.getContentType(), fileType, folder, uploadedBy);
@@ -96,6 +109,7 @@ public class FileService {
     @Transactional
     public FileVersion createVersion(Long fileId, MultipartFile data, User createdBy, String changeNote) {
         File file = getOrThrow(fileId);
+        checkUploadSize(data);
         storageQuota.charge(file.getFolder(), file.getUploadedBy().getId(), data.getSize());
         String storagePath = storageService.store(data, file.getFileName());
         // Not currentVersion + 1: after restoring an old version, currentVersion goes backwards.
@@ -142,6 +156,13 @@ public class FileService {
     }
 
     @Transactional(readOnly = true)
+    // The file a stored version belongs to (used to check access before restoring it)
+    public File fileOfVersion(Long versionId) {
+        return fileVersionRepository.findById(versionId)
+                .orElseThrow(() -> new NoSuchElementException("Version not found: " + versionId))
+                .getFile();
+    }
+
     public File getOrThrow(Long fileId) {
         return fileRepository.findById(fileId)
                 .filter(f -> !f.isDeleted())

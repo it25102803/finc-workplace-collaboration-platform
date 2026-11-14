@@ -178,12 +178,12 @@ function displayUsers(list) {
 
                     <span class="status
                         ${user.active
-                            ? "active"
-                            : "disabled"}">
+            ? "active"
+            : "disabled"}">
 
                         ${user.active
-                            ? "Active"
-                            : "Disabled"}
+            ? "Active"
+            : "Disabled"}
 
                     </span>
 
@@ -193,13 +193,13 @@ function displayUsers(list) {
                 <td>
 
                     <span class="${user.online
-                        ? "online"
-                        : "offline"}">
+            ? "online"
+            : "offline"}">
 
                         ●
                         ${user.online
-                            ? "Online"
-                            : "Offline"}
+            ? "Online"
+            : "Offline"}
 
                     </span>
 
@@ -219,9 +219,9 @@ function displayUsers(list) {
 
 
                     ${
-                        user.active
-                        ?
-                        `
+            user.active
+                ?
+                `
                         <button
                             class="action-button"
                             onclick="disableUser(${user.id})"
@@ -231,9 +231,9 @@ function displayUsers(list) {
 
                         </button>
                         `
-                        :
-                        ""
-                    }
+                :
+                ""
+        }
 
                 </td>
 
@@ -527,7 +527,7 @@ function filterUsers() {
 
 
             return matchesSearch &&
-                   matchesDepartment;
+                matchesDepartment;
         });
 
 
@@ -598,8 +598,8 @@ function showPage(pageId, button) {
     document
         .getElementById(pageId)
         .classList.add(
-            "active-page"
-        );
+        "active-page"
+    );
 
 
     document
@@ -763,7 +763,7 @@ let currentDate = new Date();
 
 function renderCalendar(){
 
-    
+
 
     const grid = document.getElementById("calendarGrid");
     const title = document.getElementById("monthYear");
@@ -991,9 +991,9 @@ function bindEvents() {
     document.getElementById("notificationBtn").addEventListener("click", toggleNotifications);
     document.getElementById("sidebarToggle").addEventListener("click", toggleSidebar);
     document.getElementById("sidebarBackdrop").addEventListener("click", closeSidebar);
-    
+
     const notificationPanel = document.getElementById("notificationPanel");
-    
+
     // Prevent clicks inside the notification panel from closing it
     if (notificationPanel) {
         notificationPanel.addEventListener("click", event => {
@@ -1608,7 +1608,7 @@ function renderMemberList() {
                 <li>
                     <strong>${escapeHtml(label)}</strong>
                     <span>
-                        ${currentChannel.type}
+                        ${escapeHtml(prettyLabel(currentChannel.type))}
                         ${canManage ? `<button type="button" class="remove-member-button" data-email="${escapeHtml(email)}" title="Remove member">Remove</button>` : ""}
                     </span>
                 </li>

@@ -6,6 +6,8 @@ import com.finc.platform.entity.TaskComment;
 import com.finc.platform.entity.TaskStatus;
 import com.finc.platform.entity.User;
 import com.finc.platform.repository.UserRepository;
+import com.finc.platform.service.FileAccess;
+import com.finc.platform.service.FileService;
 import com.finc.platform.service.TaskService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,10 +25,15 @@ public class TaskController {
 
     private final TaskService taskService;
     private final UserRepository userRepository;
+    private final FileAccess fileAccess;
+    private final FileService fileService;
 
-    public TaskController(TaskService taskService, UserRepository userRepository) {
+    public TaskController(TaskService taskService, UserRepository userRepository,
+                          FileAccess fileAccess, FileService fileService) {
         this.taskService = taskService;
         this.userRepository = userRepository;
+        this.fileAccess = fileAccess;
+        this.fileService = fileService;
     }
 
     @GetMapping
@@ -34,10 +41,12 @@ public class TaskController {
         return ResponseEntity.ok(taskService.getTasksForUserView(actorId));
     }
 
+    // Only the people this user is allowed to assign tasks to
     @GetMapping("/users")
-    public ResponseEntity<List<Map<String, Object>>> getAssignableUsers() {
+    public ResponseEntity<List<Map<String, Object>>> getAssignableUsers(@RequestParam(required = false) Long actorId) {
+        User actor = actor(actorId);
         List<Map<String, Object>> list = userRepository.findAll().stream()
-                .filter(u -> !Boolean.FALSE.equals(u.getEnabled()))
+                .filter(u -> taskService.canAssign(actor, u))
                 .map(u -> {
                     Map<String, Object> map = new HashMap<>();
                     map.put("id", u.getId());
@@ -52,8 +61,9 @@ public class TaskController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Task> getTaskById(@PathVariable Long id) {
-        return ResponseEntity.ok(taskService.getTaskById(id));
+    public ResponseEntity<Task> getTaskById(@PathVariable Long id,
+                                            @RequestParam(required = false) Long actorId) {
+        return ResponseEntity.ok(requireView(id, actorId));
     }
 
     @GetMapping("/user/{userId}")
@@ -63,17 +73,23 @@ public class TaskController {
         if (!actor.getId().equals(userId) && !taskService.isManager(actor)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        return ResponseEntity.ok(taskService.getTasksByUser(userId));
+        return ResponseEntity.ok(taskService.getTasksByUser(userId).stream()
+                .filter(task -> taskService.canView(task, actor)).toList());
     }
 
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<Task>> getTasksByStatus(@PathVariable TaskStatus status) {
-        return ResponseEntity.ok(taskService.getTasksByStatus(status));
+    public ResponseEntity<List<Task>> getTasksByStatus(@PathVariable TaskStatus status,
+                                                       @RequestParam(required = false) Long actorId) {
+        User actor = actor(actorId);
+        return ResponseEntity.ok(taskService.getTasksByStatus(status).stream()
+                .filter(task -> taskService.canView(task, actor)).toList());
     }
 
     @GetMapping("/overdue")
-    public ResponseEntity<List<Task>> getOverdueTasks() {
-        return ResponseEntity.ok(taskService.getOverdueTasks());
+    public ResponseEntity<List<Task>> getOverdueTasks(@RequestParam(required = false) Long actorId) {
+        User actor = actor(actorId);
+        return ResponseEntity.ok(taskService.getOverdueTasks().stream()
+                .filter(task -> taskService.canView(task, actor)).toList());
     }
 
     @PostMapping
@@ -83,6 +99,7 @@ public class TaskController {
             @RequestParam(required = false) Long assignedUserId,
             @RequestParam(required = false) Long eventId
     ) {
+        requireCanAssign(actor(actorId), assignedUserId);
         Task created = taskService.createTask(task, actorId, assignedUserId, eventId);
         return ResponseEntity.ok(created);
     }
@@ -95,6 +112,16 @@ public class TaskController {
             @RequestParam(required = false) Long assignedUserId,
             @RequestParam(required = false) Long eventId
     ) {
+        Task existing = taskService.getTaskById(id);
+        User actor = actor(actorId);
+        if (!taskService.canManage(existing, actor)) {
+            throw new SecurityException("Only the person who created this task (or an administrator) can edit it");
+        }
+        Long currentAssignee = existing.getAssignee() == null ? null : existing.getAssignee().getId();
+        boolean reassigning = !java.util.Objects.equals(currentAssignee, normalise(assignedUserId));
+        if (reassigning) {
+            requireCanAssign(actor, assignedUserId);
+        }
         Task updated = taskService.updateTask(id, task, actorId, assignedUserId, eventId);
         return ResponseEntity.ok(updated);
     }
@@ -116,7 +143,11 @@ public class TaskController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteTask(@PathVariable Long id,
+                                           @RequestParam(required = false) Long actorId) {
+        if (!taskService.canManage(taskService.getTaskById(id), actor(actorId))) {
+            throw new SecurityException("Only the person who created this task (or an administrator) can delete it");
+        }
         taskService.deleteTask(id);
         return ResponseEntity.noContent().build();
     }
@@ -136,7 +167,9 @@ public class TaskController {
     }
 
     @GetMapping("/{id}/comments")
-    public ResponseEntity<List<TaskComment>> getComments(@PathVariable Long id) {
+    public ResponseEntity<List<TaskComment>> getComments(@PathVariable Long id,
+                                                         @RequestParam(required = false) Long actorId) {
+        requireView(id, actorId);
         return ResponseEntity.ok(taskService.getComments(id));
     }
 
@@ -146,11 +179,15 @@ public class TaskController {
                                                              @RequestParam Long fileId,
                                                              @RequestParam(required = false) Long actorId) {
         requireWorkOn(id, actorId);
+        // You can only attach files you are allowed to open yourself
+        fileAccess.requireReadFile(fileService.getOrThrow(fileId), actor(actorId));
         return ResponseEntity.ok(toView(taskService.addAttachment(id, fileId)));
     }
 
     @GetMapping("/{id}/attachments")
-    public ResponseEntity<List<Map<String, Object>>> getAttachments(@PathVariable Long id) {
+    public ResponseEntity<List<Map<String, Object>>> getAttachments(@PathVariable Long id,
+                                                                     @RequestParam(required = false) Long actorId) {
+        requireView(id, actorId);
         return ResponseEntity.ok(taskService.getAttachments(id).stream().map(this::toView).toList());
     }
 
@@ -179,6 +216,31 @@ public class TaskController {
         }
         return userRepository.findById(actorId)
                 .orElseThrow(() -> new SecurityException("Unknown user"));
+    }
+
+    private Task requireView(Long taskId, Long actorId) {
+        Task task = taskService.getTaskById(taskId);
+        if (!taskService.canView(task, actor(actorId))) {
+            throw new SecurityException("You don't have access to this task");
+        }
+        return task;
+    }
+
+    private static Long normalise(Long userId) {
+        return userId == null || userId <= 0 ? null : userId;
+    }
+
+    private void requireCanAssign(User actor, Long assignedUserId) {
+        Long targetId = normalise(assignedUserId);
+        User target = null;
+        if (targetId != null) {
+            target = userRepository.findById(targetId)
+                    .orElseThrow(() -> new IllegalArgumentException("Assigned user not found"));
+        }
+        if (!taskService.canAssign(actor, target)) {
+            throw new SecurityException("You can't assign tasks to this user. Team leaders assign employees "
+                    + "in their own department; department admins assign team leaders and employees in theirs.");
+        }
     }
 
     private void requireWorkOn(Long taskId, Long actorId) {
