@@ -45,8 +45,9 @@ public class KnowledgeArticleController {
     }
 
     @GetMapping("/{articleId}")
-    public ResponseEntity<KnowledgeArticleResponse> view(@PathVariable Long articleId) {
-        return ResponseEntity.ok(KnowledgeArticleResponse.from(articleService.view(articleId)));
+    public ResponseEntity<KnowledgeArticleResponse> view(@PathVariable Long articleId,
+                                                         @RequestParam(required = false) Long actorId) {
+        return ResponseEntity.ok(KnowledgeArticleResponse.from(articleService.view(articleId, actorId)));
     }
 
     @PostMapping("/{articleId}/publish")

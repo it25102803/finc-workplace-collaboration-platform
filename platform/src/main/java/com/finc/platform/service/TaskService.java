@@ -44,13 +44,68 @@ public class TaskService {
                 || role == RoleType.ROLE_TEAM_LEADER;
     }
 
-    // Status, progress, comments and attachments: the assignee, the creator, or a manager.
+    // Status, progress, comments and attachments: the assignee, the creator,
+    // or a manager who is allowed to see the task.
     public boolean canWorkOn(Task task, User user) {
         if (user == null) return false;
-        if (isManager(user)) return true;
-        boolean assignee = task.getAssignee() != null && user.getId().equals(task.getAssignee().getId());
-        boolean creator = task.getCreator() != null && user.getId().equals(task.getCreator().getId());
-        return assignee || creator;
+        if (AccessRules.isSameUser(user, task.getAssignee()) || AccessRules.isSameUser(user, task.getCreator())) {
+            return true;
+        }
+        return isManager(user) && canView(task, user);
+    }
+
+    // Who can see a task:
+    //  - System admin: every task
+    //  - Everyone: tasks they created, tasks assigned to them, and "All Members" (unassigned) tasks
+    //  - Department admin / team leader: also tasks assigned to people in their own department
+    public boolean canView(Task task, User user) {
+        if (user == null) return false;
+        if (AccessRules.isSystemAdmin(user)) return true;
+        if (task.getAssignee() == null) return true;
+        if (AccessRules.isSameUser(user, task.getAssignee()) || AccessRules.isSameUser(user, task.getCreator())) {
+            return true;
+        }
+        RoleType role = AccessRules.roleOf(user);
+        boolean departmentManager = role == RoleType.ROLE_DEPT_ADMIN || role == RoleType.ROLE_TEAM_LEADER;
+        return departmentManager && AccessRules.sameDepartment(user, task.getAssignee());
+    }
+
+    // Who a user may assign a task to (null = "All Members"):
+    //  - System admin: anyone
+    //  - Department admin: themselves, or team leaders and employees in their department
+    //  - Team leader: themselves, or employees in their department
+    public boolean canAssign(User actor, User target) {
+        if (actor == null) return false;
+        if (target == null) return isManager(actor);
+        if (Boolean.FALSE.equals(target.getEnabled())) return false;
+        RoleType actorRole = AccessRules.roleOf(actor);
+        RoleType targetRole = AccessRules.roleOf(target);
+        if (actorRole == RoleType.ROLE_SYSTEM_ADMIN) return true;
+        if (AccessRules.isSameUser(actor, target)) return isManager(actor);
+        if (actorRole == RoleType.ROLE_DEPT_ADMIN) {
+            return (targetRole == RoleType.ROLE_TEAM_LEADER || targetRole == RoleType.ROLE_EMPLOYEE)
+                    && AccessRules.sameDepartment(actor, target);
+        }
+        if (actorRole == RoleType.ROLE_TEAM_LEADER) {
+            return targetRole == RoleType.ROLE_EMPLOYEE && AccessRules.sameDepartment(actor, target);
+        }
+        return false;
+    }
+
+    // Who can edit, reassign or delete a task:
+    //  - System admin: any task
+    //  - The person who created it
+    //  - Department admin: tasks created by team leaders/employees of their own department
+    public boolean canManage(Task task, User user) {
+        if (user == null) return false;
+        if (AccessRules.isSystemAdmin(user)) return true;
+        if (AccessRules.isSameUser(user, task.getCreator())) return true;
+        if (AccessRules.roleOf(user) == RoleType.ROLE_DEPT_ADMIN && task.getCreator() != null) {
+            RoleType creatorRole = AccessRules.roleOf(task.getCreator());
+            boolean creatorBelowAdmin = creatorRole == RoleType.ROLE_TEAM_LEADER || creatorRole == RoleType.ROLE_EMPLOYEE;
+            return creatorBelowAdmin && AccessRules.sameDepartment(user, task.getCreator());
+        }
+        return false;
     }
     public List<Task> getAllTasks() {
         return taskRepository.findAll();
@@ -61,10 +116,13 @@ public class TaskService {
             return List.of();
         }
         User user = userRepository.findById(userId).orElse(null);
-        if (isManager(user)) {
+        if (user == null) {
+            return List.of();
+        }
+        if (AccessRules.isSystemAdmin(user)) {
             return taskRepository.findAll();
         }
-        return taskRepository.findVisibleToUser(userId);
+        return taskRepository.findAll().stream().filter(task -> canView(task, user)).toList();
     }
 
     public List<Task> getTasksByUser(Long userId) {

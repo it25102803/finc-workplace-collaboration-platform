@@ -1,0 +1,363 @@
+/* ============================================================
+   Finc Enterprise Portal - shared brand rules for every page
+   Loaded LAST on each page, so it wins over the page's own stylesheet.
+     1. One font            (change --finc-font to switch it everywhere)
+     2. One accent colour   (change the --finc-accent values)
+     3. Sentence case       (no ALL CAPS labels)
+     4. One header pattern  (title + one-line subtitle on the left, actions on the right)
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    --finc-font: 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+    --finc-accent: #2563eb;
+    --finc-accent-hover: #1d4ed8;
+    --finc-accent-soft: #eef4ff;
+    --finc-accent-text: #2563eb;
+    --finc-on-accent: #ffffff;
+
+    /* Each module's own names for its accent, pointed at the one shared accent */
+    --accent: var(--finc-accent);              /* theme.css pages (Member 1) */
+    --accent-2: var(--finc-accent-hover);
+    --accent-soft: var(--finc-accent-soft);
+    --accent-contrast: var(--finc-on-accent);
+    --primary: var(--finc-accent);             /* tasks, calendar, knowledge base */
+    --primary-hover: var(--finc-accent-hover);
+    --primary-light: var(--finc-accent-soft);
+    --primary-dark: var(--finc-accent-hover);  /* chat */
+}
+
+[data-theme="dark"] {
+    --finc-accent: #3b82f6;
+    --finc-accent-hover: #60a5fa;
+    --finc-accent-soft: #0d2847;
+    --finc-accent-text: #60a5fa;
+    --finc-on-accent: #ffffff;
+
+    --accent: var(--finc-accent);
+    --accent-2: var(--finc-accent-hover);
+    --accent-soft: var(--finc-accent-soft);
+    --accent-contrast: var(--finc-on-accent);
+    --primary: var(--finc-accent);
+    --primary-hover: var(--finc-accent-hover);
+    --primary-light: var(--finc-accent-soft);
+    --primary-dark: var(--finc-accent-hover);
+}
+
+/* the chat page keeps its colours on <body> */
+body.channels-page {
+    --c-accent: var(--finc-accent);
+    --c-accent-hover: var(--finc-accent-hover);
+    --c-accent-text: var(--finc-accent-text);
+    --c-accent-soft: var(--finc-accent-soft);
+    --c-mine: var(--finc-accent-soft);
+}
+
+
+/* 1. ONE FONT (icons keep their icon font) */
+body,
+body :not(i):not(.fa):not([class^="fa-"]):not([class*=" fa-"]) {
+    font-family: var(--finc-font) !important;
+}
+
+
+/* 2. ONE ACCENT - the few places that hard-code the old indigo */
+.badge-user,
+.type-POLICY {
+    background: var(--finc-accent-soft) !important;
+    color: var(--finc-accent-text) !important;
+}
+
+
+/* 3. SENTENCE CASE - no ALL CAPS labels, table headings or badges */
+body * {
+    text-transform: none !important;
+}
+
+
+/* 4. ONE HEADER PATTERN */
+.top-navbar,
+.top-header,
+.main-content > .topbar,
+.workspace-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.page-heading,
+.top-header .page-title,
+.main-content > .topbar h1,
+.workspace-header h1 {
+    font-size: 26px !important;
+    font-weight: 700 !important;
+    line-height: 1.25 !important;
+    letter-spacing: -0.01em;
+    margin: 0 0 4px !important;
+}
+
+.page-subheading,
+.top-header .page-desc,
+.main-content > .topbar .subtitle,
+.workspace-header .meta-text {
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    margin: 0 !important;
+}
+
+/* no small label above the title */
+.top-navbar .eyebrow,
+.main-content > .topbar .eyebrow,
+.workspace-header .eyebrow {
+    display: none !important;
+}
+
+/* 5. PHONES AND TABLETS
+   Up to 991px wide the sidebar becomes a slide-in menu, opened by the ☰ button
+   that js/api.js adds to the page header. Content then uses the full width. */
+
+.finc-menu-btn {
+    display: none;
+}
+
+.top-header .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+@media (max-width: 991px) {
+    .app-sidebar,
+    .app-layout > .sidebar,
+    .app > .sidebar,
+    .app-nav {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        width: 260px !important;
+        height: 100vh !important;
+        min-height: 0 !important;
+        padding: 24px 16px !important;
+        display: flex !important;
+        flex-direction: column;
+        overflow-y: auto;
+        z-index: 1100 !important;
+        transform: translateX(-105%);
+        transition: transform 0.25s ease;
+    }
+
+    body.finc-nav-open .app-sidebar,
+    body.finc-nav-open .app-layout > .sidebar,
+    body.finc-nav-open .app > .sidebar,
+    body.finc-nav-open .app-nav {
+        transform: translateX(0);
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.35);
+    }
+
+    /* some pages shrank the sidebar to icons on small screens; the slide-in menu shows full labels */
+    .app-layout > .sidebar .nav-item span,
+    .app > .sidebar .nav-item span {
+        display: inline !important;
+    }
+
+    .app-layout > .sidebar .brand-portal-title,
+    .app > .sidebar .brand-portal-title {
+        display: flex !important;
+    }
+
+    .finc-nav-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 1050;
+        background: rgba(15, 23, 42, 0.45);
+    }
+
+    body.finc-nav-open .finc-nav-backdrop {
+        display: block;
+    }
+
+    .finc-menu-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        flex-shrink: 0;
+        padding: 0;
+        border: 1px solid rgba(148, 163, 184, 0.45);
+        border-radius: 10px;
+        background: transparent;
+        color: inherit;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    /* content uses the full width */
+    .app-layout {
+        display: block !important;
+    }
+
+    .app-main,
+    .main-content,
+    body.channels-page .main-panel,
+    body.channels-page.sidebar-collapsed .main-panel {
+        margin-left: 0 !important;
+    }
+
+    .app-main,
+    .main-content {
+        padding: 16px !important;
+    }
+
+    /* headers wrap instead of squeezing */
+    .top-navbar,
+    .top-header,
+    .main-content > .topbar,
+    .workspace-header {
+        flex-wrap: wrap;
+        align-items: flex-start !important;
+        gap: 12px;
+    }
+
+    .top-navbar > div:not(.d-flex),
+    .top-header > div:first-of-type,
+    .main-content > .topbar > div:first-of-type {
+        flex: 1 1 200px;
+        min-width: 0;
+    }
+
+    .header-actions,
+    .top-actions,
+    .top-navbar > .d-flex {
+        flex-wrap: wrap;
+    }
+
+    .search-box {
+        flex: 1 1 200px;
+    }
+
+    .search-box input,
+    .search-input {
+        width: 100% !important;
+    }
+
+    /* card grids: two across */
+    .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    /* task board: swipe sideways between columns */
+    .kanban-board {
+        display: grid !important;
+        grid-template-columns: repeat(4, minmax(240px, 1fr)) !important;
+        overflow-x: auto;
+        padding-bottom: 8px;
+    }
+
+    /* calendar: smaller day cells */
+    .calendar-toolbar {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .calendar-day {
+        min-height: 72px !important;
+        padding: 4px !important;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    /* seven equal columns that can shrink to fit narrow screens */
+    .calendar-grid,
+    .calendar-grid-header {
+        grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    }
+
+    .calendar-grid {
+        grid-auto-rows: minmax(72px, auto) !important;
+    }
+
+    .nav-controls {
+        flex-wrap: wrap;
+        gap: 10px !important;
+    }
+
+    .current-month-label {
+        min-width: 0 !important;
+        font-size: 1.1rem !important;
+    }
+
+    .calendar-toolbar {
+        padding: 12px !important;
+    }
+
+    .event-chip {
+        font-size: 10px !important;
+        padding: 2px 4px !important;
+    }
+
+    /* wide tables scroll sideways inside their card */
+    .file-table,
+    .app-main table,
+    .wrap table {
+        display: block;
+        max-width: 100%;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    /* pop-ups fit the screen */
+    .modal-box,
+    .modal-content {
+        max-width: calc(100vw - 24px) !important;
+        max-height: calc(100vh - 24px);
+        overflow-y: auto;
+    }
+
+    /* admin settings (no sidebar) */
+    .wrap {
+        padding: 16px !important;
+    }
+
+    .tabs {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 600px) {
+    .page-heading,
+    .top-header .page-title,
+    .main-content > .topbar h1,
+    .workspace-header h1 {
+        font-size: 22px !important;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr !important;
+    }
+
+    .calendar-day {
+        min-height: 56px !important;
+    }
+
+    .calendar-grid {
+        grid-auto-rows: minmax(56px, auto) !important;
+    }
+
+    .day-header {
+        font-size: 11px !important;
+    }
+
+    .calendar-grid-header > div {
+        font-size: 11px;
+    }
+}

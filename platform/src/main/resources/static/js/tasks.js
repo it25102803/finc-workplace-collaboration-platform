@@ -159,7 +159,7 @@ function renderKanban() {
                     <div class="progress-bar-fill" style="width: ${Number(task.progress) || 0}%"></div>
                 </div>
                 <div class="card-meta">
-                    <span class="badge badge-${priority.toLowerCase()}">${priority}</span>
+                    <span class="badge badge-${priority.toLowerCase()}">${escapeHtml(prettyLabel(priority))}</span>
                     ${assigneeBadge}
                     <span>${task.dueDate ? '<i class="fa-regular fa-clock"></i> ' + escapeHtml(task.dueDate) : ''}</span>
                 </div>
@@ -214,9 +214,9 @@ async function handleSaveTask(e) {
 function openTaskDetails(task) {
     currentTask = task;
     document.getElementById('viewTaskTitle').textContent = task.title;
-    document.getElementById('viewPriority').textContent = task.priority;
+    document.getElementById('viewPriority').textContent = prettyLabel(task.priority);
     document.getElementById('viewPriority').className = `badge badge-${(task.priority || 'medium').toLowerCase()}`;
-    document.getElementById('viewStatus').textContent = task.status;
+    document.getElementById('viewStatus').textContent = prettyLabel(task.status);
     document.getElementById('viewStatus').className = 'badge';
 
     const assigneeText = task.assignee

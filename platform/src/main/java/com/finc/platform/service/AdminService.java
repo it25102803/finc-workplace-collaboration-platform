@@ -75,6 +75,17 @@ public class AdminService {
 
     @Transactional
     public User createUser(AdminCreateUserRequest req, Long actorId) {
+        if (isBlank(req.getUsername()) || isBlank(req.getEmail()) || isBlank(req.getPassword())
+                || isBlank(req.getFirstName()) || isBlank(req.getLastName())) {
+            throw new IllegalArgumentException("Please fill in all required fields");
+        }
+        req.setUsername(req.getUsername().trim());
+        req.setEmail(req.getEmail().trim());
+        // Storage quotas are per department, so everyone except a system administrator needs one
+        boolean systemAdmin = req.getRole() != null && req.getRole().replace("ROLE_", "").equals("SYSTEM_ADMIN");
+        if (!systemAdmin && req.getDepartmentId() == null) {
+            throw new IllegalArgumentException("Choose a department for this user");
+        }
         if (userRepository.existsByUsername(req.getUsername())) {
             throw new IllegalArgumentException("Username already exists");
         }
@@ -206,6 +217,10 @@ public class AdminService {
                 "totalDepartments", departmentRepository.count(),
                 "totalRoles", roleRepository.count()
         );
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
     private Role resolveRole(String roleName, RoleType fallback) {

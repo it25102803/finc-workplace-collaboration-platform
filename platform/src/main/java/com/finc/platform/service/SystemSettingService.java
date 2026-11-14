@@ -56,10 +56,22 @@ public class SystemSettingService {
         }
         if (key.equals("upload.maxSizeMb") || key.equals("password.minLength")
                 || key.equals("session.timeoutMinutes")) {
-            try { Integer.parseInt(value); }
+            int number;
+            try { number = Integer.parseInt(value.trim()); }
             catch (NumberFormatException e) {
                 throw new IllegalArgumentException("Value for " + key + " must be a number");
             }
+            // Allowed ranges. Uploads can't go above 10 MB because the server itself
+            // rejects bigger requests (spring.servlet.multipart.max-file-size).
+            int min = key.equals("password.minLength") ? 6 : key.equals("upload.maxSizeMb") ? 1 : 5;
+            int max = key.equals("password.minLength") ? 64 : key.equals("upload.maxSizeMb") ? 10 : 1440;
+            if (number < min || number > max) {
+                throw new IllegalArgumentException("Value for " + key + " must be between " + min + " and " + max);
+            }
+            value = String.valueOf(number);
+        }
+        if (key.equals("organization.name") && value.isBlank()) {
+            throw new IllegalArgumentException("Organisation name can't be empty");
         }
 
         SystemSetting s = repo.findById(key)

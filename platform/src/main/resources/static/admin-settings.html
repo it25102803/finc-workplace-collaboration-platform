@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Settings — Finc Workplace</title>
+    <title>Admin Settings | Finc Workplace</title>
 
     <!-- Apply theme before paint -->
     <script>
@@ -424,11 +424,12 @@
         }
     </style>
     <script src="js/api.js"></script>
+    <link rel="stylesheet" href="css/brand.css">
 </head>
 <body>
 
 <div class="topbar">
-    <h1><i class="fa-solid fa-gear"></i> Admin Console</h1>
+    <h1><i class="fa-solid fa-gear"></i> Admin Settings</h1>
     <div class="d-flex align-items-center gap-3">
         <button type="button" class="theme-toggle-inline" data-theme-toggle aria-label="Toggle theme">
             <i class="fa-solid fa-moon"></i>
@@ -458,7 +459,7 @@
             <div style="overflow-x: auto;">
                 <table class="user-table">
                     <thead>
-                        <tr><th>ID</th><th>USERNAME</th><th>NAME</th><th>EMAIL</th><th>ROLE</th><th>STATUS</th><th>ACTIONS</th></tr>
+                        <tr><th>ID</th><th>Username</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr>
                     </thead>
                     <tbody id="usersTbody">
                         <tr><td colspan="7" class="text-center py-4" style="color: var(--text-3);">Loading...</td></tr>
@@ -478,7 +479,7 @@
             <div style="overflow-x: auto;">
                 <table class="user-table">
                     <thead>
-                        <tr><th>ID</th><th>NAME</th><th>DESCRIPTION</th><th>USERS</th><th>STORAGE LIMIT</th><th>ACTIONS</th></tr>
+                        <tr><th>ID</th><th>Name</th><th>Description</th><th>Users</th><th>Storage limit</th><th>Actions</th></tr>
                     </thead>
                     <tbody id="deptTbody">
                         <tr><td colspan="6" class="text-center py-4" style="color: var(--text-3);">Loading...</td></tr>
@@ -1058,7 +1059,8 @@ async function loadSettings() {
         const list = await res.json();
         const container = document.getElementById("settingsList");
         container.innerHTML = "";
-        list.forEach(s => {
+        // Session timeout is hidden: there are no login sessions yet, so it would have no effect
+        list.filter(s => s.key !== "session.timeoutMinutes").forEach(s => {
             const row = document.createElement("div");
             row.className = "setting-row";
             row.innerHTML = `

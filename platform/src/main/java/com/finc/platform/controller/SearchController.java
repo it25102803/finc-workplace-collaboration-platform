@@ -15,7 +15,8 @@ public class SearchController {
 
     /** GET /api/search?q=meeting */
     @GetMapping
-    public SearchResult search(@RequestParam(name = "q", defaultValue = "") String q) {
-        return searchService.search(q);
+    public SearchResult search(@RequestParam(name = "q", defaultValue = "") String q,
+                               @RequestParam(required = false) Long actorId) {
+        return searchService.search(q, actorId);
     }
 }

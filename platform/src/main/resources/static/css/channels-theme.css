@@ -1,0 +1,956 @@
+/* ============================================================
+   Channels & Chat - layout to match the other pages, plus light/dark mode.
+   Loaded after channels-style.css, so these rules take priority.
+   The light/dark choice is shared with the other pages (js/theme.js).
+   ============================================================ */
+
+body.channels-page {
+    --c-bg: #f5f7fb;
+    --c-card: #ffffff;
+    --c-card-2: #f8fafc;
+    --c-border: #eaecf0;
+    --c-text: #101828;
+    --c-text-2: #475467;
+    --c-muted: #667085;
+    --c-accent: #2563eb;
+    --c-accent-hover: #1d4ed8;
+    --c-accent-text: #2563eb;
+    --c-accent-soft: #eef4ff;
+    --c-mine: #eef4ff;
+    --c-mine-border: #c7d7fe;
+    --c-danger: #b42318;
+    --c-danger-soft: #fef3f2;
+    --c-shadow: 0 12px 30px rgba(16, 24, 40, 0.12);
+
+    /* the older stylesheet's own colour names */
+    --panel: var(--c-card);
+    --panel-muted: var(--c-card-2);
+    --text: var(--c-text);
+    --muted: var(--c-muted);
+    --border: var(--c-border);
+    --bg: var(--c-bg);
+    --text-main: var(--c-text);
+    --text-muted: var(--c-muted);
+
+    background: var(--c-bg);
+    color: var(--c-text);
+    font-family: 'Inter', -apple-system, sans-serif;
+}
+
+[data-theme="dark"] body.channels-page {
+    --c-bg: #0b1120;
+    --c-card: #131c31;
+    --c-card-2: #1e293b;
+    --c-border: #2d3b52;
+    --c-text: #f1f5f9;
+    --c-text-2: #cbd5e1;
+    --c-muted: #94a3b8;
+    --c-accent: #3b82f6;
+    --c-accent-hover: #2563eb;
+    --c-accent-text: #64b5f6;
+    --c-accent-soft: #0d2847;
+    --c-mine: #0d2847;
+    --c-mine-border: #1e4a7a;
+    --c-danger: #fca5a5;
+    --c-danger-soft: #450a0a;
+    --c-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+}
+
+
+/* =========================
+   APP NAVIGATION (same as the other pages)
+========================= */
+
+.channels-page .app-shell {
+    display: block;
+    min-height: 100vh;
+}
+
+.app-nav {
+    width: 250px;
+    background: #0b192c;
+    border-right: 1px solid #16263d;
+    color: #ffffff;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    z-index: 50;
+}
+
+.app-nav .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.app-nav .brand-logo-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 4px 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.app-nav .brand-logo-img {
+    height: 38px;
+    width: auto;
+    max-width: 120px;
+    object-fit: contain;
+    display: block;
+}
+
+.app-nav .brand-portal-title {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+}
+
+.app-nav .brand-portal-title .title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.app-nav .brand-portal-title .subtitle {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.app-nav .nav-menu {
+    margin-top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.app-nav .nav-link-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    color: #94a3b8;
+    font-size: 0.92rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.app-nav .nav-link-item i {
+    width: 18px;
+    text-align: center;
+}
+
+.app-nav .nav-link-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+}
+
+.app-nav .nav-link-item.active {
+    background: rgba(56, 189, 248, 0.12);
+    color: #38bdf8;
+    font-weight: 600;
+}
+
+
+/* =========================
+   MAIN AREA
+========================= */
+
+body.channels-page .main-panel,
+body.channels-page.sidebar-collapsed .main-panel {
+    margin-left: 250px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--c-bg);
+}
+
+
+/* =========================
+   HEADER: title on the left, tidy actions on the right
+========================= */
+
+body.channels-page .workspace-header {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    padding: 28px 32px 18px;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    color: var(--c-text);
+}
+
+.channels-page .header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+body.channels-page .eyebrow {
+    margin: 0 0 4px;
+    color: var(--c-muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.3px;
+    text-transform: uppercase;
+}
+
+body.channels-page .workspace-header h1 {
+    margin: 0 0 4px;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--c-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.channels-page .meta-text {
+    font-size: 0.85rem;
+    color: var(--c-muted);
+}
+
+body.channels-page .sidebar-toggle {
+    display: none;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    background: var(--c-card);
+    color: var(--c-text-2);
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.channels-page .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+/* search box with an icon inside */
+body.channels-page .conversation-search {
+    position: relative;
+    width: 280px;
+}
+
+.channels-page .conversation-search .search-icon {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--c-muted);
+    font-size: 0.85rem;
+    pointer-events: none;
+}
+
+body.channels-page .conversation-search input {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px 0 36px;
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    background: var(--c-card);
+    color: var(--c-text);
+    font-size: 0.88rem;
+    outline: none;
+}
+
+body.channels-page .conversation-search input:focus {
+    border-color: var(--c-accent);
+}
+
+body.channels-page .search-results {
+    background: var(--c-card);
+    border: 1px solid var(--c-border);
+    color: var(--c-text);
+    box-shadow: var(--c-shadow);
+}
+
+body.channels-page .search-result {
+    background: transparent;
+    color: var(--c-text);
+}
+
+body.channels-page .search-result:hover {
+    background: var(--c-accent-soft);
+}
+
+/* matching square icon buttons */
+.channels-page .header-icon-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+body.channels-page .icon-btn {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    background: var(--c-card);
+    color: var(--c-text-2);
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+body.channels-page .icon-btn:hover {
+    background: var(--c-accent-soft);
+    color: var(--c-accent-text);
+}
+
+body.channels-page .icon-btn.hidden {
+    display: none;
+}
+
+body.channels-page .icon-btn .notification-count {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    border: 2px solid var(--c-bg);
+}
+
+body.channels-page .icon-btn .notification-count.hidden {
+    display: none;
+}
+
+/* notifications drop-down */
+body.channels-page .notification-panel {
+    position: absolute;
+    top: calc(100% - 6px);
+    right: 32px;
+    background: var(--c-card);
+    border: 1px solid var(--c-border);
+    color: var(--c-text);
+    box-shadow: var(--c-shadow);
+}
+
+body.channels-page .notification-panel.hidden {
+    display: none;
+}
+
+body.channels-page .notification-item {
+    background: transparent;
+    color: var(--c-text);
+    border-color: var(--c-border);
+}
+
+body.channels-page .notification-item.unread {
+    background: var(--c-accent-soft);
+}
+
+
+/* =========================
+   THREE COLUMNS: conversations | chat | people
+========================= */
+
+body.channels-page .content-layout {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr) 250px;
+    gap: 16px;
+    padding: 0 32px 28px;
+    flex: 1;
+    min-height: 0;
+}
+
+/* conversation list: a card, no longer a fixed dark sidebar */
+body.channels-page .content-layout .conversations-panel,
+body.channels-page.sidebar-collapsed .content-layout .conversations-panel {
+    position: static;
+    transform: none;
+    width: auto;
+    height: calc(100vh - 150px);
+    min-height: 480px;
+    inset: auto;
+    z-index: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 16px 12px;
+    overflow-y: auto;
+    background: var(--c-card);
+    border: 1px solid var(--c-border);
+    border-radius: 14px;
+    box-shadow: none;
+    color: var(--c-text);
+}
+
+body.channels-page .sidebar-backdrop {
+    display: none !important;
+}
+
+body.channels-page .side-section {
+    margin: 0;
+    padding: 0;
+}
+
+body.channels-page .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 6px 8px;
+    color: var(--c-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+body.channels-page .section-add-btn {
+    width: 26px;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 7px;
+    background: var(--c-accent-soft);
+    color: var(--c-accent-text);
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+
+body.channels-page .section-add-btn:hover {
+    background: var(--c-accent);
+    color: #ffffff;
+}
+
+body.channels-page .channel-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+body.channels-page .channel-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--c-text-2);
+    font-size: 0.9rem;
+    text-align: left;
+}
+
+body.channels-page .channel-item small {
+    color: var(--c-muted);
+    font-size: 0.75rem;
+}
+
+body.channels-page .channel-item:hover {
+    background: var(--c-card-2);
+    color: var(--c-text);
+}
+
+body.channels-page .channel-item.active {
+    background: var(--c-accent-soft);
+    color: var(--c-accent-text);
+    font-weight: 600;
+}
+
+body.channels-page .channel-hash {
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    background: var(--c-card-2);
+    color: var(--c-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+body.channels-page .channel-item.active .channel-hash {
+    background: var(--c-accent);
+    color: #ffffff;
+}
+
+body.channels-page .empty-state {
+    color: var(--c-muted);
+    background: transparent;
+}
+
+
+/* =========================
+   CHAT CARD
+========================= */
+
+body.channels-page .chat-panel {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 150px);
+    min-height: 480px;
+    overflow: hidden;
+    background: var(--c-card);
+    border: 1px solid var(--c-border);
+    border-radius: 14px;
+    box-shadow: none;
+}
+
+body.channels-page .message-list {
+    background: var(--c-card);
+}
+
+body.channels-page .message-bubble {
+    background: var(--c-card-2);
+    border: 1px solid var(--c-border);
+    border-radius: 12px;
+    color: var(--c-text);
+}
+
+body.channels-page .message-bubble.mine {
+    background: var(--c-mine);
+    border-color: var(--c-mine-border);
+    color: var(--c-text);
+}
+
+body.channels-page .message-meta {
+    color: var(--c-muted);
+}
+
+body.channels-page .message-actions,
+body.channels-page .message-bubble.mine .message-actions {
+    background-color: transparent !important;
+    border: 0;
+    padding: 0;
+}
+
+body.channels-page .message-actions button,
+body.channels-page .reaction-badge,
+body.channels-page .message-action-btn {
+    border: 1px solid var(--c-border);
+    background: var(--c-card);
+    color: var(--c-text-2);
+    border-radius: 6px;
+}
+
+body.channels-page .message-actions button:hover,
+body.channels-page .message-action-btn:hover {
+    background: var(--c-accent-soft);
+    color: var(--c-accent-text);
+}
+
+body.channels-page .reaction-badge.selected {
+    border-color: var(--c-accent);
+    background: var(--c-accent-soft);
+    color: var(--c-accent-text);
+}
+
+body.channels-page .reaction-options {
+    background: var(--c-card);
+    border-color: var(--c-border);
+}
+
+body.channels-page .pinned-messages {
+    background: var(--c-card);
+    border-bottom: 1px solid var(--c-border);
+}
+
+body.channels-page .pinned-message-link {
+    background: var(--c-card-2);
+    border: 1px solid var(--c-border);
+    color: var(--c-text);
+}
+
+body.channels-page .attachment-status {
+    color: var(--c-text-2);
+    background: var(--c-card-2);
+    border-top: 1px solid var(--c-border);
+}
+
+
+/* =========================
+   MESSAGE BAR: attach | voice | message | send
+========================= */
+
+body.channels-page .composer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    border-top: 1px solid var(--c-border);
+    background: var(--c-card);
+}
+
+body.channels-page .composer-btn {
+    height: 40px;
+    min-width: 40px;
+    margin: 0;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    background: var(--c-card);
+    color: var(--c-text-2);
+    font-size: 0.84rem;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+body.channels-page .composer-btn:hover {
+    background: var(--c-accent-soft);
+    color: var(--c-accent-text);
+}
+
+/* the chat script rewrites this button's text, so the icon is added here */
+body.channels-page .voice-btn::before {
+    content: "\f130";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+}
+
+/* icon only, with the full label as a tooltip; the text shows again while recording */
+body.channels-page .voice-btn {
+    font-size: 0;
+    gap: 0;
+}
+
+body.channels-page .voice-btn::before {
+    font-size: 0.9rem;
+}
+
+body.channels-page .voice-btn.recording {
+    font-size: 0.84rem;
+    gap: 6px;
+    background: var(--c-danger-soft);
+    border-color: var(--c-danger);
+    color: var(--c-danger);
+}
+
+body.channels-page .composer input#messageInput {
+    flex: 1;
+    min-width: 0;
+    height: 40px;
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    background: var(--c-card-2);
+    color: var(--c-text);
+    box-shadow: none;
+}
+
+body.channels-page .composer input#messageInput::placeholder {
+    color: var(--c-muted);
+}
+
+body.channels-page .composer input#messageInput:focus {
+    border-color: var(--c-accent);
+}
+
+body.channels-page .send-btn {
+    height: 40px;
+    padding: 0 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--c-accent);
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.88rem;
+    cursor: pointer;
+}
+
+body.channels-page .send-btn:hover {
+    background: var(--c-accent-hover);
+}
+
+
+/* =========================
+   PEOPLE CARD
+========================= */
+
+body.channels-page .right-panel {
+    min-width: 0;
+}
+
+body.channels-page .panel-card {
+    background: var(--c-card);
+    border: 1px solid var(--c-border);
+    border-radius: 14px;
+    padding: 16px;
+    color: var(--c-text);
+    box-shadow: none;
+}
+
+body.channels-page .panel-card h3 {
+    margin: 0 0 12px;
+    color: var(--c-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+body.channels-page .member-toolbar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+body.channels-page .member-toolbar .form-select {
+    flex: 1;
+    min-width: 0;
+    height: 38px;
+    font-size: 0.84rem;
+    border-color: var(--c-border);
+    background-color: var(--c-card-2);
+    color: var(--c-text);
+}
+
+body.channels-page .add-member-btn {
+    height: 38px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--c-accent-soft);
+    color: var(--c-accent-text);
+    font-size: 0.84rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+body.channels-page .add-member-btn:hover {
+    background: var(--c-accent);
+    color: #ffffff;
+}
+
+body.channels-page .member-list {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+body.channels-page .member-list li {
+    background: var(--c-card-2);
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: var(--c-text);
+}
+
+body.channels-page .member-list li strong {
+    color: var(--c-text);
+    font-size: 0.84rem;
+    font-weight: 600;
+    word-break: break-word;
+}
+
+body.channels-page .member-list li span {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+    color: var(--c-muted);
+    font-size: 0.72rem;
+    letter-spacing: 0.4px;
+}
+
+body.channels-page .remove-member-button {
+    padding: 2px 9px;
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--c-danger);
+    font-size: 0.74rem;
+}
+
+body.channels-page .remove-member-button:hover {
+    background: var(--c-danger-soft);
+}
+
+
+/* =========================
+   CREATE-CHANNEL POP-UP
+========================= */
+
+body.channels-page .modal-content {
+    background: var(--c-card);
+    color: var(--c-text);
+    border: 1px solid var(--c-border);
+    border-radius: 14px;
+}
+
+body.channels-page .modal-content label {
+    color: var(--c-text-2);
+}
+
+body.channels-page .modal-content input,
+body.channels-page .modal-content select {
+    background-color: var(--c-card-2);
+    border-color: var(--c-border);
+    color: var(--c-text);
+}
+
+body.channels-page .close-button {
+    color: var(--c-text-2);
+}
+
+body.channels-page .modal-header {
+    border-bottom-color: var(--c-border);
+}
+
+body.channels-page .modal-actions .secondary-button {
+    background: var(--c-card);
+    border: 1px solid var(--c-border);
+    color: var(--c-text-2);
+}
+
+body.channels-page .modal-actions .secondary-button:hover {
+    background: var(--c-card-2);
+    color: var(--c-text);
+}
+
+body.channels-page .modal-actions .primary-button {
+    background: var(--c-accent);
+    border: 0;
+    color: #ffffff;
+}
+
+body.channels-page .modal-actions .primary-button:hover {
+    background: var(--c-accent-hover);
+}
+
+
+/* =========================
+   SMOOTH LIGHT / DARK SWITCH (same 0.3s fade as the other pages)
+========================= */
+
+body.channels-page,
+body.channels-page .main-panel,
+body.channels-page .conversations-panel,
+body.channels-page .chat-panel,
+body.channels-page .message-list,
+body.channels-page .message-bubble,
+body.channels-page .panel-card,
+body.channels-page .member-list li,
+body.channels-page .composer,
+body.channels-page .composer-btn,
+body.channels-page .icon-btn,
+body.channels-page .channel-item,
+body.channels-page .channel-hash,
+body.channels-page .conversation-search input,
+body.channels-page .composer input#messageInput,
+body.channels-page .modal-content,
+body.channels-page .notification-panel {
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+
+/* =========================
+   SMALLER SCREENS
+========================= */
+
+@media (max-width: 1150px) {
+    body.channels-page .content-layout {
+        grid-template-columns: 230px minmax(0, 1fr);
+    }
+
+    body.channels-page .right-panel {
+        grid-column: 1 / -1;
+    }
+
+    body.channels-page .conversation-search {
+        width: 200px;
+    }
+}
+
+@media (max-width: 900px) {
+    .app-nav {
+        display: none;
+    }
+
+    body.channels-page .main-panel,
+    body.channels-page.sidebar-collapsed .main-panel {
+        margin-left: 0;
+    }
+
+    body.channels-page .workspace-header {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 18px 16px 12px;
+    }
+
+    body.channels-page .sidebar-toggle {
+        display: inline-flex;
+    }
+
+    body.channels-page .header-actions {
+        flex-wrap: wrap;
+    }
+
+    body.channels-page .conversation-search {
+        flex: 1;
+        width: auto;
+    }
+
+    body.channels-page .content-layout {
+        grid-template-columns: 1fr;
+        padding: 0 16px 16px;
+    }
+
+    body.channels-page .content-layout .conversations-panel {
+        height: auto;
+        min-height: 0;
+        max-height: 260px;
+    }
+
+    /* the menu button shows and hides the conversation list */
+    body.channels-page.sidebar-collapsed .content-layout .conversations-panel {
+        display: none;
+    }
+
+    body.channels-page .chat-panel {
+        height: 70vh;
+        min-height: 420px;
+    }
+
+    body.channels-page .send-btn span {
+        display: none;
+    }
+}

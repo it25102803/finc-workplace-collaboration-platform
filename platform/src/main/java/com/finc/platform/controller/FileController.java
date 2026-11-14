@@ -10,7 +10,9 @@ import com.finc.platform.dto.RenameRequest;
 import com.finc.platform.entity.File;
 import com.finc.platform.entity.FileType;
 import com.finc.platform.entity.User;
+import com.finc.platform.service.FileAccess;
 import com.finc.platform.service.FileService;
+import com.finc.platform.service.FolderService;
 
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -33,10 +35,16 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/files")
 
 public class FileController {
+    // actorId is the logged-in user (added to every request by api.js).
+    // Reading needs read access; changing a file needs it to be yours (see FileAccess).
     private final FileService fileService;
+    private final FolderService folderService;
+    private final FileAccess fileAccess;
 
-    public FileController(FileService fileService) {
+    public FileController(FileService fileService, FolderService folderService, FileAccess fileAccess) {
         this.fileService = fileService;
+        this.folderService = folderService;
+        this.fileAccess = fileAccess;
     }
 
     @PostMapping("/upload")
@@ -45,20 +53,22 @@ public class FileController {
                                                @RequestParam(required = false) Long uploaderId,
                                                @RequestParam FileType fileType,
                                                @RequestParam(required = false) Long actorId) {
-        // The uploader is the logged-in user (actorId from the login token), not whatever the page sends
-        User uploader = new User();
-        uploader.setId(actorId != null ? actorId : uploaderId);
+        // The uploader is the logged-in user, and you can only upload into your own folders
+        User uploader = fileAccess.actor(actorId);
+        fileAccess.requireManageFolder(folderService.getOrThrow(folderId), uploader);
         return ResponseEntity.ok(FileResponse.from(fileService.upload(data, folderId, uploader, fileType)));
     }
 
     @GetMapping("/{fileId}")
-    public ResponseEntity<FileResponse> get(@PathVariable Long fileId) {
-        return ResponseEntity.ok(FileResponse.from(fileService.getOrThrow(fileId)));
+    public ResponseEntity<FileResponse> get(@PathVariable Long fileId,
+                                            @RequestParam(required = false) Long actorId) {
+        return ResponseEntity.ok(FileResponse.from(readable(fileId, actorId)));
     }
 
     @GetMapping("/{fileId}/download")
-    public ResponseEntity<byte[]> download(@PathVariable Long fileId) {
-        File file = fileService.getOrThrow(fileId);
+    public ResponseEntity<byte[]> download(@PathVariable Long fileId,
+                                           @RequestParam(required = false) Long actorId) {
+        File file = readable(fileId, actorId);
         byte[] bytes = fileService.download(fileId);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
@@ -68,8 +78,9 @@ public class FileController {
     }
 
     @GetMapping("/{fileId}/preview")
-    public ResponseEntity<byte[]> preview(@PathVariable Long fileId) {
-        File file = fileService.getOrThrow(fileId);
+    public ResponseEntity<byte[]> preview(@PathVariable Long fileId,
+                                          @RequestParam(required = false) Long actorId) {
+        File file = readable(fileId, actorId);
         if (!fileService.isPreviewable(file)) {
             return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
                     .contentType(MediaType.TEXT_PLAIN)
@@ -98,12 +109,17 @@ public class FileController {
     }
 
     @PutMapping("/{fileId}/rename")
-    public ResponseEntity<FileResponse> rename(@PathVariable Long fileId, @RequestBody RenameRequest request) {
+    public ResponseEntity<FileResponse> rename(@PathVariable Long fileId, @RequestBody RenameRequest request,
+                                               @RequestParam(required = false) Long actorId) {
+        changeable(fileId, actorId);
         return ResponseEntity.ok(FileResponse.from(fileService.rename(fileId, request.name())));
     }
 
     @PutMapping("/{fileId}/move")
-    public ResponseEntity<FileResponse> move(@PathVariable Long fileId, @RequestParam Long targetFolderId) {
+    public ResponseEntity<FileResponse> move(@PathVariable Long fileId, @RequestParam Long targetFolderId,
+                                             @RequestParam(required = false) Long actorId) {
+        changeable(fileId, actorId);
+        fileAccess.requireManageFolder(folderService.getOrThrow(targetFolderId), fileAccess.actor(actorId));
         return ResponseEntity.ok(FileResponse.from(fileService.move(fileId, targetFolderId)));
     }
 
@@ -113,27 +129,50 @@ public class FileController {
                                                              @RequestParam(required = false) Long createdById,
                                                              @RequestParam(required = false) String changeNote,
                                                              @RequestParam(required = false) Long actorId) {
-        User createdBy = new User();
-        createdBy.setId(actorId != null ? actorId : createdById);
+        changeable(fileId, actorId);
+        User createdBy = fileAccess.actor(actorId);
         return ResponseEntity.ok(FileVersionResponse.from(
                 fileService.createVersion(fileId, data, createdBy, changeNote)));
     }
 
     @GetMapping("/{fileId}/versions")
-    public ResponseEntity<List<FileVersionResponse>> getVersionHistory(@PathVariable Long fileId) {
+    public ResponseEntity<List<FileVersionResponse>> getVersionHistory(@PathVariable Long fileId,
+                                                                       @RequestParam(required = false) Long actorId) {
+        readable(fileId, actorId);
         return ResponseEntity.ok(fileService.getVersionHistory(fileId).stream()
                 .map(FileVersionResponse::from).toList());
     }
 
     @PostMapping("/versions/{versionId}/restore")
-    public ResponseEntity<FileResponse> restoreVersion(@PathVariable Long versionId) {
+    public ResponseEntity<FileResponse> restoreVersion(@PathVariable Long versionId,
+                                                       @RequestParam(required = false) Long actorId) {
+        fileAccess.requireManageFile(fileService.fileOfVersion(versionId), fileAccess.actor(actorId));
         return ResponseEntity.ok(FileResponse.from(fileService.restoreVersion(versionId)));
     }
 
     @DeleteMapping("/{fileId}")
-    public ResponseEntity<Void> delete(@PathVariable Long fileId) {
+    public ResponseEntity<Void> delete(@PathVariable Long fileId,
+                                       @RequestParam(required = false) Long actorId) {
+        changeable(fileId, actorId);
         fileService.delete(fileId);
         return ResponseEntity.noContent().build();
+    }
+
+    private File readable(Long fileId, Long actorId) {
+        File file = fileService.getOrThrow(fileId);
+        fileAccess.requireReadFile(file, fileAccess.actor(actorId));
+        return file;
+    }
+
+    private File changeable(Long fileId, Long actorId) {
+        File file = fileService.getOrThrow(fileId);
+        fileAccess.requireManageFile(file, fileAccess.actor(actorId));
+        return file;
+    }
+
+    @ExceptionHandler(SecurityException.class)
+    public ResponseEntity<String> forbidden(SecurityException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
